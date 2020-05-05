@@ -36,7 +36,7 @@ class Call:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if json not None else resp.content}
+            return {"status": resp.status_code, "data": json if not json == None else resp.content}
 
         return {"status": resp.status_code, "data": resp.json()}
 
@@ -58,6 +58,6 @@ class Call:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if json not None else resp.content}
+            return {"status": resp.status_code, "data": json if not json == None else resp.content}
 
         return {"status": resp.status_code, "data": resp.json()}

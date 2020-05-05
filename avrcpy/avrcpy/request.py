@@ -45,7 +45,7 @@ class aCall:
                 try: json = await resp.json()
                 except: json = None
 
-                return {"status": resp.status, "data": json if json not None else content}
+                return {"status": resp.status, "data": json if not json == None else content}
 
             json = await resp.json()
             status = resp.status
@@ -73,7 +73,7 @@ class aCall:
                     try: json = await resp.json()
                     except: json = None
 
-                    return {"status": resp.status, "data": json if json not None else content}
+                    return {"status": resp.status, "data": json if not json == None else content}
 
                 json = await resp.json()
                 status = resp.status
