@@ -1,0 +1,1 @@
+from vrcpy.objects import *
