@@ -25,3 +25,7 @@ class IntegretyError(Exception):
 class OutOfDateError(Exception):
     ## When api wrapper is too out of date to function at all
     pass
+
+class NotFoundError(Exception):
+    ## When a requested object doesn't exist
+    pass
