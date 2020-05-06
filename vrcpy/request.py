@@ -2,6 +2,8 @@ import asyncio
 import aiohttp
 import requests
 
+from vrcpy.errors import OutOfDateError, NotAuthenticated
+
 class ACall:
     def __init__(self, loop=asyncio.get_event_loop()):
         self.loop = loop
@@ -10,7 +12,7 @@ class ACall:
 
     def openSession(self, b64_auth):
         if self.session != None:
-            raise Exception("A session is already open!")
+            raise AlreadyLoggedInError("A session is already open!")
 
         # Assume good b64_auth
         headers = {
@@ -36,7 +38,7 @@ class ACall:
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise Exception("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
         async with self.session.request(method, path, params=params, headers=headers) as resp:
@@ -54,8 +56,14 @@ class ACall:
         return {"status": status, "data": json}
 
     async def _call(self, path, method="GET", headers={}, params={}):
-        async with aiohttp.ClientSession(headers={"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
- AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"}) as session:
+        h = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
+     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+        }
+
+        h.update(headers)
+
+        async with aiohttp.ClientSession(headers=h) as session:
             if self.apiKey == None:
                 async with session.get("https://api.vrchat.cloud/api/1/config") as resp:
                     assert resp.status == 200
@@ -64,7 +72,7 @@ class ACall:
                 try:
                     self.apiKey = j["apiKey"]
                 except:
-                    raise Exception("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                    raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
             path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
             async with session.request(method, path, params=params, headers=headers) as resp:
@@ -98,7 +106,7 @@ class Call:
             return self._call(path, method, headers, params)
 
         if self.b64_auth == None:
-            raise Exception("Tried to do authenticated request without setting b64 auth (Call.set_auth(b64_auth))!")
+            raise NotAuthenticated("Tried to do authenticated request without setting b64 auth (Call.set_auth(b64_auth))!")
         headers["Authorization"] = "Basic "+self.b64_auth
 
         if self.apiKey == None:
@@ -109,7 +117,7 @@ class Call:
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise Exception("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
         resp = requests.request(method, path, headers=headers, params=params)
@@ -131,7 +139,7 @@ class Call:
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise Exception("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
         resp = requests.request(method, path, headers=headers, params=params)
