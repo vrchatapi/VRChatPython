@@ -1,4 +1,5 @@
-# VRChatPython
-A Python library for the VRChat API.
+# VRCpy
 
-Feel free to make commits and push requests!
+API wrapper for the VRChat API, supporting both synchronous and asynchronous structures
+
+Not on pypi yet.
