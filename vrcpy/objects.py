@@ -3,22 +3,23 @@ from vrcpy import errors
 class BaseObject:
     objType = "Base"
 
-    def __init__(self):
+    def __init__(self, client):
         self.unique = [] # Keys that identify this object
         self.only = [] # List of all keys in this object, if used
         self.types = {} # Dictionary of what keys have special types
         self.arrTypes = {} # Dictionary of what keys are arrays with special types
+        self.client = client
 
     def _assign(self, obj):
         self._objectIntegrety(obj)
 
         for key in obj:
             if key in self.types:
-                setattr(self, key, self.types[key](obj[key]))
+                setattr(self, key, self.types[key](self.client, obj[key]))
             elif key in self.arrTypes:
                 arr = []
                 for o in obj[key]:
-                    arr.append(self.arrTypes[key](o))
+                    arr.append(self.arrTypes[key](self.client, o))
                 setattr(self, key, arr)
             else:
                 setattr(self, key, obj[key])
@@ -41,8 +42,8 @@ class BaseObject:
 class Avatar(BaseObject):
     objType = "Avatar"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "authorId",
             "imported",
@@ -53,13 +54,15 @@ class Avatar(BaseObject):
             "unityPackages": UnityPackage
         })
 
+        self._assign(obj)
+
 ## User Objects
 
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
-    def __init__(self, obj=None):
-        super().__init__()
+    def __init__(self, client, obj=None):
+        super().__init__(client)
         self.unique += [
             "bio",
             "isFriend"
@@ -70,8 +73,8 @@ class LimitedUser(BaseObject):
 class User(LimitedUser):
     objType = "User"
 
-    def __init__(self, obj=None):
-        super().__init__()
+    def __init__(self, client, obj=None):
+        super().__init__(client)
         self.unique += [
             "allowAvatarCopying"
         ]
@@ -86,8 +89,8 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "feature",
             "hasEmail"
@@ -102,8 +105,8 @@ class CurrentUser(User):
 class Feature(BaseObject):
     objType = "Feature"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.only += [
             "twoFactorAuth"
         ]
@@ -113,8 +116,8 @@ class Feature(BaseObject):
 class PastDisplayName(BaseObject):
     objType = "PastDisplayName"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.only += [
             "displayName",
             "updated_at"
@@ -127,8 +130,8 @@ class PastDisplayName(BaseObject):
 class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
 
-    def __init__(self, obj=None):
-        super().__init__()
+    def __init__(self, client, obj=None):
+        super().__init__(client)
         self.unique += [
             "visits",
             "occupants",
@@ -144,8 +147,8 @@ class LimitedWorld(BaseObject):
 class World(LimitedWorld):
     objType = "World"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "namespace",
             "pluginUrl",
@@ -161,7 +164,7 @@ class World(LimitedWorld):
 class Location:
     objType = "Location"
 
-    def __init__(self, location):
+    def __init__(self, client, location):
         if not type(location) == str: raise TypeError("Expected string, got "+str(type(location)))
 
         self.nonce = None
@@ -170,6 +173,7 @@ class Location:
         self.worldId = None
         self.userId = None
         self.location = location
+        self.client = client
 
         if ":" in location:
             self.worldId, location = location.split(":")
@@ -186,8 +190,8 @@ class Location:
 class Instance(BaseObject):
     objType = "Instance"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "n_users",
             "instanceId",
@@ -207,8 +211,8 @@ class Instance(BaseObject):
 class UnityPackage(BaseObject):
     objType = "UnityPackage"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "id",
             "platform",
@@ -223,8 +227,8 @@ class UnityPackage(BaseObject):
 class Notification(BaseObject):
     objType = "Notification"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.unique += [
             "senderUsername",
             "senderUserId",
@@ -241,8 +245,8 @@ class Notification(BaseObject):
 class NotificationDetails(BaseObject):
     objType = "NotificationDetails"
 
-    def __init__(self, obj):
-        super().__init__()
+    def __init__(self, client, obj):
+        super().__init__(client)
         self.types.update({
             "worldId": Location
         })
