@@ -1,9 +1,4 @@
 # VRCpy
 
-API wrapper for the VRChat API
-Not on pypi yet.
-
-# AVRCpy
-
-Asynchronous variant of VRCpy
+API wrapper for the VRChat API, supporting both synchronous and asynchronous structures
 Not on pypi yet.
