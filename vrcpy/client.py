@@ -106,7 +106,7 @@ class AClient(Client):
         self.loggedIn = False
 
     def __init__(self):
-        super().__init()
+        super().__init__()
 
         self.api = ACall()
         self.loggedIn = False

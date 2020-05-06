@@ -20,7 +20,7 @@ class ACall:
             "Authorization": "Basic "+b64_auth
         }
 
-        self.session = aiohttp.ClientSession(headers)
+        self.session = aiohttp.ClientSession(headers=headers)
 
     async def closeSession(self):
         await self.session.close()
@@ -28,7 +28,7 @@ class ACall:
 
     async def call(self, path, method="GET", headers={}, params={}, no_auth=False):
         if no_auth:
-            resp = await self._call(path, method, headers, params)
+            return await self._call(path, method, headers, params)
 
         if self.apiKey == None:
             async with self.session.get("https://api.vrchat.cloud/api/1/config") as resp:
