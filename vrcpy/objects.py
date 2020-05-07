@@ -209,11 +209,9 @@ class Location:
             self.worldId, location = location.split(":")
 
         if "~" in location:
-            self.name, location = location.split("~")
-            parts = location.split("(")
-            self.type = parts.pop(0)
-            self.userId = parts.pop(0)[:-1]
-            self.nonce = parts[0].split("(")[1].split(")")[0]
+            self.name, t, nonce = location.split("~")
+            self.type, self.userId = t.split("(")
+            self.nonce = nonce.split("(")[1][:-1]
         else:
             self.name = location
 
