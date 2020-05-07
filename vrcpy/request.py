@@ -96,8 +96,14 @@ class Call:
         self.b64_auth = None
 
     def set_auth(self, b64_auth):
+        self.new_session()
         # Assume good b64_auth
         self.b64_auth = b64_auth
+
+
+    def new_session(self):
+        self.session = requests.Session()
+        self.b64_auth = None
 
     def call(self, path, method="GET", headers={}, params={}, no_auth=False):
         headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"
@@ -110,7 +116,7 @@ class Call:
         headers["Authorization"] = "Basic "+self.b64_auth
 
         if self.apiKey == None:
-            resp = requests.get("https://api.vrchat.cloud/api/1/config")
+            resp = self.session.get("https://api.vrchat.cloud/api/1/config")
             assert resp.status_code == 200
 
             j = resp.json()
@@ -120,7 +126,7 @@ class Call:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        resp = requests.request(method, path, headers=headers, params=params)
+        resp = self.session.request(method, path, headers=headers, params=params)
 
         if resp.status_code != 200:
             try: json = resp.json()

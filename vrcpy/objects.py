@@ -1,4 +1,5 @@
 from vrcpy import errors
+from vrcpy import types
 
 class BaseObject:
     objType = "Base"
@@ -94,6 +95,25 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
+    def avatars(self, releaseStatus=types.ReleaseStatus.All):
+        '''
+        Returns array of Avatar objects owned by the current user
+
+            releaseStatus, string
+            One of types type.ReleaseStatus
+        '''
+
+        resp = self.client.api.call("/avatars",
+            params={"releaseStatus": releaseStatus, "user": "me"})
+        self.client._raise_for_status(resp)
+
+        avatars = []
+        for avatar in resp["data"]:
+            if avatar["authorId"] == self.id:
+                avatars.append(Avatar(self.client, avatar))
+
+        return avatars
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
@@ -134,6 +154,11 @@ class PastDisplayName(BaseObject):
 
 class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
+
+    def author(self):
+        resp = self.client.api.call("/users/"+self.authorId)
+        self.client._raise_for_status(resp)
+        return User(self.client, resp["data"])
 
     def __init__(self, client, obj=None):
         super().__init__(client)
@@ -184,16 +209,22 @@ class Location:
             self.worldId, location = location.split(":")
 
         if "~" in location:
-            self.name, location = location.split("~")
-            parts = location.split("(")
-            self.type = parts.pop(0)
-            self.userId = parts.pop(0)[:-1]
-            self.nonce = parts[0].split("(")[1].split(")")[0]
+            self.name, t, nonce = location.split("~")
+            self.type, self.userId = t.split("(")
+            self.nonce = nonce.split("(")[1][:-1]
         else:
             self.name = location
 
 class Instance(BaseObject):
     objType = "Instance"
+
+    def world(self):
+        resp = self.client.api.call("/worlds/"+self.worldId)
+        self.client._raise_for_status(resp)
+        return World(resp["data"])
+
+    def short_name(self):
+        return "https://vrchat.com/i/"+self.shortName
 
     def __init__(self, client, obj):
         super().__init__(client)
