@@ -27,6 +27,17 @@ class Client:
 
         return objects.Avatar(self, resp["data"])
 
+    def fetch_user_by_id(self, id):
+        '''
+        Returns User or FriendUser
+            id, string The users id
+        '''
+
+        resp = self.api.call("/users/"+id)
+        self._raise_for_status(resp)
+
+        return objects.User(self, resp["data"])
+
     def logout(self):
         self.api = Call()
         self.loggedIn = False
@@ -79,6 +90,17 @@ class AClient(Client):
         self._raise_for_status(resp)
 
         return aobjects.Avatar(self, resp["data"])
+
+    async def fetch_user_by_id(self, id):
+        '''
+        Returns User or FriendUser
+            id, string The users id
+        '''
+
+        resp = await self.api.call("/users/"+id)
+        self._raise_for_status(resp)
+
+        return objects.User(self, resp["data"])
 
     async def login(self, username, password):
         '''
