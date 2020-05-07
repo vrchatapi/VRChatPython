@@ -62,7 +62,7 @@ class Client:
         if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
         if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
         if resp["status"] == 404: raise NotFoundError(resp["data"]["error"]["message"])
-        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+resp["data"])
+        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
 
     def __init__(self):
         self.api = Call()
