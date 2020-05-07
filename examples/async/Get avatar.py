@@ -9,8 +9,8 @@ async def main():
     # Get avatar via id
     a = await client.fetch_avatar("avtr_fa5303c6-78d1-451c-a678-faf3eadb5c50")
     author = await a.author() # Get author of the avatar
-    print("Avatar '"+a.name+"' was made "+author.displayName)
-    ## This should print "Avatar 'Etoigne' was made ***REMOVED***"
+    print("Avatar '"+a.name+"' was made by "+author.displayName)
+    ## This should print "Avatar 'Etoigne' was made by ***REMOVED***"
 
     # Close client session
     await client.logout()
