@@ -204,6 +204,10 @@ class Instance(BaseObject):
         resp = self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])
+
+    def short_name(self):
+        return "https://vrchat.com/i/"+self.shortName
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
