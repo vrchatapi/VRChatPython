@@ -200,6 +200,10 @@ class Location:
 class Instance(BaseObject):
     objType = "Instance"
 
+    def world(self):
+        resp = self.client.api.call("/worlds/"+self.worldId)
+        self.client._raise_for_status(resp)
+        return World(resp["data"])
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
