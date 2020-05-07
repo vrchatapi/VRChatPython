@@ -39,7 +39,7 @@ class Client:
         return objects.User(self, resp["data"])
 
     def logout(self):
-        self.api = Call()
+        self.api.new_session()
         self.loggedIn = False
 
     def login(self, username, password):
