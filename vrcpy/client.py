@@ -27,8 +27,19 @@ class Client:
 
         return objects.Avatar(self, resp["data"])
 
+    def fetch_user_by_id(self, id):
+        '''
+        Returns User or FriendUser
+            id, string The users id
+        '''
+
+        resp = self.api.call("/users/"+id)
+        self._raise_for_status(resp)
+
+        return objects.User(self, resp["data"])
+
     def logout(self):
-        self.api = Call()
+        self.api.new_session()
         self.loggedIn = False
 
     def login(self, username, password):
@@ -51,7 +62,7 @@ class Client:
         if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
         if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
         if resp["status"] == 404: raise NotFoundError(resp["data"]["error"]["message"])
-        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+resp["data"])
+        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
 
     def __init__(self):
         self.api = Call()
@@ -79,6 +90,17 @@ class AClient(Client):
         self._raise_for_status(resp)
 
         return aobjects.Avatar(self, resp["data"])
+
+    async def fetch_user_by_id(self, id):
+        '''
+        Returns User or FriendUser
+            id, string The users id
+        '''
+
+        resp = await self.api.call("/users/"+id)
+        self._raise_for_status(resp)
+
+        return objects.User(self, resp["data"])
 
     async def login(self, username, password):
         '''
