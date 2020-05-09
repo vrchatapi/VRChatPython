@@ -26,9 +26,9 @@ class ACall:
         await self.session.close()
         self.session = None
 
-    async def call(self, path, method="GET", headers={}, params={}, no_auth=False):
+    async def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False):
         if no_auth:
-            return await self._call(path, method, headers, params)
+            return await self._call(path, method, headers, params, json)
 
         if self.apiKey == None:
             async with self.session.get("https://api.vrchat.cloud/api/1/config") as resp:
@@ -41,7 +41,7 @@ class ACall:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        async with self.session.request(method, path, params=params, headers=headers) as resp:
+        async with self.session.request(method, path, params=params, headers=headers, json=json) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
 
@@ -55,7 +55,7 @@ class ACall:
 
         return {"status": status, "data": json}
 
-    async def _call(self, path, method="GET", headers={}, params={}):
+    async def _call(self, path, method="GET", headers={}, params={}, json={}):
         h = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
      AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
@@ -75,7 +75,7 @@ class ACall:
                     raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
             path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-            async with session.request(method, path, params=params, headers=headers) as resp:
+            async with session.request(method, path, params=params, headers=headers, json=json) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
 
@@ -105,11 +105,11 @@ class Call:
         self.session = requests.Session()
         self.b64_auth = None
 
-    def call(self, path, method="GET", headers={}, params={}, no_auth=False):
+    def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False):
         headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"
 
         if no_auth:
-            return self._call(path, method, headers, params)
+            return self._call(path, method, headers, params, json)
 
         if self.b64_auth == None:
             raise NotAuthenticated("Tried to do authenticated request without setting b64 auth (Call.set_auth(b64_auth))!")
@@ -126,7 +126,7 @@ class Call:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params)
+        resp = self.session.request(method, path, headers=headers, params=params, data=json)
 
         if resp.status_code != 200:
             try: json = resp.json()
@@ -136,7 +136,7 @@ class Call:
 
         return {"status": resp.status_code, "data": resp.json()}
 
-    def _call(self, path, method="GET", headers={}, params={}):
+    def _call(self, path, method="GET", headers={}, params={}, json={}):
         if self.apiKey == None:
             resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers)
             assert resp.status_code == 200
@@ -148,7 +148,7 @@ class Call:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        resp = requests.request(method, path, headers=headers, params=params)
+        resp = requests.request(method, path, headers=headers, params=params, data=json)
 
         if resp.status_code != 200:
             try: json = resp.json()
