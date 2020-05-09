@@ -1,2 +1,2 @@
-aiohttp
-requests
+aiohttp>=3.6.0
+requests>=2.22.0

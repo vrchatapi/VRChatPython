@@ -3,6 +3,8 @@ from vrcpy.errors import *
 from vrcpy import objects
 from vrcpy import aobjects
 import base64
+import time
+import json
 
 class Client:
     def fetch_me(self):
@@ -15,6 +17,54 @@ class Client:
 
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
+
+    def fetch_full_friends(self):
+        '''
+        Returns list of Users
+        This function uses possibly lot of calls, use with caution
+        '''
+
+        self.fetch_me()
+        friends = []
+
+        # Get friends
+        for friend in self.me.friends:
+            time.sleep(0)
+            resp = self.api.call("/users/"+friend)
+            try:
+                self._raise_for_status(resp)
+            except NotFoundError:
+                # User no longer exists
+                continue
+
+            friends.append(objects.User(self, resp))
+
+        return friends
+
+    def fetch_friends(self):
+        '''
+        Returns list of LimitedUsers
+        '''
+
+        self.fetch_me()
+        friends = []
+
+        # Get all pages of friends if > 100
+        for offset in range(0, len(self.me.friends), 100):
+            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(objects.LimitedUser(self, friend))
+
+        for offset in range(0, len(self.me.friends), 100):
+            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(objects.LimitedUser(self, friend))
+
+        return friends
 
     def fetch_avatar(self, id):
         '''
@@ -60,9 +110,12 @@ class Client:
 
     def _raise_for_status(self, resp):
         if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
-        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
-        if resp["status"] == 404: raise NotFoundError(resp["data"]["error"]["message"])
+        if resp["status"] == 404:
+            if type(resp["data"]) == bytes:
+                raise NotFoundError(json.loads(resp["data"].decode()))
+            raise NotFoundError(resp["data"]["error"]["message"])
         if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
+        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
 
     def __init__(self):
         self.api = Call()
@@ -79,6 +132,54 @@ class AClient(Client):
 
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
+
+    async def fetch_full_friends(self):
+        '''
+        Returns list of Users
+        This function uses possibly lot of calls, use with caution
+        '''
+
+        await self.fetch_me()
+        friends = []
+
+        # Get friends
+        for friend in self.me.friends:
+            await asyncio.sleep(0)
+            resp = await self.api.call("/users/"+friend)
+            try:
+                self._raise_for_status(resp)
+            except NotFoundError:
+                # User no longer exists
+                continue
+
+            friends.append(aobjects.User(self, resp))
+
+        return friends
+
+    async def fetch_friends(self):
+        '''
+        Returns list of LimitedUsers
+        '''
+
+        await self.fetch_me()
+        friends = []
+
+        # Get all pages of friends if > 100
+        for offset in range(0, len(self.me.friends), 100):
+            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(aobjects.LimitedUser(self, friend))
+
+        for offset in range(0, len(self.me.friends), 100):
+            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(aobjects.LimitedUser(self, friend))
+
+        return friends
 
     async def fetch_avatar(self, id):
         '''
@@ -112,9 +213,7 @@ class AClient(Client):
         auth = str(base64.b64encode(auth.encode()))[2:-1]
 
         resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-        if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
-        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
-        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+resp["data"])
+        self._raise_for_status(resp)
 
         self.api.openSession(auth)
         self.me = aobjects.CurrentUser(self, resp["data"])
