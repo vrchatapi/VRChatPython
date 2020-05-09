@@ -3,6 +3,7 @@ from vrcpy.errors import *
 from vrcpy import objects
 from vrcpy import aobjects
 import base64
+import time
 
 class Client:
     def fetch_me(self):
@@ -15,6 +16,29 @@ class Client:
 
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
+
+    def fetch_full_friends(self):
+        '''
+        Returns list of Users
+        This function uses possibly lot of calls, use with caution
+        '''
+
+        self.fetch_me()
+        friends = []
+
+        # Get friends
+        for friend in self.me.friends:
+            time.sleep(0)
+            resp = self.api.call("/users/"+friend)
+            try:
+                self._raise_for_status(resp)
+            except NotFoundError:
+                # User no longer exists
+                continue
+
+            friends.append(objects.User(self, resp))
+
+        return friends
 
     def fetch_avatar(self, id):
         '''
@@ -79,6 +103,29 @@ class AClient(Client):
 
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
+
+    async def fetch_full_friends(self):
+        '''
+        Returns list of Users
+        This function uses possibly lot of calls, use with caution
+        '''
+
+        await self.fetch_me()
+        friends = []
+
+        # Get friends
+        for friend in self.me.friends:
+            await asyncio.sleep(0)
+            resp = await self.api.call("/users/"+friend)
+            try:
+                self._raise_for_status(resp)
+            except NotFoundError:
+                # User no longer exists
+                continue
+
+            friends.append(aobjects.User(self, resp))
+
+        return friends
 
     async def fetch_avatar(self, id):
         '''
