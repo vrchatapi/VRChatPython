@@ -29,14 +29,14 @@ class BaseObject:
         if self.only == []:
             for key in self.unique:
                 if not key in obj:
-                    raise errors.IntegretyError("Object does not have unique key for "+self.type)
+                    raise errors.IntegretyError("Object does not have unique key ("+key+") for "+self.objType)
         else:
             for key in obj:
                 if not key in self.only:
-                    raise errors.IntegretyError("Object has key not found in "+self.type)
+                    raise errors.IntegretyError("Object has key not found in "+self.objType)
             for key in self.only:
                 if not key in obj:
-                    raise errors.IntegretyError("Object does not have requred key for "+self.type)
+                    raise errors.IntegretyError("Object does not have requred key ("+key+") for "+self.objType)
 
 ## Avatar Objects
 
@@ -70,11 +70,11 @@ class LimitedUser(BaseObject):
     def __init__(self, client, obj=None):
         super().__init__(client)
         self.unique += [
-            "bio",
             "isFriend"
         ]
 
         if not obj == None: self._assign(obj)
+        if not hasattr(self, "bio"): self.bio = ""
 
 class User(LimitedUser):
     objType = "User"
