@@ -41,6 +41,31 @@ class Client:
 
         return friends
 
+    def fetch_friends(self):
+        '''
+        Returns list of LimitedUsers
+        '''
+
+        self.fetch_me()
+        friends = []
+
+        # Get all pages of friends if > 100
+        for offset in range(0, len(self.me.friends), 100):
+            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(objects.LimitedUser(self, friend))
+
+        for offset in range(0, len(self.me.friends), 100):
+            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(objects.LimitedUser(self, friend))
+
+        return friends
+
     def fetch_avatar(self, id):
         '''
             ID is the AvatarId of the avatar
@@ -128,6 +153,31 @@ class AClient(Client):
                 continue
 
             friends.append(aobjects.User(self, resp))
+
+        return friends
+
+    async def fetch_friends(self):
+        '''
+        Returns list of LimitedUsers
+        '''
+
+        await self.fetch_me()
+        friends = []
+
+        # Get all pages of friends if > 100
+        for offset in range(0, len(self.me.friends), 100):
+            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(aobjects.LimitedUser(self, friend))
+
+        for offset in range(0, len(self.me.friends), 100):
+            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
+            self._raise_for_status(resp)
+
+            for friend in resp["data"]:
+                friends.append(aobjects.LimitedUser(self, friend))
 
         return friends
 
