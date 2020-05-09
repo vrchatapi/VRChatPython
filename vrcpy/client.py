@@ -4,6 +4,7 @@ from vrcpy import objects
 from vrcpy import aobjects
 import base64
 import time
+import json
 
 class Client:
     def fetch_me(self):
@@ -84,9 +85,12 @@ class Client:
 
     def _raise_for_status(self, resp):
         if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
-        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
-        if resp["status"] == 404: raise NotFoundError(resp["data"]["error"]["message"])
+        if resp["status"] == 404:
+            if type(resp["data"]) == bytes:
+                raise NotFoundError(json.loads(resp["data"].decode()))
+            raise NotFoundError(resp["data"]["error"]["message"])
         if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
+        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
 
     def __init__(self):
         self.api = Call()
@@ -159,9 +163,7 @@ class AClient(Client):
         auth = str(base64.b64encode(auth.encode()))[2:-1]
 
         resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-        if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
-        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
-        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+resp["data"])
+        self._raise_for_status(resp)
 
         self.api.openSession(auth)
         self.me = aobjects.CurrentUser(self, resp["data"])
