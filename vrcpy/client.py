@@ -69,7 +69,7 @@ class Client:
 
         return friends
 
-    def fetch_user_by_id(self, id) -> User:
+    def fetch_user_by_id(self, id: str) -> User:
         '''
         Returns User or FriendUser object
 
@@ -82,7 +82,7 @@ class Client:
 
         return objects.User(self, resp["data"])
 
-    def fetch_avatar(self, id) -> Avatar:
+    def fetch_avatar(self, id: str) -> Avatar:
         '''
         Returns Avatar object
 
@@ -135,7 +135,7 @@ class Client:
         self.api.new_session()
         self.loggedIn = False
 
-    def login(self, username, password):
+    def login(self, username: str, password: str):
         '''
         Used to initialize the client for use
         '''
@@ -227,7 +227,7 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_user_by_id(self, id) -> User:
+    async def fetch_user_by_id(self, id: str) -> User:
         '''
         Returns User or FriendUser object
 
@@ -240,7 +240,7 @@ class AClient(Client):
 
         return objects.User(self, resp["data"])
 
-    async def fetch_avatar(self, id) -> Avatar:
+    async def fetch_avatar(self, id: str) -> Avatar:
         '''
         Returns Avatar object
 
@@ -285,7 +285,7 @@ class AClient(Client):
 
         return avatars
 
-    async def login(self, username, password):
+    async def login(self, username: str, password: str):
         '''
         Used to initialize the client for use
         '''
