@@ -12,7 +12,7 @@ async def main():
     print("Avatar '"+a.name+"' was made by "+author.displayName)
     ## This should print "Avatar 'Etoigne' was made by ***REMOVED***"
 
-    # Close client session
+    # Close client session cleanly
     await client.logout()
 
 if __name__ == "__main__":
