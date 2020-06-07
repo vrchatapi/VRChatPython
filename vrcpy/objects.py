@@ -78,8 +78,7 @@ class LimitedUser(BaseObject):
 
         avatars = []
         for avatar in resp["data"]:
-            if avatar["authorId"] == self.id:
-                avatars.append(Avatar(self.client, avatar))
+            avatars.append(Avatar(self.client, avatar))
 
         return avatars
 
