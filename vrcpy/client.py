@@ -9,7 +9,7 @@ import json
 class Client:
     def fetch_me(self):
         '''
-            Simply returns newest version of CurrentUser
+        Simply returns newest version of CurrentUser
         '''
 
         resp = self.api.call("/auth/user")
@@ -20,8 +20,8 @@ class Client:
 
     def fetch_full_friends(self):
         '''
-        Returns list of Users
-        This function uses possibly lot of calls, use with caution
+        Returns list of User objects
+        !! This function uses possibly lot of calls, use with caution
         '''
 
         self.fetch_me()
@@ -43,7 +43,7 @@ class Client:
 
     def fetch_friends(self):
         '''
-        Returns list of LimitedUsers
+        Returns list of LimitedUser objects
         '''
 
         self.fetch_me()
@@ -68,8 +68,10 @@ class Client:
 
     def fetch_avatar(self, id):
         '''
-            ID is the AvatarId of the avatar
-            Returns Avatar object
+        Returns Avatar object
+
+            id, string,
+            AvatarId of the avatar
         '''
 
         resp = self.api.call("/avatars/"+id)
@@ -79,8 +81,10 @@ class Client:
 
     def fetch_user_by_id(self, id):
         '''
-        Returns User or FriendUser
-            id, string The users id
+        Returns User or FriendUser object
+
+            id, string
+            UserId of the user
         '''
 
         resp = self.api.call("/users/"+id)
@@ -89,13 +93,18 @@ class Client:
         return objects.User(self, resp["data"])
 
     def logout(self):
+        '''
+        Closes client session
+        '''
+
         self.api.new_session()
         self.loggedIn = False
 
     def login(self, username, password):
         '''
-            Used to initialize the client for use
+        Used to initialize the client for use
         '''
+
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
@@ -126,8 +135,9 @@ class Client:
 class AClient(Client):
     async def fetch_me(self):
         '''
-            Simply returns newest version of CurrentUser
+        Simply returns newest version of CurrentUser
         '''
+
         resp = await self.api.call("/auth/user")
         self._raise_for_status(resp)
 
@@ -136,8 +146,8 @@ class AClient(Client):
 
     async def fetch_full_friends(self):
         '''
-        Returns list of Users
-        This function uses possibly lot of calls, use with caution
+        Returns list of User objects
+        !! This function uses possibly lot of calls, use with caution
         '''
 
         await self.fetch_me()
@@ -159,7 +169,7 @@ class AClient(Client):
 
     async def fetch_friends(self):
         '''
-        Returns list of LimitedUsers
+        Returns list of LimitedUser objects
         '''
 
         await self.fetch_me()
@@ -184,8 +194,10 @@ class AClient(Client):
 
     async def fetch_avatar(self, id):
         '''
-            ID is the AvatarId of the avatar
-            Returns Avatar object
+        Returns Avatar object
+
+            id, string,
+            AvatarId of the avatar
         '''
 
         resp = await self.api.call("/avatars/"+id)
@@ -195,8 +207,10 @@ class AClient(Client):
 
     async def fetch_user_by_id(self, id):
         '''
-        Returns User or FriendUser
-            id, string The users id
+        Returns User or FriendUser object
+
+            id, string
+            UserId of the user
         '''
 
         resp = await self.api.call("/users/"+id)
@@ -206,8 +220,9 @@ class AClient(Client):
 
     async def login(self, username, password):
         '''
-            Used to initialize the client for use
+        Used to initialize the client for use
         '''
+
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
@@ -221,6 +236,10 @@ class AClient(Client):
         self.loggedIn = True
 
     async def logout(self):
+        '''
+        Closes client session
+        '''
+
         await self.api.closeSession()
         await asyncio.sleep(0)
 
