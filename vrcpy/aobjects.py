@@ -1,10 +1,12 @@
+import vrcpy._hardtyping as ht
+
 import vrcpy.objects as o
 import vrcpy.types as types
 
 ## Avatar
 
 class Avatar(o.Avatar):
-    async def author(self):
+    async def author(self) -> ht.User:
         resp = await self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -12,7 +14,7 @@ class Avatar(o.Avatar):
 ## User
 
 class LimitedUser(o.LimitedUser):
-    async def public_avatars(self):
+    async def public_avatars(self) -> ht.AvatarList:
         '''
         Returns array of Avatar objects owned by user object
         '''
@@ -28,18 +30,18 @@ class LimitedUser(o.LimitedUser):
         return avatars
 
 class User(o.User, LimitedUser):
-    async def public_avatars(self):
+    async def public_avatars(self) -> ht.AvatarList:
         avatars = await LimitedUser.public_avatars(self)
         return avatars
 
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
 
-    async def public_avatars(self):
+    async def public_avatars(self) -> ht.AvatarList:
         avatars = await User.public_avatars(self)
         return avatars
 
-    async def avatars(self, releaseStatus=types.ReleaseStatus.All):
+    async def avatars(self, releaseStatus=types.ReleaseStatus.All) -> ht.AvatarList:
         '''
         Returns array of Avatar objects owned by the current user
 
@@ -61,18 +63,18 @@ class CurrentUser(o.CurrentUser, User):
 ## World
 
 class LimitedWorld(o.LimitedWorld):
-    async def author(self):
+    async def author(self) -> ht.User:
         resp = await self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
 class World(o.World, LimitedWorld):
-    async def author(self):
+    async def author(self) -> ht.User:
         resp = await super(LimitedWorld, self).author()
         return resp
 
 class Instance(o.Instance):
-    async def world(self):
+    async def world(self) -> ht.World:
         resp = await self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])
