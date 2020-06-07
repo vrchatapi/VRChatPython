@@ -1,3 +1,5 @@
+import vrcpy._hardtyping as ht
+
 from vrcpy import errors
 from vrcpy import types
 
@@ -43,7 +45,7 @@ class BaseObject:
 class Avatar(BaseObject):
     objType = "Avatar"
 
-    def author(self):
+    def author(self) -> ht.User:
         resp = self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -67,7 +69,7 @@ class Avatar(BaseObject):
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
-    def public_avatars(self):
+    def public_avatars(self) -> ht.AvatarList:
         '''
         Returns array of Avatar objects owned by user object
         '''
@@ -110,7 +112,7 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
-    def avatars(self, releaseStatus=types.ReleaseStatus.All):
+    def avatars(self, releaseStatus=types.ReleaseStatus.All) -> ht.AvatarList:
         '''
         Returns array of Avatar objects owned by the current user
 
@@ -170,7 +172,7 @@ class PastDisplayName(BaseObject):
 class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
 
-    def author(self):
+    def author(self) -> ht.User:
         resp = self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -233,12 +235,12 @@ class Location:
 class Instance(BaseObject):
     objType = "Instance"
 
-    def world(self):
+    def world(self) -> ht.World:
         resp = self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])
 
-    def short_name(self):
+    def short_name(self) -> str:
         return "https://vrchat.com/i/"+self.shortName
 
     def __init__(self, client, obj):
