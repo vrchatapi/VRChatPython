@@ -1,12 +1,18 @@
-import vrcpy._hardtyping as ht
+from typing import List, Union
 
 import vrcpy.objects as o
 import vrcpy.types as types
 
+## Typings
+
+htAvatarList = List[Avatar]
+htUser = Union[User, LimitedUser]
+htWorld = Union[World, LimitedWorld]
+
 ## Avatar
 
 class Avatar(o.Avatar):
-    async def author(self) -> ht.User:
+    async def author(self) -> htUser:
         resp = await self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -14,7 +20,7 @@ class Avatar(o.Avatar):
 ## User
 
 class LimitedUser(o.LimitedUser):
-    async def public_avatars(self) -> ht.AvatarList:
+    async def public_avatars(self) -> htAvatarList:
         '''
         Returns array of Avatar objects owned by user object
         '''
@@ -30,18 +36,18 @@ class LimitedUser(o.LimitedUser):
         return avatars
 
 class User(o.User, LimitedUser):
-    async def public_avatars(self) -> ht.AvatarList:
+    async def public_avatars(self) -> htAvatarList:
         avatars = await LimitedUser.public_avatars(self)
         return avatars
 
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
 
-    async def public_avatars(self) -> ht.AvatarList:
+    async def public_avatars(self) -> htAvatarList:
         avatars = await User.public_avatars(self)
         return avatars
 
-    async def avatars(self, releaseStatus=types.ReleaseStatus.All) -> ht.AvatarList:
+    async def avatars(self, releaseStatus=types.ReleaseStatus.All) -> htAvatarList:
         '''
         Returns array of Avatar objects owned by the current user
 
@@ -63,18 +69,18 @@ class CurrentUser(o.CurrentUser, User):
 ## World
 
 class LimitedWorld(o.LimitedWorld):
-    async def author(self) -> ht.User:
+    async def author(self) -> htUser:
         resp = await self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
 class World(o.World, LimitedWorld):
-    async def author(self) -> ht.User:
+    async def author(self) -> htUser:
         resp = await super(LimitedWorld, self).author()
         return resp
 
 class Instance(o.Instance):
-    async def world(self) -> ht.World:
+    async def world(self) -> htWorld:
         resp = await self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])

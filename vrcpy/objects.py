@@ -1,7 +1,15 @@
-import vrcpy._hardtyping as ht
+from typing import List, Union
 
 from vrcpy import errors
 from vrcpy import types
+
+## Typings
+
+htAvatarList = List[Avatar]
+htUser = Union[User, LimitedUser]
+htWorld = Union[World, LimitedWorld]
+
+## Base Object
 
 class BaseObject:
     objType = "Base"
@@ -45,7 +53,7 @@ class BaseObject:
 class Avatar(BaseObject):
     objType = "Avatar"
 
-    def author(self) -> ht.User:
+    def author(self) -> htUser:
         resp = self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -69,7 +77,7 @@ class Avatar(BaseObject):
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
-    def public_avatars(self) -> ht.AvatarList:
+    def public_avatars(self) -> htAvatarList:
         '''
         Returns array of Avatar objects owned by user object
         '''
@@ -112,7 +120,7 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
-    def avatars(self, releaseStatus=types.ReleaseStatus.All) -> ht.AvatarList:
+    def avatars(self, releaseStatus=types.ReleaseStatus.All) -> htAvatarList:
         '''
         Returns array of Avatar objects owned by the current user
 
@@ -172,7 +180,7 @@ class PastDisplayName(BaseObject):
 class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
 
-    def author(self) -> ht.User:
+    def author(self) -> htUser:
         resp = self.client.api.call("/users/"+self.authorId)
         self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
@@ -235,7 +243,7 @@ class Location:
 class Instance(BaseObject):
     objType = "Instance"
 
-    def world(self) -> ht.World:
+    def world(self) -> htWorld:
         resp = self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])
