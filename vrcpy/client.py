@@ -7,6 +7,8 @@ import time
 import json
 
 class Client:
+    # User calls
+
     def fetch_me(self):
         '''
         Simply returns newest version of CurrentUser
@@ -66,19 +68,6 @@ class Client:
 
         return friends
 
-    def fetch_avatar(self, id):
-        '''
-        Returns Avatar object
-
-            id, string,
-            AvatarId of the avatar
-        '''
-
-        resp = self.api.call("/avatars/"+id)
-        self._raise_for_status(resp)
-
-        return objects.Avatar(self, resp["data"])
-
     def fetch_user_by_id(self, id):
         '''
         Returns User or FriendUser object
@@ -91,6 +80,19 @@ class Client:
         self._raise_for_status(resp)
 
         return objects.User(self, resp["data"])
+
+    def fetch_avatar(self, id):
+        '''
+        Returns Avatar object
+
+            id, string,
+            AvatarId of the avatar
+        '''
+
+        resp = self.api.call("/avatars/"+id)
+        self._raise_for_status(resp)
+
+        return objects.Avatar(self, resp["data"])
 
     def logout(self):
         '''
@@ -192,19 +194,6 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_avatar(self, id):
-        '''
-        Returns Avatar object
-
-            id, string,
-            AvatarId of the avatar
-        '''
-
-        resp = await self.api.call("/avatars/"+id)
-        self._raise_for_status(resp)
-
-        return aobjects.Avatar(self, resp["data"])
-
     async def fetch_user_by_id(self, id):
         '''
         Returns User or FriendUser object
@@ -217,6 +206,19 @@ class AClient(Client):
         self._raise_for_status(resp)
 
         return objects.User(self, resp["data"])
+
+    async def fetch_avatar(self, id):
+        '''
+        Returns Avatar object
+
+            id, string,
+            AvatarId of the avatar
+        '''
+
+        resp = await self.api.call("/avatars/"+id)
+        self._raise_for_status(resp)
+
+        return aobjects.Avatar(self, resp["data"])
 
     async def login(self, username, password):
         '''
