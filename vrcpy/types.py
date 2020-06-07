@@ -56,24 +56,3 @@ class InstanceType:
         if rs in ["hidden", "friends", ""]:
             return True
         return False
-
-class NotificationDetails:
-    class Invite:
-        def __init__(self, worldId):
-            self.worldId = worldId
-
-    class RequestInvite:
-        def __init__(self, platform):
-            self.platform = platform
-
-class NotificationType:
-    All = "all"
-    Invite = "invite"
-    RequestInvite = "requestInvite"
-    VoteKick = "votetokick"
-
-    @staticmethod
-    def Check(rs):
-        if rs in ["all", "invite", "requestInvite", "votetokick"]:
-            return True
-        return False
