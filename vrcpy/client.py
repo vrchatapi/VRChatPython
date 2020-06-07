@@ -112,7 +112,8 @@ class Client:
         if resp["status"] == 401: raise IncorrectLoginError(resp["data"]["error"]["message"])
         if resp["status"] == 404:
             if type(resp["data"]) == bytes:
-                raise NotFoundError(json.loads(resp["data"].decode()))
+                try: raise NotFoundError(json.loads(resp["data"].decode()))
+                except: raise NotFoundError(str(resp["data"].decode()))
             raise NotFoundError(resp["data"]["error"]["message"])
         if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
         if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
