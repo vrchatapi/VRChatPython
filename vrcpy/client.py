@@ -10,7 +10,7 @@ import json
 class Client:
     # User calls
 
-    def fetch_me(self):
+    def fetch_me(self) -> CurrentUser:
         '''
         Simply returns newest version of CurrentUser
         '''
@@ -21,7 +21,7 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
 
-    def fetch_full_friends(self):
+    def fetch_full_friends(self) -> UserList:
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
@@ -44,7 +44,7 @@ class Client:
 
         return friends
 
-    def fetch_friends(self):
+    def fetch_friends(self) -> UserList:
         '''
         Returns list of LimitedUser objects
         '''
@@ -69,7 +69,7 @@ class Client:
 
         return friends
 
-    def fetch_user_by_id(self, id):
+    def fetch_user_by_id(self, id) -> User:
         '''
         Returns User or FriendUser object
 
@@ -82,7 +82,7 @@ class Client:
 
         return objects.User(self, resp["data"])
 
-    def fetch_avatar(self, id):
+    def fetch_avatar(self, id) -> Avatar:
         '''
         Returns Avatar object
 
@@ -168,7 +168,7 @@ class Client:
         self.me = None
 
 class AClient(Client):
-    async def fetch_me(self):
+    async def fetch_me(self) -> CurrentUser:
         '''
         Simply returns newest version of CurrentUser
         '''
@@ -179,7 +179,7 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
 
-    async def fetch_full_friends(self):
+    async def fetch_full_friends(self) -> UserList:
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
@@ -202,7 +202,7 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_friends(self):
+    async def fetch_friends(self) -> UserList:
         '''
         Returns list of LimitedUser objects
         '''
@@ -227,7 +227,7 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_user_by_id(self, id):
+    async def fetch_user_by_id(self, id) -> User:
         '''
         Returns User or FriendUser object
 
@@ -240,7 +240,7 @@ class AClient(Client):
 
         return objects.User(self, resp["data"])
 
-    async def fetch_avatar(self, id):
+    async def fetch_avatar(self, id) -> Avatar:
         '''
         Returns Avatar object
 
