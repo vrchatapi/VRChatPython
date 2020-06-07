@@ -100,7 +100,6 @@ class Call:
         # Assume good b64_auth
         self.b64_auth = b64_auth
 
-
     def new_session(self):
         self.session = requests.Session()
         self.b64_auth = None
