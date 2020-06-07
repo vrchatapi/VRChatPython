@@ -11,5 +11,9 @@ def main():
     print("Avatar '"+a.name+"' was made by "+author.displayName)
     ## This should print "Avatar 'Etoigne' was made by Katfish"
 
+    # Close client session
+    # Not needed unless you want to login again with this client object
+    await client.logout()
+
 if __name__ == "__main__":
     main()
