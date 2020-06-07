@@ -1,3 +1,4 @@
+from vrcpy._hardtyping import *
 from vrcpy.request import *
 from vrcpy.errors import *
 from vrcpy import objects
@@ -93,6 +94,38 @@ class Client:
         self._raise_for_status(resp)
 
         return objects.Avatar(self, resp["data"])
+
+    def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
+        userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
+        releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
+        minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
+        platform: oString = None) -> AvatarList:
+
+        p = {}
+
+        if user: p["user"] = user
+        if featured: p["featured"] = featured
+        if tag: p["tag"] = tag
+        if userId: p["userId"] = userId
+        if n: p["n"] = n
+        if offset: p["offset"] = offset
+        if order: p["order"] = order
+        if releaseStatus: p["releaseStatus"] = releaseStatus
+        if sort: p["sort"] = sort
+        if maxUnityVersion: p["maxUnityVersion"] = maxUnityVersion
+        if minUnityVersion: p["minUnityVersion"] = minUnityVersion
+        if maxAssetVersion: p["maxAssetVersion"] = maxAssetVersion
+        if minAssetVersion: p["minAssetVersion"] = minAssetVersion
+        if platform: p["platform"] = platform
+
+        resp = self.api.call("/avatars", params=p)
+        self._raise_for_status(resp)
+
+        avatars = []
+        for avatar in resp["data"]:
+            avatars.append(objects.Avatar(client, avatar))
+
+        return avatars
 
     def logout(self):
         '''
@@ -219,6 +252,38 @@ class AClient(Client):
         self._raise_for_status(resp)
 
         return aobjects.Avatar(self, resp["data"])
+
+    async def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
+        userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
+        releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
+        minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
+        platform: oString = None) -> AvatarList:
+
+        p = {}
+
+        if user: p["user"] = user
+        if featured: p["featured"] = featured
+        if tag: p["tag"] = tag
+        if userId: p["userId"] = userId
+        if n: p["n"] = n
+        if offset: p["offset"] = offset
+        if order: p["order"] = order
+        if releaseStatus: p["releaseStatus"] = releaseStatus
+        if sort: p["sort"] = sort
+        if maxUnityVersion: p["maxUnityVersion"] = maxUnityVersion
+        if minUnityVersion: p["minUnityVersion"] = minUnityVersion
+        if maxAssetVersion: p["maxAssetVersion"] = maxAssetVersion
+        if minAssetVersion: p["minAssetVersion"] = minAssetVersion
+        if platform: p["platform"] = platform
+
+        resp = await self.api.call("/avatars", params=p)
+        self._raise_for_status(resp)
+
+        avatars = []
+        for avatar in resp["data"]:
+            avatars.append(aobjects.Avatar(self, avatar))
+
+        return avatars
 
     async def login(self, username, password):
         '''
