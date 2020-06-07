@@ -12,3 +12,4 @@ UserList = Union[List[objects.User], List[objects.LimitedUser], List[aobjects.Us
 Avatar = Union[objects.Avatar, aobjects.Avatar]
 User = Union[objects.User, objects.LimitedUser, aobjects.User, aobjects.LimitedUser]
 CurrentUser = Union[objects.CurrentUser, aobjects.CurrentUser]
+World = Union[objects.World, objects.LimitedWorld, aobjects.World, aobjects.LimitedWorld]
