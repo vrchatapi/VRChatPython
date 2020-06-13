@@ -3,6 +3,8 @@ from vrcpy.request import *
 from vrcpy.errors import *
 from vrcpy import objects
 from vrcpy import aobjects
+
+import urllib
 import base64
 import time
 import json
@@ -85,13 +87,26 @@ class Client:
 
     def fetch_user_by_id(self, id):
         '''
-        Returns User or FriendUser object
+        Returns User object
 
             id, string
             UserId of the user
         '''
 
         resp = self.api.call("/users/"+id)
+        self._raise_for_status(resp)
+
+        return objects.User(self, resp["data"])
+
+    def fetch_user_by_name(self, name):
+        '''
+        Returns User object
+
+            name, string
+            Name of the user
+        '''
+
+        resp = self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
         self._raise_for_status(resp)
 
         return objects.User(self, resp["data"])
@@ -261,7 +276,7 @@ class AClient(Client):
 
     async def fetch_user_by_id(self, id):
         '''
-        Returns User or FriendUser object
+        Returns User object
 
             id, string
             UserId of the user
@@ -270,7 +285,20 @@ class AClient(Client):
         resp = await self.api.call("/users/"+id)
         self._raise_for_status(resp)
 
-        return objects.User(self, resp["data"])
+        return aobjects.User(self, resp["data"])
+
+    async def fetch_user_by_name(self, name):
+        '''
+        Returns User object
+
+            name, string
+            Name of the user
+        '''
+
+        resp = await self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
+        self._raise_for_status(resp)
+
+        return aobjects.User(self, resp["data"])
 
     # Avatar calls
 
