@@ -1,6 +1,6 @@
 __title__ = "vrcpy"
 __author__ = "Katistic"
-__version__ = "0.5.4"
+__version__ = "0.5.8"
 
 from vrcpy.client import Client
 from vrcpy.client import AClient
