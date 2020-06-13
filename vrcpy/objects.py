@@ -69,6 +69,12 @@ class Avatar(BaseObject):
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
+    def fetch_full(self):
+        resp = self.client.api.call("/users/"+self.id)
+        self.client._raise_for_status(resp)
+
+        return User(self.client, resp["data"])
+
     def public_avatars(self):
         '''
         Returns array of Avatar objects owned by user object

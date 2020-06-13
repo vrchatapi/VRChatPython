@@ -12,6 +12,12 @@ class Avatar(o.Avatar):
 ## User
 
 class LimitedUser(o.LimitedUser):
+    async def fetch_full(self):
+        resp = await self.client.api.call("/users/"+self.id)
+        self.client._raise_for_status(resp)
+
+        return User(self.client, resp["data"])
+
     async def public_avatars(self):
         '''
         Returns array of Avatar objects owned by user object
@@ -28,6 +34,10 @@ class LimitedUser(o.LimitedUser):
         return avatars
 
 class User(o.User, LimitedUser):
+    async def fetch_full(self):
+        user = await LimitedUser.fetch_full(self)
+        return user
+
     async def public_avatars(self):
         avatars = await LimitedUser.public_avatars(self)
         return avatars
@@ -35,8 +45,12 @@ class User(o.User, LimitedUser):
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
 
+    async def fetch_full(self):
+        user = await LimitedUser.fetch_full(self)
+        return user
+
     async def public_avatars(self):
-        avatars = await User.public_avatars(self)
+        avatars = await LimitedUser.public_avatars(self)
         return avatars
 
     async def avatars(self, releaseStatus=types.ReleaseStatus.All):
