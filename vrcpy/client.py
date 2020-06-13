@@ -10,7 +10,7 @@ import json
 class Client:
     # User calls
 
-    def fetch_me(self) -> CurrentUser:
+    def fetch_me(self):
         '''
         Simply returns newest version of CurrentUser
         '''
@@ -21,7 +21,7 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
 
-    def fetch_full_friends(self) -> UserList:
+    def fetch_full_friends(self):
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
@@ -44,7 +44,7 @@ class Client:
 
         return friends
 
-    def fetch_friends(self) -> UserList:
+    def fetch_friends(self):
         '''
         Returns list of LimitedUser objects
         '''
@@ -69,7 +69,7 @@ class Client:
 
         return friends
 
-    def fetch_user_by_id(self, id: str) -> User:
+    def fetch_user_by_id(self, id):
         '''
         Returns User or FriendUser object
 
@@ -82,7 +82,7 @@ class Client:
 
         return objects.User(self, resp["data"])
 
-    def fetch_avatar(self, id: str) -> Avatar:
+    def fetch_avatar(self, id):
         '''
         Returns Avatar object
 
@@ -99,7 +99,7 @@ class Client:
         userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
         releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
         minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
-        platform: oString = None) -> AvatarList:
+        platform: oString = None):
 
         p = {}
 
@@ -123,7 +123,7 @@ class Client:
 
         avatars = []
         for avatar in resp["data"]:
-            avatars.append(objects.Avatar(client, avatar))
+            avatars.append(objects.Avatar(self, avatar))
 
         return avatars
 
@@ -135,7 +135,7 @@ class Client:
         self.api.new_session()
         self.loggedIn = False
 
-    def login(self, username: str, password: str):
+    def login(self, username, password):
         '''
         Used to initialize the client for use
         '''
@@ -168,7 +168,7 @@ class Client:
         self.me = None
 
 class AClient(Client):
-    async def fetch_me(self) -> CurrentUser:
+    async def fetch_me(self):
         '''
         Simply returns newest version of CurrentUser
         '''
@@ -179,7 +179,7 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
 
-    async def fetch_full_friends(self) -> UserList:
+    async def fetch_full_friends(self):
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
@@ -202,7 +202,7 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_friends(self) -> UserList:
+    async def fetch_friends(self):
         '''
         Returns list of LimitedUser objects
         '''
@@ -227,7 +227,7 @@ class AClient(Client):
 
         return friends
 
-    async def fetch_user_by_id(self, id: str) -> User:
+    async def fetch_user_by_id(self, id):
         '''
         Returns User or FriendUser object
 
@@ -240,7 +240,7 @@ class AClient(Client):
 
         return objects.User(self, resp["data"])
 
-    async def fetch_avatar(self, id: str) -> Avatar:
+    async def fetch_avatar(self, id):
         '''
         Returns Avatar object
 
@@ -257,7 +257,7 @@ class AClient(Client):
         userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
         releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
         minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
-        platform: oString = None) -> AvatarList:
+        platform: oString = None):
 
         p = {}
 
@@ -285,7 +285,7 @@ class AClient(Client):
 
         return avatars
 
-    async def login(self, username: str, password: str):
+    async def login(self, username, password):
         '''
         Used to initialize the client for use
         '''
