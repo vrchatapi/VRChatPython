@@ -40,7 +40,12 @@ class ACall:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
         async with self.session.request(method, path, params=params, headers=headers, json=json) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
@@ -73,7 +78,12 @@ class ACall:
                 except:
                     raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-            path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+            path = "https://api.vrchat.cloud/api/1" + path
+
+            for param in params:
+                if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+            params["apiKey"] = self.apiKey
             async with session.request(method, path, params=params, headers=headers, json=json) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
@@ -87,7 +97,6 @@ class ACall:
                 status = resp.status
 
             return {"status": status, "data": json}
-
 
 class Call:
     def __init__(self):
@@ -123,8 +132,13 @@ class Call:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params, data=json)
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
+        resp = self.session.request(method, path, headers=headers, params=params, json=json)
 
         if resp.status_code != 200:
             try: json = resp.json()
@@ -145,7 +159,12 @@ class Call:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
         resp = requests.request(method, path, headers=headers, params=params, data=json)
 
         if resp.status_code != 200:
