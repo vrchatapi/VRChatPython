@@ -56,3 +56,12 @@ class InstanceType:
         if rs in ["hidden", "friends", ""]:
             return True
         return False
+
+class NotificationType:
+    FriendRequest = "friendRequest"
+
+    @staticmethod
+    def Check(rs):
+        if rs in ["friendRequest"]:
+            return True
+        return False
