@@ -33,3 +33,7 @@ class NotFoundError(Exception):
 class NotFriendsError(Exception):
     ## When request requires users to be friends but they aren't
     pass
+
+class AlreadyFriendsError(Exception):
+    ## When users are already friends
+    pass

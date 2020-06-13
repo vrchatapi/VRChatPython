@@ -186,7 +186,9 @@ class Client:
     def _raise_for_status(self, resp):
         def handle_400():
             if resp["data"]["error"]["message"] == "These users are not friends":
-                raise NotFriendsError(resp["data"]["error"])
+                raise NotFriendsError("These users are not friends")
+            elif resp["data"]["error"]["message"] == "\"Users are already friends!\"":
+                raise AlreadyFriendsError("Users are already friends!")
 
         def handle_401():
             raise IncorrectLoginError(resp["data"]["error"]["message"])
