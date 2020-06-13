@@ -137,6 +137,21 @@ class CurrentUser(User):
 
         return avatars
 
+    def update_info(self, email=None, status=None,\
+        statusDescription=None, bio=None, bioLinks=None):
+
+        params = {"email": email, "status": status, "statusDescription": statusDescription,\
+            "bio": bio, "bioLinks": bioLinks}
+
+        for p in params:
+            if params[p] == None: params[p] = getattr(self, p)
+
+        resp = self.client.api.call("/users/"+self.id, "PUT", params=params)
+        self.client._raise_for_status(resp)
+
+        self.client.me = CurrentUser(self.client, resp["data"])
+        return self.client.me
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
