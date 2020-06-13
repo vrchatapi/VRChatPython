@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import requests
 
-from vrcpy.errors import OutOfDateError, NotAuthenticated
+from vrcpy.errors import *
 
 class ACall:
     def __init__(self, loop=asyncio.get_event_loop()):
