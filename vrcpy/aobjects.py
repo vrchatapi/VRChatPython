@@ -33,6 +33,14 @@ class LimitedUser(o.LimitedUser):
 
         return avatars
 
+    async def unfriend(self):
+        '''
+        Returns void
+        '''
+
+        resp = await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
+        self.client._raise_for_status(resp)
+
 class User(o.User, LimitedUser):
     async def fetch_full(self):
         user = await LimitedUser.fetch_full(self)

@@ -90,6 +90,14 @@ class LimitedUser(BaseObject):
 
         return avatars
 
+    def unfriend(self):
+        '''
+        Returns void
+        '''
+
+        resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
+        self.client._raise_for_status(resp)
+
     def __init__(self, client, obj=None):
         super().__init__(client)
         self.unique += [
