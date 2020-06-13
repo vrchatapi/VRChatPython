@@ -21,51 +21,64 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
 
-    def fetch_full_friends(self):
+    def fetch_full_friends(self, offline=True, n=0, offset=0):
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
+
+            offline, bool
+            Include offline friends or not
+
+            n, int
+            Number of friends to return (0 for all)
+
+            offset, int
+            Skip first <offset> friends
         '''
 
-        self.fetch_me()
+        lfriends = self.fetch_friends(offline, n, offset)
         friends = []
 
         # Get friends
-        for friend in self.me.friends:
+        for friend in lfriends:
             time.sleep(0)
-            resp = self.api.call("/users/"+friend)
-            try:
-                self._raise_for_status(resp)
-            except NotFoundError:
-                # User no longer exists
-                continue
-
-            friends.append(objects.User(self, resp))
+            friends.append(friend.fetch_full())
 
         return friends
 
-    def fetch_friends(self):
+    def fetch_friends(self, offline=False, n=0, offset=0):
         '''
         Returns list of LimitedUser objects
+
+            offline, bool
+            Get offline friends instead of online friends
+
+            n, int
+            Number of friends to return (0 for all)
+
+            offset, int
+            Skip first <offset> friends
         '''
 
-        self.fetch_me()
         friends = []
 
-        # Get all pages of friends if > 100
-        for offset in range(0, len(self.me.friends), 100):
-            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+        while True:
+            newn = 100
+            if not n == 0 and n - len(friends) < 100: newn = n - len(friends)
+
+            last_count = 0
+
+            resp = self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
             self._raise_for_status(resp)
 
             for friend in resp["data"]:
+                last_count += 1
                 friends.append(objects.LimitedUser(self, friend))
 
-        for offset in range(0, len(self.me.friends), 100):
-            resp = self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
-            self._raise_for_status(resp)
+            if last_count < 100:
+                break
 
-            for friend in resp["data"]:
-                friends.append(objects.LimitedUser(self, friend))
+            offset += 100
 
         return friends
 
@@ -179,51 +192,64 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
 
-    async def fetch_full_friends(self):
+    async def fetch_full_friends(self, offline=True, n=0, offset=0):
         '''
         Returns list of User objects
         !! This function uses possibly lot of calls, use with caution
+
+            offline, bool
+            Include offline friends or not
+
+            n, int
+            Number of friends to return (0 for all)
+
+            offset, int
+            Skip first <offset> friends
         '''
 
-        await self.fetch_me()
+        lfriends = await self.fetch_friends(offline, n, offset)
         friends = []
 
         # Get friends
-        for friend in self.me.friends:
-            await asyncio.sleep(0)
-            resp = await self.api.call("/users/"+friend)
-            try:
-                self._raise_for_status(resp)
-            except NotFoundError:
-                # User no longer exists
-                continue
-
-            friends.append(aobjects.User(self, resp))
+        for friend in lfriends:
+            time.sleep(0)
+            friends.append(await friend.fetch_full())
 
         return friends
 
-    async def fetch_friends(self):
+    async def fetch_friends(self, offline=False, n=0, offset=0):
         '''
         Returns list of LimitedUser objects
+
+            offline, bool
+            Get offline friends instead of online friends
+
+            n, int
+            Number of friends to return (0 for all)
+
+            offset, int
+            Skip first <offset> friends
         '''
 
-        await self.fetch_me()
         friends = []
 
-        # Get all pages of friends if > 100
-        for offset in range(0, len(self.me.friends), 100):
-            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": True})
+        while True:
+            newn = 100
+            if not n == 0 and n - len(friends) < 100: newn = n - len(friends)
+
+            last_count = 0
+
+            resp = await self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
             self._raise_for_status(resp)
 
             for friend in resp["data"]:
+                last_count += 1
                 friends.append(aobjects.LimitedUser(self, friend))
 
-        for offset in range(0, len(self.me.friends), 100):
-            resp = await self.api.call("/auth/user/friends", json={"offset": offset, "offline": False})
-            self._raise_for_status(resp)
+            if last_count < 100:
+                break
 
-            for friend in resp["data"]:
-                friends.append(aobjects.LimitedUser(self, friend))
+            offset += 100
 
         return friends
 
