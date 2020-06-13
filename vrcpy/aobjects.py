@@ -53,6 +53,21 @@ class CurrentUser(o.CurrentUser, User):
         avatars = await LimitedUser.public_avatars(self)
         return avatars
 
+    async def update_info(self, email=None, status=None,\
+        statusDescription=None, bio=None, bioLinks=None):
+
+        params = {"email": email, "status": status, "statusDescription": statusDescription,\
+            "bio": bio, "bioLinks": bioLinks}
+
+        for p in params:
+            if params[p] == None: params[p] = getattr(self, p)
+
+        resp = await self.client.api.call("/users/"+self.id, "PUT", params=params)
+        self.client._raise_for_status(resp)
+
+        self.client.me = CurrentUser(self.client, resp["data"])
+        return self.client.me
+
     async def avatars(self, releaseStatus=types.ReleaseStatus.All):
         '''
         Returns array of Avatar objects owned by the current user
