@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import requests
 
-from vrcpy.errors import OutOfDateError, NotAuthenticated
+from vrcpy.errors import *
 
 class ACall:
     def __init__(self, loop=asyncio.get_event_loop()):
@@ -16,7 +16,7 @@ class ACall:
 
         # Assume good b64_auth
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+            "user-agent": "",
             "Authorization": "Basic "+b64_auth
         }
 
@@ -40,7 +40,12 @@ class ACall:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
         async with self.session.request(method, path, params=params, headers=headers, json=json) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
@@ -57,8 +62,7 @@ class ACall:
 
     async def _call(self, path, method="GET", headers={}, params={}, json={}):
         h = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
-     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+            "user-agent": "",
         }
 
         h.update(headers)
@@ -74,7 +78,12 @@ class ACall:
                 except:
                     raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-            path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+            path = "https://api.vrchat.cloud/api/1" + path
+
+            for param in params:
+                if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+            params["apiKey"] = self.apiKey
             async with session.request(method, path, params=params, headers=headers, json=json) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
@@ -89,7 +98,6 @@ class ACall:
 
             return {"status": status, "data": json}
 
-
 class Call:
     def __init__(self):
         self.apiKey = None
@@ -100,13 +108,12 @@ class Call:
         # Assume good b64_auth
         self.b64_auth = b64_auth
 
-
     def new_session(self):
         self.session = requests.Session()
         self.b64_auth = None
 
     def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False):
-        headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"
+        headers["user-agent"] = ""
 
         if no_auth:
             return self._call(path, method, headers, params, json)
@@ -125,8 +132,13 @@ class Call:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params, data=json)
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
+        resp = self.session.request(method, path, headers=headers, params=params, json=json)
 
         if resp.status_code != 200:
             try: json = resp.json()
@@ -147,7 +159,12 @@ class Call:
             except:
                 raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
-        path = "https://api.vrchat.cloud/api/1" + path + "?apiKey=" + self.apiKey
+        path = "https://api.vrchat.cloud/api/1" + path
+
+        for param in params:
+            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+
+        params["apiKey"] = self.apiKey
         resp = requests.request(method, path, headers=headers, params=params, data=json)
 
         if resp.status_code != 200:

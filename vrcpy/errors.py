@@ -29,3 +29,11 @@ class OutOfDateError(Exception):
 class NotFoundError(Exception):
     ## When a requested object doesn't exist
     pass
+
+class NotFriendsError(Exception):
+    ## When request requires users to be friends but they aren't
+    pass
+
+class AlreadyFriendsError(Exception):
+    ## When users are already friends
+    pass
