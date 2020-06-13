@@ -1,3 +1,5 @@
+from vrcpy._hardtyping import *
+
 from vrcpy import errors
 from vrcpy import types
 
@@ -67,6 +69,45 @@ class Avatar(BaseObject):
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
+    def fetch_full(self):
+        resp = self.client.api.call("/users/"+self.id)
+        self.client._raise_for_status(resp)
+
+        return User(self.client, resp["data"])
+
+    def public_avatars(self):
+        '''
+        Returns array of Avatar objects owned by user object
+        '''
+
+        resp = self.client.api.call("/avatars",
+            params={"userId": self.id})
+        self.client._raise_for_status(resp)
+
+        avatars = []
+        for avatar in resp["data"]:
+            avatars.append(Avatar(self.client, avatar))
+
+        return avatars
+
+    def unfriend(self):
+        '''
+        Returns void
+        '''
+
+        resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
+        self.client._raise_for_status(resp)
+
+    def friend(self):
+        '''
+        Returns Notification object
+        '''
+
+        resp = self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
+        self.client._raise_for_status(resp)
+
+        return Notification(self.client, resp["data"])
+
     def __init__(self, client, obj=None):
         super().__init__(client)
         self.unique += [
@@ -95,6 +136,12 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
+    def unfriend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'unfriend'")
+
+    def friend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'friend'")
+
     def avatars(self, releaseStatus=types.ReleaseStatus.All):
         '''
         Returns array of Avatar objects owned by the current user
@@ -113,6 +160,21 @@ class CurrentUser(User):
                 avatars.append(Avatar(self.client, avatar))
 
         return avatars
+
+    def update_info(self, email=None, status=None,\
+        statusDescription=None, bio=None, bioLinks=None):
+
+        params = {"email": email, "status": status, "statusDescription": statusDescription,\
+            "bio": bio, "bioLinks": bioLinks}
+
+        for p in params:
+            if params[p] == None: params[p] = getattr(self, p)
+
+        resp = self.client.api.call("/users/"+self.id, "PUT", params=params)
+        self.client._raise_for_status(resp)
+
+        self.client.me = CurrentUser(self.client, resp["data"])
+        return self.client.me
 
     def __init__(self, client, obj):
         super().__init__(client)
@@ -267,9 +329,7 @@ class Notification(BaseObject):
         super().__init__(client)
         self.unique += [
             "senderUsername",
-            "senderUserId",
-            "seen",
-            "details"
+            "senderUserId"
         ]
 
         self.types.update({
