@@ -98,6 +98,16 @@ class LimitedUser(BaseObject):
         resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
         self.client._raise_for_status(resp)
 
+    def friend(self):
+        '''
+        Returns Notification object
+        '''
+
+        resp = self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
+        self.client._raise_for_status(resp)
+
+        return Notification(self.client, resp["data"])
+
     def __init__(self, client, obj=None):
         super().__init__(client)
         self.unique += [
@@ -125,6 +135,12 @@ class User(LimitedUser):
 
 class CurrentUser(User):
     objType = "CurrentUser"
+
+    def unfriend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'unfriend'")
+
+    def friend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'friend'")
 
     def avatars(self, releaseStatus=types.ReleaseStatus.All):
         '''
@@ -313,9 +329,7 @@ class Notification(BaseObject):
         super().__init__(client)
         self.unique += [
             "senderUsername",
-            "senderUserId",
-            "seen",
-            "details"
+            "senderUserId"
         ]
 
         self.types.update({
