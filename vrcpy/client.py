@@ -8,6 +8,7 @@ import time
 import json
 
 class Client:
+
     # User calls
 
     def fetch_me(self):
@@ -95,6 +96,8 @@ class Client:
 
         return objects.User(self, resp["data"])
 
+    # Avatar calls
+
     def fetch_avatar(self, id):
         '''
         Returns Avatar object
@@ -181,6 +184,9 @@ class Client:
         self.me = None
 
 class AClient(Client):
+
+    # User calls
+
     async def fetch_me(self):
         '''
         Simply returns newest version of CurrentUser
@@ -265,6 +271,8 @@ class AClient(Client):
         self._raise_for_status(resp)
 
         return objects.User(self, resp["data"])
+
+    # Avatar calls
 
     async def fetch_avatar(self, id):
         '''
