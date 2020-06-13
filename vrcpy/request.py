@@ -16,7 +16,7 @@ class ACall:
 
         # Assume good b64_auth
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+            "user-agent": "",
             "Authorization": "Basic "+b64_auth
         }
 
@@ -57,8 +57,7 @@ class ACall:
 
     async def _call(self, path, method="GET", headers={}, params={}, json={}):
         h = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)\
-     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+            "user-agent": "",
         }
 
         h.update(headers)
@@ -105,7 +104,7 @@ class Call:
         self.b64_auth = None
 
     def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False):
-        headers["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"
+        headers["user-agent"] = ""
 
         if no_auth:
             return self._call(path, method, headers, params, json)
