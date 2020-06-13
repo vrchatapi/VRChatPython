@@ -12,7 +12,7 @@ def main():
     ## This should print "Avatar 'Etoigne' was made by Katfish"
 
     # Close client session, invalidate auth cookie
-    await client.logout()
+    client.logout()
 
 if __name__ == "__main__":
     main()
