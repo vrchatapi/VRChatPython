@@ -41,6 +41,16 @@ class LimitedUser(o.LimitedUser):
         resp = await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
         self.client._raise_for_status(resp)
 
+    async def friend(self):
+        '''
+        Returns Notification object
+        '''
+
+        resp = await self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
+        self.client._raise_for_status(resp)
+
+        return o.Notification(self.client, resp["data"])
+
 class User(o.User, LimitedUser):
     async def fetch_full(self):
         user = await LimitedUser.fetch_full(self)
@@ -49,6 +59,13 @@ class User(o.User, LimitedUser):
     async def public_avatars(self):
         avatars = await LimitedUser.public_avatars(self)
         return avatars
+
+    async def unfriend(self):
+        await LimitedUser.unfriend()
+
+    async def friend(self):
+        notif = await LimitedUser.friend()
+        return notif
 
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
@@ -60,6 +77,12 @@ class CurrentUser(o.CurrentUser, User):
     async def public_avatars(self):
         avatars = await LimitedUser.public_avatars(self)
         return avatars
+
+    async def unfriend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'unfriend'")
+
+    async def friend(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'friend'")
 
     async def update_info(self, email=None, status=None,\
         statusDescription=None, bio=None, bioLinks=None):
