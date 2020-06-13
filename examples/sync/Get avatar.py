@@ -11,8 +11,7 @@ def main():
     print("Avatar '"+a.name+"' was made by "+author.displayName)
     ## This should print "Avatar 'Etoigne' was made by ***REMOVED***"
 
-    # Close client session
-    # Not needed unless you want to login again with this client object
+    # Close client session, invalidate auth cookie
     await client.logout()
 
 if __name__ == "__main__":

@@ -160,8 +160,11 @@ class Client:
 
     def logout(self):
         '''
-        Closes client session
+        Closes client session, invalidates auth cookie
         '''
+
+        resp = self.api.call("/logout", "PUT")
+        self._raise_for_status(resp)
 
         self.api.new_session()
         self.loggedIn = False
@@ -382,8 +385,11 @@ class AClient(Client):
 
     async def logout(self):
         '''
-        Closes client session
+        Closes client session, invalidates auth cookie
         '''
+
+        resp = await self.api.call("/logout", "PUT")
+        self._raise_for_status(resp)
 
         await self.api.closeSession()
         await asyncio.sleep(0)
