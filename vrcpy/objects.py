@@ -396,3 +396,31 @@ class NotificationDetails(BaseObject):
         })
 
         self._assign(obj)
+
+# Misc
+
+class Favorite(BaseObject):
+    objType = "Favorite"
+
+    def __cinit__(self):
+        if self.type == types.FavoriteType.World:
+            self.object = self.client.fetch_world(self.favoriteId)
+        elif self.type == types.FavoriteType.Friend:
+            for friend in self.client.me.friends():
+                if friend.id == self.favoriteId:
+                    self.object = friend
+                    break
+        elif self.type == types.FavoriteType.Avatar:
+            self.object = self.client.fetch_avatar(self.favoriteId)
+
+    def __init__(self, client, obj):
+        super().__init__(client)
+
+        self.unique += [
+            "id",
+            "type",
+            "favoriteId",
+            "tags"
+        ]
+
+        self._assign(obj)

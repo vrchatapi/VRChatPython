@@ -182,3 +182,17 @@ class Instance(o.Instance):
         resp = await self.client.api.call("/worlds/"+self.worldId)
         self.client._raise_for_status(resp)
         return World(resp["data"])
+
+# Misc
+
+class Favorite(o.Favorite):
+    async def __cinit__(self):
+        if self.type == types.FavoriteType.World:
+            self.object = await self.client.fetch_world(self.favoriteId)
+        elif self.type == types.FavoriteType.Friend:
+            for friend in self.client.me.friends():
+                if friend.id == self.favoriteId:
+                    self.object = friend
+                    break
+        elif self.type == types.FavoriteType.Avatar:
+            self.object = await self.client.fetch_avatar(self.favoriteId)
