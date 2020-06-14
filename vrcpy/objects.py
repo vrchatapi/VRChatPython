@@ -177,6 +177,15 @@ class CurrentUser(User):
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
 
+    def fetch_favorites(self, t):
+        resp = self.client.api.call("/favorites", params={"type": t})
+
+        f = []
+        for favorite in resp["data"]:
+            f.append(Favorite(self.client, favorite))
+
+        return f
+
     def __cinit__(self):
         if hasattr(self, "currentAvatar"):
             self.currentAvatar = self.client.fetch_avatar(self.currentAvatar)
