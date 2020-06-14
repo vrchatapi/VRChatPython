@@ -99,16 +99,6 @@ class CurrentUser(o.CurrentUser, User):
     async def friend(self):
         raise AttributeError("'CurrentUser' object has no attribute 'friend'")
 
-    async def favorite(self):
-        raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
-
-    async def remove_favorite(self, id):
-        resp = await self.client.api.call("/favorites/"+id, "DELETE")
-
-    async def get_favorite(self, id):
-        resp = await self.client.api.call("/favorites/"+id)
-        return Favorite(resp)
-
     async def update_info(self, email=None, status=None,\
         statusDescription=None, bio=None, bioLinks=None):
 
@@ -149,6 +139,16 @@ class CurrentUser(o.CurrentUser, User):
             f.append(Favorite(self.client, favorite))
 
         return f
+
+    async def favorite(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
+
+    async def remove_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id, "DELETE")
+
+    async def fetch_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id)
+        return Favorite(resp)
 
     async def __cinit__(self):
         if hasattr(self, "currentAvatar"):
