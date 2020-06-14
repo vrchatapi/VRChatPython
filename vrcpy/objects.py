@@ -184,6 +184,10 @@ class CurrentUser(User):
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
 
+    def __cinit__(self):
+        if hasattr(self, "currentAvatar"):
+            self.currentAvatar = self.client.fetch_avatar(self.currentAvatar)
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [

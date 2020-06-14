@@ -118,6 +118,10 @@ class CurrentUser(o.CurrentUser, User):
 
         return avatars
 
+    async def __cinit__(self):
+        if hasattr(self, "currentAvatar"):
+            self.currentAvatar = await self.client.fetch_avatar(self.currentAvatar)
+
 ## World
 
 class LimitedWorld(o.LimitedWorld):
