@@ -246,6 +246,8 @@ class AClient(Client):
         Simply returns newest version of CurrentUser
         '''
 
+        self.cacheFull = False
+
         resp = await self.api.call("/auth/user")
         self._raise_for_status(resp)
 
@@ -432,9 +434,14 @@ class AClient(Client):
         self.api = ACall()
         self.loggedIn = False
 
+    async def wait_for_cache(self):
+        while not self.cacheFull:
+            await asyncio.sleep(1)
+
     def __init__(self):
         super().__init__()
 
+        self.cacheFull = False
         self.api = ACall()
         self.loggedIn = False
         self.me = None
