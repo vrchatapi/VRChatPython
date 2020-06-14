@@ -207,6 +207,10 @@ class CurrentUser(User):
     def remove_favorite(self, id):
         resp = self.client.api.call("/favorites/"+id, "DELETE")
 
+    def get_favorite(self, id):
+        resp = self.client.api.call("/favorites/"+id)
+        return Favorite(resp)
+
     def favorite(self):
         raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
 
