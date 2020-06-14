@@ -6,7 +6,6 @@ import vrcpy.types as types
 class Avatar(o.Avatar):
     async def author(self):
         resp = await self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
 ## User
@@ -14,8 +13,6 @@ class Avatar(o.Avatar):
 class LimitedUser(o.LimitedUser):
     async def fetch_full(self):
         resp = await self.client.api.call("/users/"+self.id)
-        self.client._raise_for_status(resp)
-
         return User(self.client, resp["data"])
 
     async def public_avatars(self):
@@ -25,7 +22,6 @@ class LimitedUser(o.LimitedUser):
 
         resp = await self.client.api.call("/avatars",
             params={"userId": self.id})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -39,7 +35,6 @@ class LimitedUser(o.LimitedUser):
         '''
 
         resp = await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
-        self.client._raise_for_status(resp)
 
     async def friend(self):
         '''
@@ -47,8 +42,6 @@ class LimitedUser(o.LimitedUser):
         '''
 
         resp = await self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
-        self.client._raise_for_status(resp)
-
         return o.Notification(self.client, resp["data"])
 
 class User(o.User, LimitedUser):
@@ -94,7 +87,6 @@ class CurrentUser(o.CurrentUser, User):
             if params[p] == None: params[p] = getattr(self, p)
 
         resp = await self.client.api.call("/users/"+self.id, "PUT", params=params)
-        self.client._raise_for_status(resp)
 
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
@@ -109,7 +101,6 @@ class CurrentUser(o.CurrentUser, User):
 
         resp = await self.client.api.call("/avatars",
             params={"releaseStatus": releaseStatus, "user": "me"})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -151,7 +142,6 @@ class CurrentUser(o.CurrentUser, User):
 class LimitedWorld(o.LimitedWorld):
     async def author(self):
         resp = await self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
 class World(o.World, LimitedWorld):
@@ -168,8 +158,6 @@ class World(o.World, LimitedWorld):
         '''
 
         resp = await self.client.api.call("/instances/"+self.id+":"+id)
-        self.client._raise_for_status(resp)
-
         return Instance(self.client, resp["data"])
 
     async def __cinit__(self):
@@ -182,7 +170,6 @@ class World(o.World, LimitedWorld):
 class Instance(o.Instance):
     async def world(self):
         resp = await self.client.api.call("/worlds/"+self.worldId)
-        self.client._raise_for_status(resp)
         return World(resp["data"])
 
 # Misc

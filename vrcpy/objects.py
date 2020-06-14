@@ -1,6 +1,6 @@
 from vrcpy._hardtyping import *
 
-from vrcpy import errors
+from vrcpy.errors import IntegretyError
 from vrcpy import types
 
 import asyncio
@@ -41,14 +41,14 @@ class BaseObject:
         if self.only == []:
             for key in self.unique:
                 if not key in obj:
-                    raise errors.IntegretyError("Object does not have unique key ("+key+") for "+self.objType)
+                    raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType)
         else:
             for key in obj:
                 if not key in self.only:
-                    raise errors.IntegretyError("Object has key not found in "+self.objType)
+                    raise IntegretyError("Object has key not found in "+self.objType)
             for key in self.only:
                 if not key in obj:
-                    raise errors.IntegretyError("Object does not have requred key ("+key+") for "+self.objType)
+                    raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType)
 
 ## Avatar Objects
 
@@ -57,7 +57,6 @@ class Avatar(BaseObject):
 
     def author(self):
         resp = self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
     def __init__(self, client, obj):
@@ -81,8 +80,6 @@ class LimitedUser(BaseObject):
 
     def fetch_full(self):
         resp = self.client.api.call("/users/"+self.id)
-        self.client._raise_for_status(resp)
-
         return User(self.client, resp["data"])
 
     def public_avatars(self):
@@ -92,7 +89,6 @@ class LimitedUser(BaseObject):
 
         resp = self.client.api.call("/avatars",
             params={"userId": self.id})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -106,7 +102,6 @@ class LimitedUser(BaseObject):
         '''
 
         resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
-        self.client._raise_for_status(resp)
 
     def friend(self):
         '''
@@ -114,8 +109,6 @@ class LimitedUser(BaseObject):
         '''
 
         resp = self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
-        self.client._raise_for_status(resp)
-
         return Notification(self.client, resp["data"])
 
     def __init__(self, client, obj=None):
@@ -162,7 +155,6 @@ class CurrentUser(User):
 
         resp = self.client.api.call("/avatars",
             params={"releaseStatus": releaseStatus, "user": "me"})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -181,7 +173,6 @@ class CurrentUser(User):
             if params[p] == None: params[p] = getattr(self, p)
 
         resp = self.client.api.call("/users/"+self.id, "PUT", params=params)
-        self.client._raise_for_status(resp)
 
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
@@ -205,7 +196,8 @@ class CurrentUser(User):
             self.activeFriends = naf
 
         if hasattr(self, "homeLocation"):
-            self.homeLocation = self.client.fetch_world(self.homeLocation)
+            if self.homeLocation == "": self.homeLocation = None
+            else: self.homeLocation = self.client.fetch_world(self.homeLocation)
 
     def __init__(self, client, obj):
         super().__init__(client)
@@ -250,7 +242,6 @@ class LimitedWorld(BaseObject):
 
     def author(self):
         resp = self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
 
     def __init__(self, client, obj=None):
@@ -279,8 +270,6 @@ class World(LimitedWorld):
         '''
 
         resp = self.client.api.call("/instances/"+self.id+":"+id)
-        self.client._raise_for_status(resp)
-
         return Instance(self.client, resp["data"])
 
     def __cinit__(self):
@@ -292,6 +281,7 @@ class World(LimitedWorld):
 
     def __init__(self, client, obj):
         super().__init__(client)
+
         self.unique += [
             "namespace",
             "pluginUrl",
@@ -330,7 +320,6 @@ class Instance(BaseObject):
 
     def world(self):
         resp = self.client.api.call("/worlds/"+self.worldId)
-        self.client._raise_for_status(resp)
         return World(resp["data"])
 
     def short_name(self):
@@ -406,7 +395,7 @@ class Favorite(BaseObject):
         if self.type == types.FavoriteType.World:
             self.object = self.client.fetch_world(self.favoriteId)
         elif self.type == types.FavoriteType.Friend:
-            for friend in self.client.me.friends():
+            for friend in self.client.me.friends:
                 if friend.id == self.favoriteId:
                     self.object = friend
                     break

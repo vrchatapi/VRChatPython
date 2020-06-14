@@ -4,6 +4,37 @@ import requests
 
 from vrcpy.errors import *
 
+def raise_for_status(resp):
+    def handle_400():
+        if resp["data"]["error"]["message"] == "These users are not friends":
+            raise NotFriendsError("These users are not friends")
+        elif resp["data"]["error"]["message"] == "\"Users are already friends!\"":
+            raise AlreadyFriendsError("Users are already friends!")
+
+    def handle_401():
+        raise IncorrectLoginError(resp["data"]["error"]["message"])
+
+    def handle_404():
+        msg = ""
+
+        if type(resp["data"]) == bytes:
+            try: msg = json.loads(resp["data"].decode())["error"]
+            except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
+        else:
+            msg = resp["data"]["error"]["message"]
+
+        raise NotFoundError(msg)
+
+    switch = {
+        400: lambda: handle_400(),
+        401: lambda: handle_401(),
+        404: lambda: handle_404()
+    }
+
+    if resp["status"] in switch: switch[resp["status"]]()
+    if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
+    if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
+
 class ACall:
     def __init__(self, loop=asyncio.get_event_loop(), verify=True):
         self.verify = verify
@@ -59,7 +90,10 @@ class ACall:
             json = await resp.json()
             status = resp.status
 
-        return {"status": status, "data": json}
+        resp = {"status": status, "data": json}
+
+        raise_for_status(resp)
+        return resp
 
     async def _call(self, path, method="GET", headers={}, params={}, json={}):
         h = {
@@ -97,7 +131,10 @@ class ACall:
                 json = await resp.json()
                 status = resp.status
 
-            return {"status": status, "data": json}
+            resp = {"status": status, "data": json}
+
+            raise_for_status(resp)
+            return resp
 
 class Call:
     def __init__(self, verify=True):
@@ -146,9 +183,15 @@ class Call:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "data": json if not json == None else resp.content}
 
-        return {"status": resp.status_code, "data": resp.json()}
+            raise_for_status(resp)
+            return resp
+
+        resp = {"status": resp.status_code, "data": resp.json()}
+
+        raise_for_status(resp)
+        return resp
 
     def _call(self, path, method="GET", headers={}, params={}, json={}):
         if self.apiKey == None:
@@ -173,6 +216,12 @@ class Call:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "data": json if not json == None else resp.content}
 
-        return {"status": resp.status_code, "data": resp.json()}
+            raise_for_status(resp)
+            return resp
+
+        resp = {"status": resp.status_code, "data": resp.json()}
+
+        raise_for_status(resp)
+        return resp
