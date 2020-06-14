@@ -70,9 +70,9 @@ class Avatar(BaseObject):
         Returns favorite object
         '''
 
-        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
-            "favoriteId": self.id})
-        return Favorite(resp["data"])
+        resp = self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id, "tags": ["avatars1"]})
+        return Favorite(self.client, resp["data"])
 
     def __init__(self, client, obj):
         super().__init__(client)
@@ -299,6 +299,7 @@ class CurrentUser(User):
         if hasattr(self, "homeLocation"):
             if self.homeLocation == "": self.homeLocation = None
             else: self.homeLocation = self.client.fetch_world(self.homeLocation)
+        else: self.homeLocation = None
 
     def __init__(self, client, obj):
         super().__init__(client)

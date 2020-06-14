@@ -538,19 +538,11 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
-    async def wait_for_cache(self):
-        '''
-        Used to stall task and wait for caching to finish
-        Returns void
-        '''
-
-        while not self.cacheFull:
-            await asyncio.sleep(1)
+        await self.me.cacheTask
 
     def __init__(self, verify=True):
         super().__init__()
 
-        self.cacheFull = False
         self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None

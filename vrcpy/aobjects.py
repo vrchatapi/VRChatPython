@@ -16,9 +16,13 @@ class Avatar(o.Avatar):
         return User(self.client, resp["data"])
 
     async def favorite(self):
-        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
-            "favoriteId": self.id})
-        return Favorite(resp["data"])
+        resp = await self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id, "tags": ["avatars1"]})
+
+        f = Favorite(self.client, resp["data"])
+        await f.cacheTask
+
+        return f
 
 ## User
 
@@ -118,6 +122,9 @@ class CurrentUser(o.CurrentUser, User):
         for favorite in resp["data"]:
             f.append(Favorite(self.client, favorite))
 
+        for fav in f:
+            await fav.cacheTask
+
         return f
 
     async def favorite(self):
@@ -151,12 +158,11 @@ class CurrentUser(o.CurrentUser, User):
         if hasattr(self, "homeLocation"):
             if self.homeLocation == "": self.homeLocation = None
             else: self.homeLocation = await self.client.fetch_world(self.homeLocation)
+        else: self.homeLocation = None
 
         # Wait for all cacheTasks
         if not self.homeLocation == None:
             await self.homeLocation.cacheTask
-
-        self.client.cacheFull = True
 
 ## World
 
@@ -202,7 +208,7 @@ class Favorite(o.Favorite):
         if self.type == types.FavoriteType.World:
             self.object = await self.client.fetch_world(self.favoriteId)
         elif self.type == types.FavoriteType.Friend:
-            for friend in self.client.me.friends():
+            for friend in self.client.me.friends:
                 if friend.id == self.favoriteId:
                     self.object = friend
                     break
