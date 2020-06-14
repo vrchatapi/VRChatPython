@@ -105,6 +105,10 @@ class CurrentUser(o.CurrentUser, User):
     async def remove_favorite(self, id):
         resp = await self.client.api.call("/favorites/"+id, "DELETE")
 
+    async def get_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id)
+        return Favorite(resp)
+
     async def update_info(self, email=None, status=None,\
         statusDescription=None, bio=None, bioLinks=None):
 
