@@ -158,6 +158,21 @@ class Client:
 
         return avatars
 
+    # World calls
+
+    def fetch_world(self, id):
+        '''
+        Returns World object
+
+            id, str
+            WorldID of the world
+        '''
+
+        resp = self.api.call("/worlds/"+id)
+        self._raise_for_status(resp)
+
+        return objects.World(self, resp["data"])
+
     def logout(self):
         '''
         Closes client session, invalidates auth cookie
@@ -197,10 +212,15 @@ class Client:
             raise IncorrectLoginError(resp["data"]["error"]["message"])
 
         def handle_404():
+            msg = ""
+
             if type(resp["data"]) == bytes:
-                try: raise NotFoundError(json.loads(resp["data"].decode()))
-                except: raise NotFoundError(str(resp["data"].decode()))
-            raise NotFoundError(resp["data"]["error"]["message"])
+                try: msg = json.loads(resp["data"].decode())["error"]
+                except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
+            else:
+                msg = resp["data"]["error"]["message"]
+
+            raise NotFoundError(msg)
 
         switch = {
             400: lambda: handle_400(),
@@ -225,6 +245,8 @@ class AClient(Client):
         '''
         Simply returns newest version of CurrentUser
         '''
+
+        self.cacheFull = False
 
         resp = await self.api.call("/auth/user")
         self._raise_for_status(resp)
@@ -366,6 +388,21 @@ class AClient(Client):
 
         return avatars
 
+    # World calls
+
+    async def fetch_world(self, id):
+        '''
+        Returns World object
+
+            id, str
+            WorldID of the world
+        '''
+
+        resp = await self.api.call("/worlds/"+id)
+        self._raise_for_status(resp)
+
+        return aobjects.World(self, resp["data"])
+
     async def login(self, username, password):
         '''
         Used to initialize the client for use
@@ -397,9 +434,14 @@ class AClient(Client):
         self.api = ACall()
         self.loggedIn = False
 
+    async def wait_for_cache(self):
+        while not self.cacheFull:
+            await asyncio.sleep(1)
+
     def __init__(self):
         super().__init__()
 
+        self.cacheFull = False
         self.api = ACall()
         self.loggedIn = False
         self.me = None

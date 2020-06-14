@@ -3,6 +3,8 @@ from vrcpy._hardtyping import *
 from vrcpy import errors
 from vrcpy import types
 
+import asyncio
+
 class BaseObject:
     objType = "Base"
 
@@ -12,6 +14,8 @@ class BaseObject:
         self.types = {} # Dictionary of what keys have special types
         self.arrTypes = {} # Dictionary of what keys are arrays with special types
         self.client = client
+
+        self.cacheTask = None # cacheTask for async objects using __cinit__
 
     def _assign(self, obj):
         self._objectIntegrety(obj)
@@ -26,6 +30,12 @@ class BaseObject:
                 setattr(self, key, arr)
             else:
                 setattr(self, key, obj[key])
+
+        if hasattr(self, "__cinit__"):
+            if asyncio.iscoroutinefunction(self.__cinit__):
+                self.cacheTask = asyncio.get_event_loop().create_task(self.__cinit__())
+            else:
+                self.__cinit__()
 
     def _objectIntegrety(self, obj):
         if self.only == []:
@@ -176,6 +186,27 @@ class CurrentUser(User):
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
 
+    def __cinit__(self):
+        if hasattr(self, "currentAvatar"):
+            self.currentAvatar = self.client.fetch_avatar(self.currentAvatar)
+
+        self.onlineFriends = self.client.fetch_friends()
+        self.offlineFriends = self.client.fetch_friends(offline=True)
+        self.friends = self.onlineFriends + self.offlineFriends
+
+        if hasattr(self, "activeFriends"):
+            naf = []
+            for fid in self.activeFriends:
+                for f in self.friends:
+                    if f.id == fid:
+                        naf.append(f)
+                        break
+
+            self.activeFriends = naf
+
+        if hasattr(self, "homeLocation"):
+            self.homeLocation = self.client.fetch_world(self.homeLocation)
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
@@ -239,17 +270,34 @@ class LimitedWorld(BaseObject):
 class World(LimitedWorld):
     objType = "World"
 
+    def fetch_instance(self, id):
+        '''
+        Returns Instance object
+
+            id, str
+            InstanceID of instance
+        '''
+
+        resp = self.client.api.call("/instances/"+self.id+":"+id)
+        self.client._raise_for_status(resp)
+
+        return Instance(self.client, resp["data"])
+
+    def __cinit__(self):
+        instances = []
+        for instance in self.instances:
+            instances.append(self.fetch_instance(instance[0]))
+
+        self.instances = instances
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
             "namespace",
             "pluginUrl",
-            "previewYoutubeId"
+            "previewYoutubeId",
+            "instances"
         ]
-
-        self.arrTypes.update({
-            "instances": Instance
-        })
 
         self._assign(obj)
 
