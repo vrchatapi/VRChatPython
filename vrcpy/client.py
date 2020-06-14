@@ -4,12 +4,22 @@ from vrcpy.errors import *
 from vrcpy import objects
 from vrcpy import aobjects
 
+from datetime import datetime
+
 import urllib
 import base64
 import time
 import json
 
 class Client:
+
+    # Log
+
+    def _log(self, log): # TODO: Finish logging, also, dunno how I'm gonna do this yet
+        dt = datetime.now().strftime("%d/%m - %H:%M:%S")
+
+        if self.log_to_console:
+            print("[%s] %s" % dt, log)
 
     # User calls
 
