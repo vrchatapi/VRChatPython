@@ -8,6 +8,15 @@ class Avatar(o.Avatar):
         resp = await self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
 
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
+
 ## User
 
 class LimitedUser(o.LimitedUser):
@@ -44,6 +53,15 @@ class LimitedUser(o.LimitedUser):
         resp = await self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
         return o.Notification(self.client, resp["data"])
 
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
+
 class User(o.User, LimitedUser):
     async def fetch_full(self):
         user = await LimitedUser.fetch_full(self)
@@ -59,6 +77,10 @@ class User(o.User, LimitedUser):
     async def friend(self):
         notif = await LimitedUser.friend()
         return notif
+
+    async def favorite(self):
+        resp = await LimitedUser.favorite(self)
+        return resp
 
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
@@ -76,6 +98,12 @@ class CurrentUser(o.CurrentUser, User):
 
     async def friend(self):
         raise AttributeError("'CurrentUser' object has no attribute 'friend'")
+
+    async def favorite(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
+
+    async def remove_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id, "DELETE")
 
     async def update_info(self, email=None, status=None,\
         statusDescription=None, bio=None, bioLinks=None):
@@ -153,6 +181,15 @@ class LimitedWorld(o.LimitedWorld):
         resp = await self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
 
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
+
 class World(o.World, LimitedWorld):
     async def author(self):
         resp = await super(LimitedWorld, self).author()
@@ -168,6 +205,10 @@ class World(o.World, LimitedWorld):
 
         resp = await self.client.api.call("/instances/"+self.id+":"+id)
         return Instance(self.client, resp["data"])
+
+    async def favorite(self):
+        resp = await LimitedWorld.favorite(self)
+        return resp
 
     async def __cinit__(self):
         instances = []

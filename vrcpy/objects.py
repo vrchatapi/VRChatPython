@@ -59,6 +59,15 @@ class Avatar(BaseObject):
         resp = self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
 
+    def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
@@ -98,7 +107,7 @@ class LimitedUser(BaseObject):
 
     def unfriend(self):
         '''
-        Returns void
+        Unfriends user
         '''
 
         resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
@@ -110,6 +119,15 @@ class LimitedUser(BaseObject):
 
         resp = self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
         return Notification(self.client, resp["data"])
+
+    def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
 
     def __init__(self, client, obj=None):
         super().__init__(client)
@@ -186,6 +204,12 @@ class CurrentUser(User):
 
         return f
 
+    def remove_favorite(self, id):
+        resp = self.client.api.call("/favorites/"+id, "DELETE")
+
+    def favorite(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
+
     def __cinit__(self):
         if hasattr(self, "currentAvatar"):
             self.currentAvatar = self.client.fetch_avatar(self.currentAvatar)
@@ -252,6 +276,15 @@ class LimitedWorld(BaseObject):
     def author(self):
         resp = self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
+
+    def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
 
     def __init__(self, client, obj=None):
         super().__init__(client)
