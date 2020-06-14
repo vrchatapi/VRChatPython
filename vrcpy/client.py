@@ -212,10 +212,15 @@ class Client:
             raise IncorrectLoginError(resp["data"]["error"]["message"])
 
         def handle_404():
+            msg = ""
+
             if type(resp["data"]) == bytes:
-                try: raise NotFoundError(json.loads(resp["data"].decode()))
-                except: raise NotFoundError(str(resp["data"].decode()))
-            raise NotFoundError(resp["data"]["error"]["message"])
+                try: msg = json.loads(resp["data"].decode())["error"]
+                except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
+            else:
+                msg = resp["data"]["error"]["message"]
+
+            raise NotFoundError(msg)
 
         switch = {
             400: lambda: handle_400(),
