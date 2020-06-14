@@ -1,3 +1,4 @@
+import json
 import asyncio
 import aiohttp
 import requests
@@ -5,6 +6,9 @@ import requests
 from vrcpy.errors import *
 
 def raise_for_status(resp):
+    if type(resp["data"]) == bytes:
+        resp["data"] = json.loads(resp["data"].decode())
+
     def handle_400():
         if resp["data"]["error"]["message"] == "These users are not friends":
             raise NotFriendsError("These users are not friends")
