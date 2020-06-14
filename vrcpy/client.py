@@ -242,8 +242,8 @@ class Client:
         if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
         if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
 
-    def __init__(self):
-        self.api = Call()
+    def __init__(self, verify=True):
+        self.api = Call(verify)
         self.loggedIn = False
         self.me = None
 
@@ -448,10 +448,11 @@ class AClient(Client):
         while not self.cacheFull:
             await asyncio.sleep(1)
 
-    def __init__(self):
+    def __init__(self, verify=True, log_to_console=False):
         super().__init__()
 
         self.cacheFull = False
-        self.api = ACall()
+        self.log_to_console = log_to_console
+        self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None
