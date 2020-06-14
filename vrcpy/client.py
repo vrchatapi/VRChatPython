@@ -158,6 +158,21 @@ class Client:
 
         return avatars
 
+    # World calls
+
+    def fetch_world(self, id):
+        '''
+        Returns World object
+
+            id, str
+            WorldID of the world
+        '''
+
+        resp = self.api.call("/worlds/"+id)
+        self._raise_for_status(resp)
+
+        return objects.World(self, resp["data"])
+
     def logout(self):
         '''
         Closes client session, invalidates auth cookie
@@ -365,6 +380,21 @@ class AClient(Client):
             avatars.append(aobjects.Avatar(self, avatar))
 
         return avatars
+
+    # World calls
+
+    async def fetch_world(self, id):
+        '''
+        Returns World object
+
+            id, str
+            WorldID of the world
+        '''
+
+        resp = await self.api.call("/worlds/"+id)
+        self._raise_for_status(resp)
+
+        return aobjects.World(self, resp["data"])
 
     async def login(self, username, password):
         '''
