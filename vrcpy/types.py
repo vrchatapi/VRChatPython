@@ -65,3 +65,14 @@ class NotificationType:
         if rs in ["friendRequest"]:
             return True
         return False
+
+class FavoriteType:
+    World = "world"
+    Friend = "friend"
+    Avatar = "avatar"
+
+    @staticmethod
+    def Check(rs):
+        if rs in ["world", "friend", "avatar"]:
+            return True
+        return False
