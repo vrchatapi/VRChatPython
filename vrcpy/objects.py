@@ -70,9 +70,9 @@ class Avatar(BaseObject):
         Returns favorite object
         '''
 
-        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
-            "favoriteId": self.id})
-        return Favorite(resp["data"])
+        resp = self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id, "tags": ["avatars1"]})
+        return Favorite(self.client, resp["data"])
 
     def __init__(self, client, obj):
         super().__init__(client)
