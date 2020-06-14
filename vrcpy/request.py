@@ -89,7 +89,9 @@ class ACall:
                 try: json = await resp.json()
                 except: json = None
 
-                return {"status": resp.status, "data": json if not json == None else content}
+                resp = {"status": resp.status, "data": json if not json == None else content}
+                raise_for_status(resp)
+                return resp
 
             json = await resp.json()
             status = resp.status
