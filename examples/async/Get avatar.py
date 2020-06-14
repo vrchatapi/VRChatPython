@@ -6,10 +6,6 @@ async def main():
     client = vrcpy.AClient()
     await client.login("username", "password")
 
-    # Wait for connecting objects
-    # This can be used when doing client.fetch_me as well.
-    await client.wait_for_cache()
-
     # Get avatar via id
     a = await client.fetch_avatar("avtr_fa5303c6-78d1-451c-a678-faf3eadb5c50")
     author = await a.author() # Get author of the avatar
