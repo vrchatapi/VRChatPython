@@ -122,6 +122,9 @@ class CurrentUser(o.CurrentUser, User):
         for favorite in resp["data"]:
             f.append(Favorite(self.client, favorite))
 
+        for fav in f:
+            await fav.cacheTask
+
         return f
 
     async def favorite(self):
@@ -160,8 +163,6 @@ class CurrentUser(o.CurrentUser, User):
         # Wait for all cacheTasks
         if not self.homeLocation == None:
             await self.homeLocation.cacheTask
-
-        self.client.cacheFull = True
 
 ## World
 
