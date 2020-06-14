@@ -1,8 +1,10 @@
 from vrcpy._hardtyping import *
 from vrcpy.request import *
-from vrcpy.errors import *
+from vrcpy.errors import AlreadyLoggedInError
 from vrcpy import objects
 from vrcpy import aobjects
+
+from datetime import datetime
 
 import urllib
 import base64
@@ -10,6 +12,14 @@ import time
 import json
 
 class Client:
+
+    # Log
+
+    def _log(self, log): # TODO: Finish logging, also, dunno how I'm gonna do this yet
+        dt = datetime.now().strftime("%d/%m - %H:%M:%S")
+
+        if self.log_to_console:
+            print("[%s] %s" % dt, log)
 
     # User calls
 
@@ -19,7 +29,6 @@ class Client:
         '''
 
         resp = self.api.call("/auth/user")
-        self._raise_for_status(resp)
 
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
@@ -72,7 +81,6 @@ class Client:
             last_count = 0
 
             resp = self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
-            self._raise_for_status(resp)
 
             for friend in resp["data"]:
                 last_count += 1
@@ -94,8 +102,6 @@ class Client:
         '''
 
         resp = self.api.call("/users/"+id)
-        self._raise_for_status(resp)
-
         return objects.User(self, resp["data"])
 
     def fetch_user_by_name(self, name):
@@ -107,8 +113,6 @@ class Client:
         '''
 
         resp = self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
-        self._raise_for_status(resp)
-
         return objects.User(self, resp["data"])
 
     # Avatar calls
@@ -122,8 +126,6 @@ class Client:
         '''
 
         resp = self.api.call("/avatars/"+id)
-        self._raise_for_status(resp)
-
         return objects.Avatar(self, resp["data"])
 
     def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
@@ -150,7 +152,6 @@ class Client:
         if platform: p["platform"] = platform
 
         resp = self.api.call("/avatars", params=p)
-        self._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -169,8 +170,6 @@ class Client:
         '''
 
         resp = self.api.call("/worlds/"+id)
-        self._raise_for_status(resp)
-
         return objects.World(self, resp["data"])
 
     def logout(self):
@@ -179,7 +178,6 @@ class Client:
         '''
 
         resp = self.api.call("/logout", "PUT")
-        self._raise_for_status(resp)
 
         self.api.new_session()
         self.loggedIn = False
@@ -195,45 +193,13 @@ class Client:
         auth = str(base64.b64encode(auth.encode()))[2:-1]
 
         resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-        self._raise_for_status(resp)
 
         self.api.set_auth(auth)
         self.me = objects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
-    def _raise_for_status(self, resp):
-        def handle_400():
-            if resp["data"]["error"]["message"] == "These users are not friends":
-                raise NotFriendsError("These users are not friends")
-            elif resp["data"]["error"]["message"] == "\"Users are already friends!\"":
-                raise AlreadyFriendsError("Users are already friends!")
-
-        def handle_401():
-            raise IncorrectLoginError(resp["data"]["error"]["message"])
-
-        def handle_404():
-            msg = ""
-
-            if type(resp["data"]) == bytes:
-                try: msg = json.loads(resp["data"].decode())["error"]
-                except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
-            else:
-                msg = resp["data"]["error"]["message"]
-
-            raise NotFoundError(msg)
-
-        switch = {
-            400: lambda: handle_400(),
-            401: lambda: handle_401(),
-            404: lambda: handle_404()
-        }
-
-        if resp["status"] in switch: switch[resp["status"]]()
-        if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
-        if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
-
-    def __init__(self):
-        self.api = Call()
+    def __init__(self, verify=True):
+        self.api = Call(verify)
         self.loggedIn = False
         self.me = None
 
@@ -247,9 +213,7 @@ class AClient(Client):
         '''
 
         self.cacheFull = False
-
         resp = await self.api.call("/auth/user")
-        self._raise_for_status(resp)
 
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
@@ -302,7 +266,6 @@ class AClient(Client):
             last_count = 0
 
             resp = await self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
-            self._raise_for_status(resp)
 
             for friend in resp["data"]:
                 last_count += 1
@@ -324,8 +287,6 @@ class AClient(Client):
         '''
 
         resp = await self.api.call("/users/"+id)
-        self._raise_for_status(resp)
-
         return aobjects.User(self, resp["data"])
 
     async def fetch_user_by_name(self, name):
@@ -337,8 +298,6 @@ class AClient(Client):
         '''
 
         resp = await self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
-        self._raise_for_status(resp)
-
         return aobjects.User(self, resp["data"])
 
     # Avatar calls
@@ -352,8 +311,6 @@ class AClient(Client):
         '''
 
         resp = await self.api.call("/avatars/"+id)
-        self._raise_for_status(resp)
-
         return aobjects.Avatar(self, resp["data"])
 
     async def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
@@ -380,7 +337,6 @@ class AClient(Client):
         if platform: p["platform"] = platform
 
         resp = await self.api.call("/avatars", params=p)
-        self._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -399,8 +355,6 @@ class AClient(Client):
         '''
 
         resp = await self.api.call("/worlds/"+id)
-        self._raise_for_status(resp)
-
         return aobjects.World(self, resp["data"])
 
     async def login(self, username, password):
@@ -414,7 +368,6 @@ class AClient(Client):
         auth = str(base64.b64encode(auth.encode()))[2:-1]
 
         resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-        self._raise_for_status(resp)
 
         self.api.openSession(auth)
         self.me = aobjects.CurrentUser(self, resp["data"])
@@ -426,7 +379,6 @@ class AClient(Client):
         '''
 
         resp = await self.api.call("/logout", "PUT")
-        self._raise_for_status(resp)
 
         await self.api.closeSession()
         await asyncio.sleep(0)
@@ -438,10 +390,11 @@ class AClient(Client):
         while not self.cacheFull:
             await asyncio.sleep(1)
 
-    def __init__(self):
+    def __init__(self, verify=True, log_to_console=False):
         super().__init__()
 
         self.cacheFull = False
-        self.api = ACall()
+        self.log_to_console = log_to_console
+        self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None

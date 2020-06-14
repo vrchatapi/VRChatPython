@@ -4,8 +4,40 @@ import requests
 
 from vrcpy.errors import *
 
+def raise_for_status(resp):
+    def handle_400():
+        if resp["data"]["error"]["message"] == "These users are not friends":
+            raise NotFriendsError("These users are not friends")
+        elif resp["data"]["error"]["message"] == "\"Users are already friends!\"":
+            raise AlreadyFriendsError("Users are already friends!")
+
+    def handle_401():
+        raise IncorrectLoginError(resp["data"]["error"]["message"])
+
+    def handle_404():
+        msg = ""
+
+        if type(resp["data"]) == bytes:
+            try: msg = json.loads(resp["data"].decode())["error"]
+            except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
+        else:
+            msg = resp["data"]["error"]["message"]
+
+        raise NotFoundError(msg)
+
+    switch = {
+        400: lambda: handle_400(),
+        401: lambda: handle_401(),
+        404: lambda: handle_404()
+    }
+
+    if resp["status"] in switch: switch[resp["status"]]()
+    if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
+    if "requiresTwoFactorAuth" in resp["data"]: raise TwoFactorAuthNotSupportedError("2FA is not supported yet.")
+
 class ACall:
-    def __init__(self, loop=asyncio.get_event_loop()):
+    def __init__(self, loop=asyncio.get_event_loop(), verify=True):
+        self.verify = verify
         self.loop = loop
         self.session = None
         self.apiKey = None
@@ -31,7 +63,7 @@ class ACall:
             return await self._call(path, method, headers, params, json)
 
         if self.apiKey == None:
-            async with self.session.get("https://api.vrchat.cloud/api/1/config") as resp:
+            async with self.session.get("https://api.vrchat.cloud/api/1/config", verify_ssl=self.verify) as resp:
                 assert resp.status == 200
                 j = await resp.json()
 
@@ -46,7 +78,7 @@ class ACall:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        async with self.session.request(method, path, params=params, headers=headers, json=json) as resp:
+        async with self.session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
 
@@ -58,7 +90,10 @@ class ACall:
             json = await resp.json()
             status = resp.status
 
-        return {"status": status, "data": json}
+        resp = {"status": status, "data": json}
+
+        raise_for_status(resp)
+        return resp
 
     async def _call(self, path, method="GET", headers={}, params={}, json={}):
         h = {
@@ -69,7 +104,7 @@ class ACall:
 
         async with aiohttp.ClientSession(headers=h) as session:
             if self.apiKey == None:
-                async with session.get("https://api.vrchat.cloud/api/1/config") as resp:
+                async with session.get("https://api.vrchat.cloud/api/1/config", verify_ssl=self.verify) as resp:
                     assert resp.status == 200
                     j = await resp.json()
 
@@ -84,7 +119,7 @@ class ACall:
                 if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
             params["apiKey"] = self.apiKey
-            async with session.request(method, path, params=params, headers=headers, json=json) as resp:
+            async with session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
 
@@ -96,10 +131,14 @@ class ACall:
                 json = await resp.json()
                 status = resp.status
 
-            return {"status": status, "data": json}
+            resp = {"status": status, "data": json}
+
+            raise_for_status(resp)
+            return resp
 
 class Call:
-    def __init__(self):
+    def __init__(self, verify=True):
+        self.verify = verify
         self.apiKey = None
         self.b64_auth = None
 
@@ -123,7 +162,7 @@ class Call:
         headers["Authorization"] = "Basic "+self.b64_auth
 
         if self.apiKey == None:
-            resp = self.session.get("https://api.vrchat.cloud/api/1/config")
+            resp = self.session.get("https://api.vrchat.cloud/api/1/config", verify=self.verify)
             assert resp.status_code == 200
 
             j = resp.json()
@@ -138,19 +177,25 @@ class Call:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params, json=json)
+        resp = self.session.request(method, path, headers=headers, params=params, json=json, verify=self.verify)
 
         if resp.status_code != 200:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "data": json if not json == None else resp.content}
 
-        return {"status": resp.status_code, "data": resp.json()}
+            raise_for_status(resp)
+            return resp
+
+        resp = {"status": resp.status_code, "data": resp.json()}
+
+        raise_for_status(resp)
+        return resp
 
     def _call(self, path, method="GET", headers={}, params={}, json={}):
         if self.apiKey == None:
-            resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers)
+            resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers, verify=self.verify)
             assert resp.status_code == 200
 
             j = resp.json()
@@ -165,12 +210,18 @@ class Call:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = requests.request(method, path, headers=headers, params=params, data=json)
+        resp = requests.request(method, path, headers=headers, params=params, data=json, verify=self.verify)
 
         if resp.status_code != 200:
             try: json = resp.json()
             except: json = None
 
-            return {"status": resp.status_code, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "data": json if not json == None else resp.content}
 
-        return {"status": resp.status_code, "data": resp.json()}
+            raise_for_status(resp)
+            return resp
+
+        resp = {"status": resp.status_code, "data": resp.json()}
+
+        raise_for_status(resp)
+        return resp

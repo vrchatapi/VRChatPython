@@ -6,16 +6,22 @@ import vrcpy.types as types
 class Avatar(o.Avatar):
     async def author(self):
         resp = await self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
+
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
 
 ## User
 
 class LimitedUser(o.LimitedUser):
     async def fetch_full(self):
         resp = await self.client.api.call("/users/"+self.id)
-        self.client._raise_for_status(resp)
-
         return User(self.client, resp["data"])
 
     async def public_avatars(self):
@@ -25,7 +31,6 @@ class LimitedUser(o.LimitedUser):
 
         resp = await self.client.api.call("/avatars",
             params={"userId": self.id})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -39,7 +44,6 @@ class LimitedUser(o.LimitedUser):
         '''
 
         resp = await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
-        self.client._raise_for_status(resp)
 
     async def friend(self):
         '''
@@ -47,9 +51,16 @@ class LimitedUser(o.LimitedUser):
         '''
 
         resp = await self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
-        self.client._raise_for_status(resp)
-
         return o.Notification(self.client, resp["data"])
+
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
 
 class User(o.User, LimitedUser):
     async def fetch_full(self):
@@ -66,6 +77,10 @@ class User(o.User, LimitedUser):
     async def friend(self):
         notif = await LimitedUser.friend()
         return notif
+
+    async def favorite(self):
+        resp = await LimitedUser.favorite(self)
+        return resp
 
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
@@ -94,7 +109,6 @@ class CurrentUser(o.CurrentUser, User):
             if params[p] == None: params[p] = getattr(self, p)
 
         resp = await self.client.api.call("/users/"+self.id, "PUT", params=params)
-        self.client._raise_for_status(resp)
 
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
@@ -109,7 +123,6 @@ class CurrentUser(o.CurrentUser, User):
 
         resp = await self.client.api.call("/avatars",
             params={"releaseStatus": releaseStatus, "user": "me"})
-        self.client._raise_for_status(resp)
 
         avatars = []
         for avatar in resp["data"]:
@@ -117,6 +130,25 @@ class CurrentUser(o.CurrentUser, User):
                 avatars.append(Avatar(self.client, avatar))
 
         return avatars
+
+    async def fetch_favorites(self, t):
+        resp = await self.client.api.call("/favorites", params={"type": t})
+
+        f = []
+        for favorite in resp["data"]:
+            f.append(Favorite(self.client, favorite))
+
+        return f
+
+    async def favorite(self):
+        raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
+
+    async def remove_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id, "DELETE")
+
+    async def fetch_favorite(self, id):
+        resp = await self.client.api.call("/favorites/"+id)
+        return Favorite(resp)
 
     async def __cinit__(self):
         if hasattr(self, "currentAvatar"):
@@ -137,10 +169,12 @@ class CurrentUser(o.CurrentUser, User):
             self.activeFriends = naf
 
         if hasattr(self, "homeLocation"):
-            self.homeLocation = await self.client.fetch_world(self.homeLocation)
+            if self.homeLocation == "": self.homeLocation = None
+            else: self.homeLocation = await self.client.fetch_world(self.homeLocation)
 
         # Wait for all cacheTasks
-        await self.homeLocation.cacheTask
+        if not self.homeLocation == None:
+            await self.homeLocation.cacheTask
 
         self.client.cacheFull = True
 
@@ -149,8 +183,16 @@ class CurrentUser(o.CurrentUser, User):
 class LimitedWorld(o.LimitedWorld):
     async def author(self):
         resp = await self.client.api.call("/users/"+self.authorId)
-        self.client._raise_for_status(resp)
         return User(self.client, resp["data"])
+
+    async def favorite(self):
+        '''
+        Returns favorite object
+        '''
+
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
+            "favoriteId": self.id})
+        return Favorite(resp["data"])
 
 class World(o.World, LimitedWorld):
     async def author(self):
@@ -166,9 +208,11 @@ class World(o.World, LimitedWorld):
         '''
 
         resp = await self.client.api.call("/instances/"+self.id+":"+id)
-        self.client._raise_for_status(resp)
-
         return Instance(self.client, resp["data"])
+
+    async def favorite(self):
+        resp = await LimitedWorld.favorite(self)
+        return resp
 
     async def __cinit__(self):
         instances = []
@@ -180,5 +224,18 @@ class World(o.World, LimitedWorld):
 class Instance(o.Instance):
     async def world(self):
         resp = await self.client.api.call("/worlds/"+self.worldId)
-        self.client._raise_for_status(resp)
         return World(resp["data"])
+
+# Misc
+
+class Favorite(o.Favorite):
+    async def __cinit__(self):
+        if self.type == types.FavoriteType.World:
+            self.object = await self.client.fetch_world(self.favoriteId)
+        elif self.type == types.FavoriteType.Friend:
+            for friend in self.client.me.friends():
+                if friend.id == self.favoriteId:
+                    self.object = friend
+                    break
+        elif self.type == types.FavoriteType.Avatar:
+            self.object = await self.client.fetch_avatar(self.favoriteId)
