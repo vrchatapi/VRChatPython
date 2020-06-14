@@ -258,12 +258,9 @@ class World(LimitedWorld):
         self.unique += [
             "namespace",
             "pluginUrl",
-            "previewYoutubeId"
+            "previewYoutubeId",
+            "instances"
         ]
-
-        self.arrTypes.update({
-            "instances": Instance
-        })
 
         self._assign(obj)
 
