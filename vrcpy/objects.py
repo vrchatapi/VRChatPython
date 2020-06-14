@@ -190,6 +190,23 @@ class CurrentUser(User):
         if hasattr(self, "currentAvatar"):
             self.currentAvatar = self.client.fetch_avatar(self.currentAvatar)
 
+        self.onlineFriends = self.client.fetch_friends()
+        self.offlineFriends = self.client.fetch_friends(offline=True)
+        self.friends = self.onlineFriends + self.offlineFriends
+
+        if hasattr(self, "activeFriends"):
+            naf = []
+            for fid in self.activeFriends:
+                for f in self.friends:
+                    if f.id == fid:
+                        naf.append(f)
+                        break
+
+            self.activeFriends = naf
+
+        if hasattr(self, "homeLocation"):
+            self.homeLocation = self.client.fetch_world(self.homeLocation)
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
@@ -252,6 +269,27 @@ class LimitedWorld(BaseObject):
 
 class World(LimitedWorld):
     objType = "World"
+
+    def fetch_instance(self, id):
+        '''
+        Returns Instance object
+
+            id, str
+            InstanceID of instance
+        '''
+
+        resp = self.client.api.call("/instances/"+self.id+":"+id)
+        self.client._raise_for_status(resp)
+
+        return Instance(self.client, resp["data"])
+
+
+    def __cinit__(self):
+        instances = []
+        for instance in self.instances:
+            instances.append(self.fetch_instance(instance[0]))
+
+        self.instances = instances
 
     def __init__(self, client, obj):
         super().__init__(client)
