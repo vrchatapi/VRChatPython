@@ -137,10 +137,12 @@ class CurrentUser(o.CurrentUser, User):
             self.activeFriends = naf
 
         if hasattr(self, "homeLocation"):
-            self.homeLocation = await self.client.fetch_world(self.homeLocation)
+            if self.homeLocation == "": self.homeLocation = None
+            else: self.homeLocation = await self.client.fetch_world(self.homeLocation)
 
         # Wait for all cacheTasks
-        await self.homeLocation.cacheTask
+        if not self.homeLocation == None:
+            await self.homeLocation.cacheTask
 
         self.client.cacheFull = True
 
