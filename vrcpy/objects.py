@@ -3,6 +3,8 @@ from vrcpy._hardtyping import *
 from vrcpy import errors
 from vrcpy import types
 
+import asyncio
+
 class BaseObject:
     objType = "Base"
 
@@ -26,6 +28,12 @@ class BaseObject:
                 setattr(self, key, arr)
             else:
                 setattr(self, key, obj[key])
+
+        if hasattr(self, "__cinit__"):
+            if asyncio.iscoroutinefunction(self.__cinit__):
+                asyncio.get_event_loop().create_task(self.__cinit__())
+            else:
+                self.__cinit__()
 
     def _objectIntegrety(self, obj):
         if self.only == []:
