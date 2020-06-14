@@ -155,6 +155,7 @@ class CurrentUser(o.CurrentUser, User):
         if hasattr(self, "homeLocation"):
             if self.homeLocation == "": self.homeLocation = None
             else: self.homeLocation = await self.client.fetch_world(self.homeLocation)
+        else: self.homeLocation = None
 
         # Wait for all cacheTasks
         if not self.homeLocation == None:

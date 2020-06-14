@@ -299,6 +299,7 @@ class CurrentUser(User):
         if hasattr(self, "homeLocation"):
             if self.homeLocation == "": self.homeLocation = None
             else: self.homeLocation = self.client.fetch_world(self.homeLocation)
+        else: self.homeLocation = None
 
     def __init__(self, client, obj):
         super().__init__(client)
