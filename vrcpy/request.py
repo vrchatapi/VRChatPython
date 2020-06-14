@@ -5,7 +5,8 @@ import requests
 from vrcpy.errors import *
 
 class ACall:
-    def __init__(self, loop=asyncio.get_event_loop()):
+    def __init__(self, loop=asyncio.get_event_loop(), verify=True):
+        self.verify = verify
         self.loop = loop
         self.session = None
         self.apiKey = None
@@ -31,7 +32,7 @@ class ACall:
             return await self._call(path, method, headers, params, json)
 
         if self.apiKey == None:
-            async with self.session.get("https://api.vrchat.cloud/api/1/config") as resp:
+            async with self.session.get("https://api.vrchat.cloud/api/1/config", verify_ssl=self.verify) as resp:
                 assert resp.status == 200
                 j = await resp.json()
 
@@ -46,7 +47,7 @@ class ACall:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        async with self.session.request(method, path, params=params, headers=headers, json=json) as resp:
+        async with self.session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
 
@@ -69,7 +70,7 @@ class ACall:
 
         async with aiohttp.ClientSession(headers=h) as session:
             if self.apiKey == None:
-                async with session.get("https://api.vrchat.cloud/api/1/config") as resp:
+                async with session.get("https://api.vrchat.cloud/api/1/config", verify_ssl=self.verify) as resp:
                     assert resp.status == 200
                     j = await resp.json()
 
@@ -84,7 +85,7 @@ class ACall:
                 if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
             params["apiKey"] = self.apiKey
-            async with session.request(method, path, params=params, headers=headers, json=json) as resp:
+            async with session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
 
@@ -99,7 +100,8 @@ class ACall:
             return {"status": status, "data": json}
 
 class Call:
-    def __init__(self):
+    def __init__(self, verify=True):
+        self.verify = verify
         self.apiKey = None
         self.b64_auth = None
 
@@ -123,7 +125,7 @@ class Call:
         headers["Authorization"] = "Basic "+self.b64_auth
 
         if self.apiKey == None:
-            resp = self.session.get("https://api.vrchat.cloud/api/1/config")
+            resp = self.session.get("https://api.vrchat.cloud/api/1/config", verify=self.verify)
             assert resp.status_code == 200
 
             j = resp.json()
@@ -138,7 +140,7 @@ class Call:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params, json=json)
+        resp = self.session.request(method, path, headers=headers, params=params, json=json, verify=self.verify)
 
         if resp.status_code != 200:
             try: json = resp.json()
@@ -150,7 +152,7 @@ class Call:
 
     def _call(self, path, method="GET", headers={}, params={}, json={}):
         if self.apiKey == None:
-            resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers)
+            resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers, verify=self.verify)
             assert resp.status_code == 200
 
             j = resp.json()
@@ -165,7 +167,7 @@ class Call:
             if type(params[param]) == bool: params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = requests.request(method, path, headers=headers, params=params, data=json)
+        resp = requests.request(method, path, headers=headers, params=params, data=json, verify=self.verify)
 
         if resp.status_code != 200:
             try: json = resp.json()
