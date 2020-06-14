@@ -12,6 +12,12 @@ import time
 import json
 
 class Client:
+    '''
+    Main client interface for VRC
+
+        verify, boolean
+        If should verify ssl certificates on requests
+    '''
 
     # Log
 
@@ -25,7 +31,8 @@ class Client:
 
     def fetch_me(self):
         '''
-        Simply returns newest version of CurrentUser
+        Used to refresh client.me
+        Returns CurrentUser object
         '''
 
         resp = self.api.call("/auth/user")
@@ -35,17 +42,19 @@ class Client:
 
     def fetch_full_friends(self, offline=True, n=0, offset=0):
         '''
-        Returns list of User objects
+        Used to get friends of current user
         !! This function uses possibly lot of calls, use with caution
 
-            offline, bool
+            offline, boolean
             Include offline friends or not
 
-            n, int
+            n, integer
             Number of friends to return (0 for all)
 
-            offset, int
+            offset, integer
             Skip first <offset> friends
+
+        Returns list of User objects
         '''
 
         lfriends = self.fetch_friends(offline, n, offset)
@@ -60,16 +69,18 @@ class Client:
 
     def fetch_friends(self, offline=False, n=0, offset=0):
         '''
-        Returns list of LimitedUser objects
+        Used to get friends of current user
 
-            offline, bool
+            offline, boolean
             Get offline friends instead of online friends
 
-            n, int
+            n, integer
             Number of friends to return (0 for all)
 
-            offset, int
+            offset, integer
             Skip first <offset> friends
+
+        Returns list of LimitedUser objects
         '''
 
         friends = []
@@ -95,10 +106,12 @@ class Client:
 
     def fetch_user_by_id(self, id):
         '''
-        Returns User object
+        Used to get a user via id
 
             id, string
             UserId of the user
+
+        Returns User object
         '''
 
         resp = self.api.call("/users/"+id)
@@ -106,10 +119,12 @@ class Client:
 
     def fetch_user_by_name(self, name):
         '''
-        Returns User object
+        Used to get a user via id
 
             name, string
             Name of the user
+
+        Returns User object
         '''
 
         resp = self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
@@ -119,10 +134,12 @@ class Client:
 
     def fetch_avatar(self, id):
         '''
-        Returns Avatar object
+        Used to get avatar via id
 
-            id, string,
+            id, string
             AvatarId of the avatar
+
+        Returns Avatar object
         '''
 
         resp = self.api.call("/avatars/"+id)
@@ -133,6 +150,54 @@ class Client:
         releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
         minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
         platform: oString = None):
+
+        '''
+        Used to get list of avatars
+
+            user, string
+            Type of user (me, friends)
+
+            featured, boolean
+            If the avatars are featured
+
+            tag, string list
+            List of tags the avatars have
+
+            userId, string
+            ID of the user that made the avatars
+
+            n, integer
+            Number of avatars to return
+
+            offset, integer
+            Skip first <offset> avatars
+
+            order, string
+            Sort <sort> by "descending" or "ascending" order
+
+            releaseStatus, string
+            ReleaseStatus of avatars
+
+            sort, string
+            Sort by "created", "updated", "order", "_created_at", "_updated_at"
+
+            maxUnityVersion, string
+            Max version of unity the avatars were uploaded from
+
+            minUnityVersion, string
+            Min version of unity the avatars were uploaded from
+
+            maxAssetVersion, string
+            Max of 'asset version' of the avatars
+
+            minAssetVersion, string
+            Min of 'asset version' of the avatars
+
+            platform, string
+            Unity platform avatars were uploaded from
+
+        Returns list of Avatar objects
+        '''
 
         p = {}
 
@@ -163,10 +228,12 @@ class Client:
 
     def fetch_world(self, id):
         '''
-        Returns World object
+        Used to get world via id
 
-            id, str
-            WorldID of the world
+            id, string
+            ID of the world
+
+        Returns World object
         '''
 
         resp = self.api.call("/worlds/"+id)
@@ -175,6 +242,7 @@ class Client:
     def logout(self):
         '''
         Closes client session, invalidates auth cookie
+        Returns void
         '''
 
         resp = self.api.call("/logout", "PUT")
@@ -185,6 +253,14 @@ class Client:
     def login(self, username, password):
         '''
         Used to initialize the client for use
+
+            username, string
+            Username of VRC account
+
+            password, string
+            Password of VRC account
+
+        Returns void
         '''
 
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
@@ -204,12 +280,19 @@ class Client:
         self.me = None
 
 class AClient(Client):
+    '''
+    Main client interface for VRC
+
+        verify, boolean
+        If should verify ssl certificates on requests
+    '''
 
     # User calls
 
     async def fetch_me(self):
         '''
-        Simply returns newest version of CurrentUser
+        Used to refresh client.me
+        Returns CurrentUser object
         '''
 
         self.cacheFull = False
@@ -220,17 +303,19 @@ class AClient(Client):
 
     async def fetch_full_friends(self, offline=True, n=0, offset=0):
         '''
-        Returns list of User objects
+        Used to get friends of current user
         !! This function uses possibly lot of calls, use with caution
 
-            offline, bool
+            offline, boolean
             Include offline friends or not
 
-            n, int
+            n, integer
             Number of friends to return (0 for all)
 
-            offset, int
+            offset, integer
             Skip first <offset> friends
+
+        Returns list of User objects
         '''
 
         lfriends = await self.fetch_friends(offline, n, offset)
@@ -245,16 +330,18 @@ class AClient(Client):
 
     async def fetch_friends(self, offline=False, n=0, offset=0):
         '''
-        Returns list of LimitedUser objects
+        Used to get friends of current user
 
-            offline, bool
+            offline, boolean
             Get offline friends instead of online friends
 
-            n, int
+            n, integer
             Number of friends to return (0 for all)
 
-            offset, int
+            offset, integer
             Skip first <offset> friends
+
+        Returns list of LimitedUser objects
         '''
 
         friends = []
@@ -280,10 +367,12 @@ class AClient(Client):
 
     async def fetch_user_by_id(self, id):
         '''
-        Returns User object
+        Used to get a user via id
 
             id, string
             UserId of the user
+
+        Returns User object
         '''
 
         resp = await self.api.call("/users/"+id)
@@ -291,10 +380,12 @@ class AClient(Client):
 
     async def fetch_user_by_name(self, name):
         '''
-        Returns User object
+        Used to get a user via id
 
             name, string
             Name of the user
+
+        Returns User object
         '''
 
         resp = await self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
@@ -304,10 +395,12 @@ class AClient(Client):
 
     async def fetch_avatar(self, id):
         '''
-        Returns Avatar object
+        Used to get avatar via id
 
-            id, string,
+            id, string
             AvatarId of the avatar
+
+        Returns Avatar object
         '''
 
         resp = await self.api.call("/avatars/"+id)
@@ -318,6 +411,54 @@ class AClient(Client):
         releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
         minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
         platform: oString = None):
+
+        '''
+        Used to get list of avatars
+
+            user, string
+            Type of user (me, friends)
+
+            featured, boolean
+            If the avatars are featured
+
+            tag, string list
+            List of tags the avatars have
+
+            userId, string
+            ID of the user that made the avatars
+
+            n, integer
+            Number of avatars to return
+
+            offset, integer
+            Skip first <offset> avatars
+
+            order, string
+            Sort <sort> by "descending" or "ascending" order
+
+            releaseStatus, string
+            ReleaseStatus of avatars
+
+            sort, string
+            Sort by "created", "updated", "order", "_created_at", "_updated_at"
+
+            maxUnityVersion, string
+            Max version of unity the avatars were uploaded from
+
+            minUnityVersion, string
+            Min version of unity the avatars were uploaded from
+
+            maxAssetVersion, string
+            Max of 'asset version' of the avatars
+
+            minAssetVersion, string
+            Min of 'asset version' of the avatars
+
+            platform, string
+            Unity platform avatars were uploaded from
+
+        Returns list of Avatar objects
+        '''
 
         p = {}
 
@@ -348,18 +489,42 @@ class AClient(Client):
 
     async def fetch_world(self, id):
         '''
-        Returns World object
+        Used to get world via id
 
-            id, str
-            WorldID of the world
+            id, string
+            ID of the world
+
+        Returns World object
         '''
 
         resp = await self.api.call("/worlds/"+id)
         return aobjects.World(self, resp["data"])
 
+    async def logout(self):
+        '''
+        Closes client session, invalidates auth cookie
+        Returns void
+        '''
+
+        resp = await self.api.call("/logout", "PUT")
+
+        await self.api.closeSession()
+        await asyncio.sleep(0)
+
+        self.api = ACall()
+        self.loggedIn = False
+
     async def login(self, username, password):
         '''
         Used to initialize the client for use
+
+            username, string
+            Username of VRC account
+
+            password, string
+            Password of VRC account
+
+        Returns void
         '''
 
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
@@ -373,28 +538,19 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
-    async def logout(self):
-        '''
-        Closes client session, invalidates auth cookie
-        '''
-
-        resp = await self.api.call("/logout", "PUT")
-
-        await self.api.closeSession()
-        await asyncio.sleep(0)
-
-        self.api = ACall()
-        self.loggedIn = False
-
     async def wait_for_cache(self):
+        '''
+        Used to stall task and wait for caching to finish
+        Returns void
+        '''
+
         while not self.cacheFull:
             await asyncio.sleep(1)
 
-    def __init__(self, verify=True, log_to_console=False):
+    def __init__(self, verify=True):
         super().__init__()
 
         self.cacheFull = False
-        self.log_to_console = log_to_console
         self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None

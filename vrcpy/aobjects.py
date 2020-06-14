@@ -1,6 +1,13 @@
 import vrcpy.objects as o
 import vrcpy.types as types
 
+'''
+Please look at objects.py for object docs
+Everything is in the same place and does the same thing.
+
+Thanks ~ Lazy me
+'''
+
 ## Avatar
 
 class Avatar(o.Avatar):
@@ -9,10 +16,6 @@ class Avatar(o.Avatar):
         return User(self.client, resp["data"])
 
     async def favorite(self):
-        '''
-        Returns favorite object
-        '''
-
         resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Avatar,\
             "favoriteId": self.id})
         return Favorite(resp["data"])
@@ -25,10 +28,6 @@ class LimitedUser(o.LimitedUser):
         return User(self.client, resp["data"])
 
     async def public_avatars(self):
-        '''
-        Returns array of Avatar objects owned by user object
-        '''
-
         resp = await self.client.api.call("/avatars",
             params={"userId": self.id})
 
@@ -39,25 +38,13 @@ class LimitedUser(o.LimitedUser):
         return avatars
 
     async def unfriend(self):
-        '''
-        Returns void
-        '''
-
-        resp = await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
+        await self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
 
     async def friend(self):
-        '''
-        Returns Notification object
-        '''
-
         resp = await self.client.api.call("/user/"+self.id+"/friendRequest", "POST")
         return o.Notification(self.client, resp["data"])
 
     async def favorite(self):
-        '''
-        Returns favorite object
-        '''
-
         resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
             "favoriteId": self.id})
         return Favorite(resp["data"])
@@ -114,13 +101,6 @@ class CurrentUser(o.CurrentUser, User):
         return self.client.me
 
     async def avatars(self, releaseStatus=types.ReleaseStatus.All):
-        '''
-        Returns array of Avatar objects owned by the current user
-
-            releaseStatus, string
-            One of types type.ReleaseStatus
-        '''
-
         resp = await self.client.api.call("/avatars",
             params={"releaseStatus": releaseStatus, "user": "me"})
 
@@ -186,10 +166,6 @@ class LimitedWorld(o.LimitedWorld):
         return User(self.client, resp["data"])
 
     async def favorite(self):
-        '''
-        Returns favorite object
-        '''
-
         resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
             "favoriteId": self.id})
         return Favorite(resp["data"])
@@ -200,13 +176,6 @@ class World(o.World, LimitedWorld):
         return resp
 
     async def fetch_instance(self, id):
-        '''
-        Returns Instance object
-
-            id, str
-            InstanceID of instance
-        '''
-
         resp = await self.client.api.call("/instances/"+self.id+":"+id)
         return Instance(self.client, resp["data"])
 

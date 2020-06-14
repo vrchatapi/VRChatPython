@@ -56,11 +56,17 @@ class Avatar(BaseObject):
     objType = "Avatar"
 
     def author(self):
+        '''
+        Used to get author of the avatar
+        Returns User object
+        '''
+
         resp = self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
 
     def favorite(self):
         '''
+        Used to favorite avatar
         Returns favorite object
         '''
 
@@ -88,12 +94,18 @@ class LimitedUser(BaseObject):
     objType = "LimitedUser"
 
     def fetch_full(self):
+        '''
+        Used to get full version of this user
+        Returns User object
+        '''
+
         resp = self.client.api.call("/users/"+self.id)
         return User(self.client, resp["data"])
 
     def public_avatars(self):
         '''
-        Returns array of Avatar objects owned by user object
+        Used to get public avatars made by this user
+        Returns list of Avatar objects
         '''
 
         resp = self.client.api.call("/avatars",
@@ -107,13 +119,15 @@ class LimitedUser(BaseObject):
 
     def unfriend(self):
         '''
-        Unfriends user
+        Used to unfriend this user
+        Returns void
         '''
 
-        resp = self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
+        self.client.api.call("/auth/user/friends/"+self.id, "DELETE")
 
     def friend(self):
         '''
+        Used to friend this user
         Returns Notification object
         '''
 
@@ -122,6 +136,7 @@ class LimitedUser(BaseObject):
 
     def favorite(self):
         '''
+        Used to favorite this user
         Returns favorite object
         '''
 
@@ -165,10 +180,12 @@ class CurrentUser(User):
 
     def avatars(self, releaseStatus=types.ReleaseStatus.All):
         '''
-        Returns array of Avatar objects owned by the current user
+        Used to get avatars by current user
 
             releaseStatus, string
             One of types type.ReleaseStatus
+
+        Returns list of Avatar objects
         '''
 
         resp = self.client.api.call("/avatars",
@@ -183,6 +200,26 @@ class CurrentUser(User):
 
     def update_info(self, email=None, status=None,\
         statusDescription=None, bio=None, bioLinks=None):
+        '''
+        Used to update current user info
+
+            email, string
+            New email
+
+            status, string
+            New status
+
+            statusDescription, string
+            New website status
+
+            bio, string
+            New bio
+
+            bioLinks, list of strings
+            New links in bio
+
+        Returns updated CurrentUser
+        '''
 
         params = {"email": email, "status": status, "statusDescription": statusDescription,\
             "bio": bio, "bioLinks": bioLinks}
@@ -196,6 +233,15 @@ class CurrentUser(User):
         return self.client.me
 
     def fetch_favorites(self, t):
+        '''
+        Used to get favorites
+
+            t, string
+            FavoriteType
+
+        Returns list of Favorite objects
+        '''
+
         resp = self.client.api.call("/favorites", params={"type": t})
 
         f = []
@@ -205,9 +251,27 @@ class CurrentUser(User):
         return f
 
     def remove_favorite(self, id):
-        resp = self.client.api.call("/favorites/"+id, "DELETE")
+        '''
+        Used to remove a favorite via id
+
+            id, string
+            ID of the favorite object
+
+        Returns void
+        '''
+
+        self.client.api.call("/favorites/"+id, "DELETE")
 
     def get_favorite(self, id):
+        '''
+        Used to get favorite via id
+
+            id, string
+            ID of the favorite object
+
+        Returns Favorite object
+        '''
+
         resp = self.client.api.call("/favorites/"+id)
         return Favorite(resp)
 
@@ -278,12 +342,18 @@ class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
 
     def author(self):
+        '''
+        Used to get author of the world
+        Returns User object
+        '''
+
         resp = self.client.api.call("/users/"+self.authorId)
         return User(self.client, resp["data"])
 
     def favorite(self):
         '''
-        Returns favorite object
+        Used to favorite this world object
+        Returns Favorite object
         '''
 
         resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
@@ -309,10 +379,12 @@ class World(LimitedWorld):
 
     def fetch_instance(self, id):
         '''
-        Returns Instance object
+        Used to get instance of this world via id
 
-            id, str
-            InstanceID of instance
+            id, string
+            ID of instance
+
+        Returns Instance object
         '''
 
         resp = self.client.api.call("/instances/"+self.id+":"+id)
@@ -365,10 +437,20 @@ class Instance(BaseObject):
     objType = "Instance"
 
     def world(self):
+        '''
+        Used to get the world of this instance
+        Returns World object
+        '''
+
         resp = self.client.api.call("/worlds/"+self.worldId)
         return World(resp["data"])
 
     def short_name(self):
+        '''
+        Used to get shorturl of the instance
+        Returns string
+        '''
+
         return "https://vrchat.com/i/"+self.shortName
 
     def __init__(self, client, obj):
