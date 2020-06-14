@@ -283,7 +283,6 @@ class World(LimitedWorld):
 
         return Instance(self.client, resp["data"])
 
-
     def __cinit__(self):
         instances = []
         for instance in self.instances:
