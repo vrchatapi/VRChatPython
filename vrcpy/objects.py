@@ -15,6 +15,8 @@ class BaseObject:
         self.arrTypes = {} # Dictionary of what keys are arrays with special types
         self.client = client
 
+        self._dict = {} # Dictionary that is assigned
+
         self.cacheTask = None # cacheTask for async objects using __cinit__
 
     def _assign(self, obj):
@@ -36,6 +38,8 @@ class BaseObject:
                 self.cacheTask = asyncio.get_event_loop().create_task(self.__cinit__())
             else:
                 self.__cinit__()
+
+        self._dict = obj
 
     def _objectIntegrety(self, obj):
         if self.only == []:
