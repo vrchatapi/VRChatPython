@@ -33,7 +33,7 @@ class BaseObject:
             else:
                 setattr(self, key, obj[key])
 
-        if hasattr(self, "__cinit__"):
+        if hasattr(self, "__cinit__") and self.client.caching:
             if asyncio.iscoroutinefunction(self.__cinit__):
                 self.cacheTask = asyncio.get_event_loop().create_task(self.__cinit__())
             else:
