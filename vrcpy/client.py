@@ -274,10 +274,11 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
-    def __init__(self, verify=True):
+    def __init__(self, verify=True, caching=True):
         self.api = Call(verify)
         self.loggedIn = False
         self.me = None
+        self.caching = caching
 
 class AClient(Client):
     '''
@@ -540,9 +541,10 @@ class AClient(Client):
 
         await self.me.cacheTask
 
-    def __init__(self, verify=True):
+    def __init__(self, verify=True, caching=True):
         super().__init__()
 
         self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None
+        self.caching = caching
