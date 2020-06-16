@@ -454,6 +454,14 @@ class Instance(BaseObject):
 
         return "https://vrchat.com/i/"+self.shortName
 
+    def join(self):
+        '''
+        "Joins" the instance
+        Returns void
+        '''
+
+        self.client.api.call("/joins", "PUT", json={"worldId": self.location.location})
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [
