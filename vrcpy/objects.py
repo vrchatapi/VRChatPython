@@ -82,8 +82,9 @@ class Avatar(BaseObject):
         super().__init__(client)
         self.unique += [
             "authorId",
-            "imported",
-            "version"
+            "authorName",
+            "version",
+            "name"
         ]
 
         self.arrTypes.update({
