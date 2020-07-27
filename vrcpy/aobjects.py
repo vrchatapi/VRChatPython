@@ -201,6 +201,9 @@ class Instance(o.Instance):
         resp = await self.client.api.call("/worlds/"+self.worldId)
         return World(resp["data"])
 
+    async def join(self):
+        await self.client.api.call("/joins", "PUT", json={"worldId": self.location})
+
 # Misc
 
 class Favorite(o.Favorite):

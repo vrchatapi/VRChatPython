@@ -15,6 +15,8 @@ class BaseObject:
         self.arrTypes = {} # Dictionary of what keys are arrays with special types
         self.client = client
 
+        self._dict = {} # Dictionary that is assigned
+
         self.cacheTask = None # cacheTask for async objects using __cinit__
 
     def _assign(self, obj):
@@ -31,11 +33,13 @@ class BaseObject:
             else:
                 setattr(self, key, obj[key])
 
-        if hasattr(self, "__cinit__"):
+        if hasattr(self, "__cinit__") and self.client.caching:
             if asyncio.iscoroutinefunction(self.__cinit__):
                 self.cacheTask = asyncio.get_event_loop().create_task(self.__cinit__())
             else:
                 self.__cinit__()
+
+        self._dict = obj
 
     def _objectIntegrety(self, obj):
         if self.only == []:
@@ -78,8 +82,9 @@ class Avatar(BaseObject):
         super().__init__(client)
         self.unique += [
             "authorId",
-            "imported",
-            "version"
+            "authorName",
+            "version",
+            "name"
         ]
 
         self.arrTypes.update({
@@ -453,6 +458,14 @@ class Instance(BaseObject):
         '''
 
         return "https://vrchat.com/i/"+self.shortName
+
+    def join(self):
+        '''
+        "Joins" the instance
+        Returns void
+        '''
+
+        self.client.api.call("/joins", "PUT", json={"worldId": self.location.location})
 
     def __init__(self, client, obj):
         super().__init__(client)
