@@ -45,14 +45,14 @@ class BaseObject:
         if self.only == []:
             for key in self.unique:
                 if not key in obj:
-                    raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType)
+                    raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType" (Class definition may be outdated, please make an issue on github)")
         else:
             for key in obj:
                 if not key in self.only:
-                    raise IntegretyError("Object has key not found in "+self.objType)
+                    raise IntegretyError("Object has key not found in "+self.objType" (Class definition may be outdated, please make an issue on github)")
             for key in self.only:
                 if not key in obj:
-                    raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType)
+                    raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType+" (Class definition may be outdated, please make an issue on github)")
 
 ## Avatar Objects
 
