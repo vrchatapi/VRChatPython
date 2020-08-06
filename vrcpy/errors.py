@@ -10,8 +10,12 @@ class NotAuthenticated(Exception):
     ## When user tries to call authenticated requests without setting b64_auth
     pass
 
-class TwoFactorAuthNotSupportedError(Exception):
-    ## When trying to login with 2fa enabled account
+class RequiresTwoFactorAuthError(Exception):
+    ## When trying to login with 2fa enabled account without Client.login2fa()
+    pass
+
+class InvalidTwoFactorAuth(Exception):
+    ## When 2fa code passed for verification is incorrect
     pass
 
 class AlreadyLoggedInError(Exception):
