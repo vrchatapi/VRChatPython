@@ -274,11 +274,68 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
+    def login2fa(self, username, password, code=None, verify=False):
+        '''
+        Used to initialize client for use (for accounts with 2FactorAuth)
+
+            username, string
+            Username of VRC account
+
+            password, string
+            Password of VRC account
+
+            code, string
+            2FactorAuth code
+
+            verify, boolean
+            Whether to verify 2FactorAuth code, or leave for later
+
+        This will ignore the RequiresTwoFactorAuthError exception, so be careful!
+        If kwarg verify is False, Client.verify2fa() must be called after
+        '''
+
+        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+
+        auth = username+":"+password
+        auth = str(base64.b64encode(auth.encode()))[2:-1]
+
+        resp = None
+
+        try:
+            resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
+            raise_for_status(resp)
+        except RequiresTwoFactorAuthError:
+            self.api.set_auth(auth)
+            self.api.session.cookies.set("auth", resp["response"].cookies["auth"]) # Auth cookieeee
+            if verify:
+                self.needsVerification = True
+                self.verify2fa(code)
+            else: self.needsVerification = True
+
+    def verify2fa(self, code):
+        '''
+        Used to finish initializing client for use after Client.login2fa()
+
+            code, string
+            2FactorAuth code
+        '''
+
+        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+
+        resp = self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
+        resp = self.api.call("/auth/user")
+
+        self.me = objects.CurrentUser(self, resp["data"])
+        self.loggedIn = True
+        self.needsVerification = False
+
     def __init__(self, verify=True, caching=True):
         self.api = Call(verify)
         self.loggedIn = False
         self.me = None
         self.caching = caching
+
+        self.needsVerification = False
 
 class AClient(Client):
     '''
@@ -541,10 +598,70 @@ class AClient(Client):
 
         await self.me.cacheTask
 
+    async def login2fa(self, username, password, code=None, verify=False):
+        '''
+        Used to initialize client for use (for accounts with 2FactorAuth)
+
+            username, string
+            Username of VRC account
+
+            password, string
+            Password of VRC account
+
+            code, string
+            2FactorAuth code
+
+            verify, boolean
+            Whether to verify 2FactorAuth code, or leave for later
+
+        This will ignore the RequiresTwoFactorAuthError exception, so be careful!
+        If kwarg verify is False, AClient.verify2fa() must be called after
+        '''
+
+        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+
+        auth = username+":"+password
+        auth = str(base64.b64encode(auth.encode()))[2:-1]
+
+        resp = None
+
+        try:
+            resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
+            raise_for_status(resp)
+        except RequiresTwoFactorAuthError:
+            self.api.openSession(auth)
+            self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+
+            if verify:
+                self.needsVerification = True
+                await self.verify2fa(code)
+            else:
+                self.needsVerification = True
+
+    async def verify2fa(self, code):
+        '''
+        Used to finish initializing client for use after AClient.login2fa()
+
+            code, string
+            2FactorAuth code
+        '''
+
+        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+
+        await self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
+        resp = await self.api.call("/auth/user")
+
+        self.me = aobjects.CurrentUser(self, resp["data"])
+        self.loggedIn = True
+        self.needsVerification = False
+
+        await self.me.cacheTask
+
     def __init__(self, verify=True, caching=True):
         super().__init__()
-
         self.api = ACall(verify=verify)
         self.loggedIn = False
         self.me = None
         self.caching = caching
+
+        self.needsVerification = False
