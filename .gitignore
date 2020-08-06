@@ -128,3 +128,4 @@ dmypy.json
 publish.cmd
 test.py
 atest.py
+apitester.py
