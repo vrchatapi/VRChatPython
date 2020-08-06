@@ -19,7 +19,8 @@ def raise_for_status(resp):
             raise InvalidTwoFactorAuth("2FactorAuth code is invalid.")
 
     def handle_401():
-        if "requiresTwoFactorAuth" in resp["data"]["error"]["message"]:
+        if "requiresTwoFactorAuth" in resp["data"]["error"]["message"]\
+            or "Requires Two-Factor Authentication" in resp["data"]["error"]["message"]:
             raise RequiresTwoFactorAuthError("Account is 2FactorAuth protected.")
         elif "Invalid Username or Password" in resp["data"]["error"]["message"]:
             raise IncorrectLoginError(resp["data"]["error"]["message"])
