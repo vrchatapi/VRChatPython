@@ -5,7 +5,7 @@ import vrcpy
 async def main():
     # Initialise vrcpy wrapper client and login with username + password
     client = vrcpy.AClient()
-    await client.login("***REMOVED***", "***REMOVED***")
+    await client.login("username", "password")
 
     # Close client session, invalidate auth cookie
     await client.logout()
