@@ -655,7 +655,7 @@ class AClient(Client):
         self.loggedIn = True
         self.needsVerification = False
 
-        await self.me.cacheTask
+        if self.caching: await self.me.cacheTask
 
     def __init__(self, verify=True, caching=True):
         super().__init__()

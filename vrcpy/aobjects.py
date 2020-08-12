@@ -20,7 +20,7 @@ class Avatar(o.Avatar):
             "favoriteId": self.id, "tags": ["avatars1"]})
 
         f = Favorite(self.client, resp["data"])
-        await f.cacheTask
+        if self.client.caching: await f.cacheTask
 
         return f
 
@@ -129,8 +129,8 @@ class CurrentUser(o.CurrentUser, User):
         for favorite in resp["data"]:
             f.append(Favorite(self.client, favorite))
 
-        for fav in f:
-            await fav.cacheTask
+        if self.client.caching:
+            for fav in f: await fav.cacheTask
 
         return f
 
@@ -168,7 +168,7 @@ class CurrentUser(o.CurrentUser, User):
         else: self.homeLocation = None
 
         # Wait for all cacheTasks
-        if not self.homeLocation == None:
+        if not self.homeLocation == None and self.client.caching:
             await self.homeLocation.cacheTask
 
 ## World
