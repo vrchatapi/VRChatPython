@@ -78,6 +78,13 @@ class Avatar(BaseObject):
             "favoriteId": self.id, "tags": ["avatars1"]})
         return Favorite(self.client, resp["data"])
 
+    def select(self):
+        '''
+        Selects this avatar to be used/worn
+        '''
+
+        self.client.api.call("/avatars/{}/select".format(self.id), "PUT")
+
     def __init__(self, client, obj):
         super().__init__(client)
         self.unique += [

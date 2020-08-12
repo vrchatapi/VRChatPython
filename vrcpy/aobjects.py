@@ -24,6 +24,13 @@ class Avatar(o.Avatar):
 
         return f
 
+    async def select(self):
+        '''
+        Selects this avatar to be used/worn
+        '''
+
+        await self.client.api.call("/avatars/{}/select".format(self.id), "PUT")
+
 ## User
 
 class LimitedUser(o.LimitedUser):
