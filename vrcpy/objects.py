@@ -252,17 +252,20 @@ class CurrentUser(User):
         self.client.me = CurrentUser(self.client, resp["data"])
         return self.client.me
 
-    def fetch_favorites(self, t):
+    def fetch_favorites(self, t, n: int = 100):
         '''
         Used to get favorites
 
             t, string
             FavoriteType
 
+            n, integer
+            Max number of favorites to return (Most that will ever return is 100)
+
         Returns list of Favorite objects
         '''
 
-        resp = self.client.api.call("/favorites", params={"type": t})
+        resp = self.client.api.call("/favorites", params={"type": t, "n": n})
 
         f = []
         for favorite in resp["data"]:
