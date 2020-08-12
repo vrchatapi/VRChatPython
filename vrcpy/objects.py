@@ -38,6 +38,26 @@ class BaseObject:
                 self.cacheTask = asyncio.get_event_loop().create_task(self.__cinit__())
             else:
                 self.__cinit__()
+        elif hasattr(self, "__cinit__"):
+            if str(type(self.client)) == "<class 'vrcpy.client.AClient'>":
+                async def di1(self):
+                    async def di2(self):
+                        raise AttributeError(self.objType + " object has no attribute 'do_init'")
+
+                    if asyncio.iscoroutinefunction(self.__cinit__):
+                        await self.__cinit__()
+                    else:
+                        self.__cinit__()
+
+                    self.do_init = di2
+            else:
+                def di1(self):
+                    def di2(self):
+                        raise AttributeError(self.objType + " object has no attribute 'do_init'")
+
+                    self.__cinit__()
+                    self.do_init = di2
+            self.do_init = di1
 
         self._dict = obj
 
