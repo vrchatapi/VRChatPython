@@ -41,3 +41,11 @@ class NotFriendsError(Exception):
 class AlreadyFriendsError(Exception):
     ## When users are already friends
     pass
+
+class WebSocketError(Exception):
+    ## When ws dies
+    pass
+
+class WebSocketOpenedError(Exception):
+    ## When 2 websockets are attempted to be open
+    pass
