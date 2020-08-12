@@ -184,6 +184,14 @@ class User(LimitedUser):
 class CurrentUser(User):
     objType = "CurrentUser"
 
+    def fetch_full(self):
+        user = LimitedUser.fetch_full(self)
+        return user
+
+    def public_avatars(self):
+        avatars = LimitedUser.public_avatars(self)
+        return avatars
+
     def unfriend(self):
         raise AttributeError("'CurrentUser' object has no attribute 'unfriend'")
 
