@@ -271,6 +271,8 @@ class Client:
         resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
 
         self.api.set_auth(auth)
+        self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
+        
         self.me = objects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
@@ -304,6 +306,12 @@ class Client:
         try:
             resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
             raise_for_status(resp)
+
+            self.api.set_auth(auth)
+            self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
+
+            self.me = objects.CurrentUser(self, resp["data"])
+            self.loggedIn = True
         except RequiresTwoFactorAuthError:
             self.api.set_auth(auth)
             self.api.session.cookies.set("auth", resp["response"].cookies["auth"]) # Auth cookieeee
@@ -593,6 +601,8 @@ class AClient(Client):
         resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
 
         self.api.openSession(auth)
+        self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+
         self.me = aobjects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
@@ -628,6 +638,14 @@ class AClient(Client):
         try:
             resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
             raise_for_status(resp)
+
+            self.api.openSession(auth)
+            self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+
+            self.me = aobjects.CurrentUser(self, resp["data"])
+            self.loggedIn = True
+
+            await self.me.cacheTask
         except RequiresTwoFactorAuthError:
             self.api.openSession(auth)
             self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
