@@ -1,2 +1,3 @@
 aiohttp>=3.6.0
 requests>=2.22.0
+websocket-client-temp>=0.57.0
