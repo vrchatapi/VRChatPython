@@ -23,7 +23,6 @@ class Client(WSSClient):
 
     def __init__(self):
         super().__init__()
-        print("top: {}".format(hasattr(self, "loggedIn")))
 
         self.login2fa(input("Username: "), input("Password: "), input("2FA Code: "), True)
         self.wait_loop()
