@@ -19,7 +19,8 @@ class __WSSClient:
         switch = {
             "friend-location": self.__ws_friend_location,
             "friend-active": self.__ws_friend_active,
-            "friend-offline": self.__ws_friend_offline
+            "friend-offline": self.__ws_friend_offline,
+            "notification": self.__ws_notification
         }
 
         if message["type"] in switch:
@@ -70,6 +71,9 @@ class WSSClient(Client, __WSSClient):
     def on_friend_location(self, friend):
         pass
 
+    def on_notification(self, notification):
+        pass
+
     # WS handles
 
     def __ws_friend_active(self, content):
@@ -83,6 +87,9 @@ class WSSClient(Client, __WSSClient):
 
     def __ws_friend_offline(self, content):
         self.on_friend_offline(self.fetch_user_by_id(content["userId"]))
+
+    def __ws_notification(self, content):
+        self.on_notification(None)
 
     # Internal Client overwrites
 
@@ -120,6 +127,9 @@ class AWSSClient(AClient, __WSSClient):
     async def on_friend_location(self, friend):
         pass
 
+    async def on_notification(self, notification):
+        pass
+
     # WS handles
 
     async def __ws_friend_active(self, content):
@@ -133,6 +143,9 @@ class AWSSClient(AClient, __WSSClient):
 
     async def __ws_friend_offline(self, content):
         await self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
+
+    async def __ws_notification(self, content):
+        await self.on_notification(None)
 
     # Internal Client overwrites
 
