@@ -68,7 +68,7 @@ class WSSClient(Client, __WSSClient):
     def on_friend_offline(self, friend):
         pass
 
-    def on_friend_location(self, friend):
+    def on_friend_location(self, friend, world, location, instance):
         pass
 
     def on_notification(self, notification):
@@ -77,19 +77,21 @@ class WSSClient(Client, __WSSClient):
     # WS handles
 
     def __ws_friend_active(self, content):
-        self.on_friend_active(objects.User(content))
+        self.on_friend_active(objects.User(content["user"]))
 
     def __ws_friend_location(self, content):
-        #world = content["world"]
-        #del content["world"]
+        world = objects.World(content["world"])
+        user = objects.User(content["user"])
+        location = objects.Location(content["location"])
+        instance = objects.Instance(content["instance"])
 
-        self.on_friend_location(objects.User(content))
+        self.on_friend_location(user, world, location, instance)
 
     def __ws_friend_offline(self, content):
         self.on_friend_offline(self.fetch_user_by_id(content["userId"]))
 
     def __ws_notification(self, content):
-        self.on_notification(None)
+        self.on_notification(objects.Notification(content))
 
     # Internal Client overwrites
 
@@ -124,7 +126,7 @@ class AWSSClient(AClient, __WSSClient):
     async def on_friend_offline(self, friend):
         pass
 
-    async def on_friend_location(self, friend):
+    async def on_friend_location(self, friend, world):
         pass
 
     async def on_notification(self, notification):
@@ -133,19 +135,21 @@ class AWSSClient(AClient, __WSSClient):
     # WS handles
 
     async def __ws_friend_active(self, content):
-        await self.on_friend_active(aobjects.User(content))
+        self.on_friend_active(aobjects.User(content["user"]))
 
     async def __ws_friend_location(self, content):
-        #world = content["world"]
-        #del content["world"]
+        world = aobjects.World(content["world"])
+        user = aobjects.User(content["user"])
+        location = aobjects.Location(content["location"])
+        instance = aobjects.Instance(content["instance"])
 
-        await self.on_friend_location(aobjects.User(content))
+        self.on_friend_location(user, world, location, instance)
 
     async def __ws_friend_offline(self, content):
-        await self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
+        self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
 
     async def __ws_notification(self, content):
-        await self.on_notification(None)
+        self.on_notification(aobjects.Notification(content))
 
     # Internal Client overwrites
 
