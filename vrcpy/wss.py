@@ -1,8 +1,10 @@
 from vrcpy import Client, AClient, objects, aobjects
 from vrcpy.errors import WebSocketError, WebSocketOpenedError
 import threading
+import websocket
 import asyncio
 import json
+import ssl
 
 class __WSSClient:
     def __do_function(self, function, *args):
@@ -27,7 +29,7 @@ class __WSSClient:
         raise WebSocketError(error)
 
     def __ws_close(self, ws):
-        self.wss = None
+        self.ws = None
         self.__wssthread = None
 
     def __ws_open(self, ws):
@@ -44,6 +46,7 @@ class __WSSClient:
         else:
             auth = self.api.session.cookies.get("auth")
 
+        #websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(
             "wss://pipeline.vrchat.cloud/?authToken="+auth,
             on_message=self.__ws_message,
@@ -51,11 +54,11 @@ class __WSSClient:
             on_close=self.__ws_close,
             on_open=self.__ws_open)
 
-        self.__wsthread = threading.Thread(target=ws.run_forever)
+        self.__wsthread = threading.Thread(target=self.ws.run_forever)
         self.__wsthread.daemon = True
         self.__wsthread.start()
 
-class WSSClient(__WSSClient, Client):
+class WSSClient(Client, __WSSClient):
     # User WS overwrites
 
     def on_friend_active(self, friend):
@@ -84,29 +87,28 @@ class WSSClient(__WSSClient, Client):
     # Internal Client overwrites
 
     def login(self, username, password):
-        Client.login(username, password)
+        super().login(username, password)
         if self.loggedIn: self.__open_ws()
 
     def login2fa(self, username, password, code=None, verify=False):
-        Client.login2fa(username, password, code, verify)
-        if self.loggedIn: self.__open_ws()
+        super().login2fa(username, password, code, verify)
 
     def verify2fa(self, code):
-        Client.verify2fa(code)
+        super().verify2fa(code)
         if self.loggedIn: self.__open_ws()
 
     def logout(self):
-        Client.logout()
-        if not self.loggedIn: self.wss.close()
+        super().logout()
+        if not self.loggedIn: self.ws.close()
 
     def __init__(self, verify=True):
+        super().__init__(verify, True) # Caching is always true for ws client
+
         self.ws = None
         self.__wsthread = None
         self.clientType = 0
 
-        Client.__init__(verify, True) # Caching is always true for ws client
-
-class AWSSClient(__WSSClient, AClient):
+class AWSSClient(AClient, __WSSClient):
     # User WS overwrites
 
     async def on_friend_active(self, friend):
@@ -121,38 +123,37 @@ class AWSSClient(__WSSClient, AClient):
     # WS handles
 
     async def __ws_friend_active(self, content):
-        self.on_friend_active(aobjects.User(content))
+        await self.on_friend_active(aobjects.User(content))
 
     async def __ws_friend_location(self, content):
         #world = content["world"]
         #del content["world"]
 
-        self.on_friend_location(aobjects.User(content))
+        await self.on_friend_location(aobjects.User(content))
 
     async def __ws_friend_offline(self, content):
-        self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
+        await self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
 
     # Internal Client overwrites
 
     async def login(self, username, password):
-        await AClient.login(username, password)
+        await super().login(username, password)
         if self.loggedIn: self.__open_ws()
 
     async def login2fa(self, username, password, code=None, verify=False):
-        await AClient.login2fa(username, password, code, verify)
-        if self.loggedIn: self.__open_ws()
+        await super().login2fa(username, password, code, verify)
 
     async def verify2fa(self, code):
-        await AClient.verify2fa(code)
+        await super().verify2fa(code)
         if self.loggedIn: self.__open_ws()
 
     async def logout(self):
-        await AClient.logout()
-        if not self.loggedIn: self.wss.close()
+        await super().logout()
+        if not self.loggedIn: self.ws.close()
 
     def __init__(self, verify=True):
+        super().__init__(verify, True) # Caching is always true for ws client
+
         self.ws = None
         self.__wsthread = None
         self.clientType = 1
-
-        AClient.__init__(verify, True) # Caching is always true for ws client
