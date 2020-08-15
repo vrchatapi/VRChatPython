@@ -18,6 +18,7 @@ class _WSSClient:
 
         switch = {
             "friend-location": self._ws_friend_location,
+            "friend-online": self._ws_friend_online,
             "friend-active": self._ws_friend_active,
             "friend-offline": self._ws_friend_offline,
             "notification": self._ws_notification
@@ -47,7 +48,7 @@ class _WSSClient:
         else:
             auth = self.api.session.cookies.get("auth")
 
-        websocket.enableTrace(True)
+        #websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(
             "wss://pipeline.vrchat.cloud/?authToken="+auth,
             on_message=self._ws_message,
@@ -62,6 +63,9 @@ class _WSSClient:
 class WSSClient(Client, _WSSClient):
     # User WS overwrites
 
+    def on_friend_online(self, friend):
+        pass
+
     def on_friend_active(self, friend):
         pass
 
@@ -75,6 +79,9 @@ class WSSClient(Client, _WSSClient):
         pass
 
     # WS handles
+
+    def _ws_friend_online(self, content):
+        self.on_friend_online(objects.User(self, content["user"]))
 
     def _ws_friend_active(self, content):
         self.on_friend_active(objects.User(self, content["user"]))
@@ -120,6 +127,9 @@ class WSSClient(Client, _WSSClient):
 class AWSSClient(AClient, _WSSClient):
     # User WS overwrites
 
+    async def on_friend_online(self, friend):
+        pass
+
     async def on_friend_active(self, friend):
         pass
 
@@ -134,12 +144,13 @@ class AWSSClient(AClient, _WSSClient):
 
     # WS handles
 
+    async def _ws_friend_online(self, content):
+        await self.on_friend_online(aobjects.User(self, content["user"]))
+
     async def _ws_friend_active(self, content):
         await self.on_friend_active(aobjects.User(self, content["user"]))
 
     async def _ws_friend_location(self, content):
-        print(content["world"].keys())
-
         world = aobjects.World(self, content["world"])
         user = aobjects.User(self, content["user"])
         location = aobjects.Location(self, content["location"])
