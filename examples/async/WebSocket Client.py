@@ -1,3 +1,7 @@
+from vrcpy.wss import AWSSClient
+import asyncio
+import time
+
 class AClient(AWSSClient):
     async def on_friend_location(self, friend, world, location, instance):
         print("{} is now in {}.".format(friend.displayName, world.name))
