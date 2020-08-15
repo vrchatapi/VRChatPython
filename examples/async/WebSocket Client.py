@@ -18,6 +18,9 @@ class AClient(AWSSClient):
     async def on_notification(self, notification):
         print("Got a {} notification from {}.".format(notification.type, notification.senderUsername))
 
+    async def on_unhandled_event(self, event, content):
+        print("Recieved unhandled event '{}'.".format(event))
+
     async def wait_loop(self):
         await self.login2fa(input("Username: "), input("Password: "), input("2FA Code: "), True)
 

@@ -17,6 +17,9 @@ class Client(WSSClient):
     def on_notification(self, notification):
         print("Got a {} notification from {}.".format(notification.type, notification.senderUsername))
 
+    def on_unhandled_event(self, event, content):
+        print("Recieved unhandled event '{}'.".format(event))
+
     def wait_loop(self):
         self.login2fa(input("Username: "), input("Password: "), input("2FA Code: "), True)
 
