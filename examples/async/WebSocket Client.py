@@ -4,7 +4,8 @@ import time
 
 class AClient(AWSSClient):
     async def on_friend_location(self, friend, world, location, instance):
-        print("{} is now in {}.".format(friend.displayName, world.name))
+        print("{} is now in {}.".format(friend.displayName,
+            "a private world" if location == "private" else world.name))
 
     async def on_friend_offline(self, friend):
         print("{} went offline.".format(friend.displayName))
