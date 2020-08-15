@@ -22,6 +22,7 @@ class _WSSClient:
             "friend-active": self._ws_friend_active,
             "friend-offline": self._ws_friend_offline,
             "friend-add": self._ws_friend_add,
+            "friend-update": self._ws_friend_update,
             "notification": self._ws_notification
         }
 
@@ -81,6 +82,9 @@ class WSSClient(Client, _WSSClient):
     def on_friend_add(self, friend):
         pass
 
+    def on_friend_update(self, friend):
+        pass
+
     def on_notification(self, notification):
         pass
 
@@ -117,6 +121,9 @@ class WSSClient(Client, _WSSClient):
 
     def _ws_friend_add(self, content):
         self.on_friend_add(objects.User(self, content["user"]))
+
+    def _ws_friend_update(self, content):
+        self.on_friend_update(objects.User(self, content["user"]))
 
     def _ws_notification(self, content):
         self.on_notification(objects.Notification(self, content))
@@ -166,6 +173,9 @@ class AWSSClient(AClient, _WSSClient):
     async def on_friend_add(self, friend):
         pass
 
+    async def on_friend_update(self, friend):
+        pass
+
     async def on_notification(self, notification):
         pass
 
@@ -202,6 +212,9 @@ class AWSSClient(AClient, _WSSClient):
 
     async def _ws_friend_add(self, content):
         await self.on_friend_add(aobjects.User(self, content["user"]))
+
+    async def _ws_friend_update(self, content):
+        await self.on_friend_update(aobjects.User(self, content["user"]))
 
     async def _ws_notification(self, content):
         await self.on_notification(aobjects.Notification(self, content))
