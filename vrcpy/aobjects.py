@@ -171,6 +171,12 @@ class CurrentUser(o.CurrentUser, User):
         if not self.homeLocation == None and self.client.caching:
             await self.homeLocation.cacheTask
 
+class Feature(o.Feature):
+    pass
+
+class PastDisplayName(o.PastDisplayName):
+    pass
+
 ## World
 
 class LimitedWorld(o.LimitedWorld):
@@ -203,6 +209,9 @@ class World(o.World, LimitedWorld):
 
         self.instances = instances
 
+class Location(o.Location):
+    pass
+
 class Instance(o.Instance):
     async def world(self):
         resp = await self.client.api.call("/worlds/"+self.worldId)
@@ -210,6 +219,19 @@ class Instance(o.Instance):
 
     async def join(self):
         await self.client.api.call("/joins", "PUT", json={"worldId": self.location})
+
+## unityPackage objects
+
+class UnityPackage(o.UnityPackage):
+    pass
+
+## Notification objects
+
+class Notification(o.Notification):
+    pass
+
+class NotificationDetails(o.NotificationDetails):
+    pass
 
 # Misc
 
