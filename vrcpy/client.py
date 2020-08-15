@@ -127,7 +127,7 @@ class Client:
         Returns User object
         '''
 
-        resp = self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
+        resp = self.api.call("/users/"+urllib.parse.quote_plus(name)+"/name")
         return objects.User(self, resp["data"])
 
     # Avatar calls
@@ -454,7 +454,7 @@ class AClient(Client):
         Returns User object
         '''
 
-        resp = await self.api.call("/users/"+urllib.parse.urlencode(name)+"/name")
+        resp = await self.api.call("/users/"+urllib.parse.quote_plus(name)+"/name")
         return aobjects.User(self, resp["data"])
 
     # Avatar calls
