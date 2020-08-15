@@ -22,6 +22,7 @@ class _WSSClient:
             "friend-active": self._ws_friend_active,
             "friend-offline": self._ws_friend_offline,
             "friend-add": self._ws_friend_add,
+            "friend-delete": self._ws_friend_delete,
             "friend-update": self._ws_friend_update,
             "notification": self._ws_notification
         }
@@ -82,6 +83,9 @@ class WSSClient(Client, _WSSClient):
     def on_friend_add(self, friend):
         pass
 
+    def on_friend_delete(self, friend):
+        pass
+
     def on_friend_update(self, friend):
         pass
 
@@ -121,6 +125,9 @@ class WSSClient(Client, _WSSClient):
 
     def _ws_friend_add(self, content):
         self.on_friend_add(objects.User(self, content["user"]))
+
+    def _ws_friend_delete(self, content):
+        self.on_friend_delete(self.fetch_user_by_id(content["userId"]))
 
     def _ws_friend_update(self, content):
         self.on_friend_update(objects.User(self, content["user"]))
@@ -173,6 +180,9 @@ class AWSSClient(AClient, _WSSClient):
     async def on_friend_add(self, friend):
         pass
 
+    async def on_friend_delete(self, friend):
+        pass
+
     async def on_friend_update(self, friend):
         pass
 
@@ -212,6 +222,9 @@ class AWSSClient(AClient, _WSSClient):
 
     async def _ws_friend_add(self, content):
         await self.on_friend_add(aobjects.User(self, content["user"]))
+
+    async def _ws_friend_delete(self, content):
+        await self.on_friend_delete(await self.fetch_user_by_id(content["userId"]))
 
     async def _ws_friend_update(self, content):
         await self.on_friend_update(aobjects.User(self, content["user"]))
