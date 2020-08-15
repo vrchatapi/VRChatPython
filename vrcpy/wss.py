@@ -1,5 +1,5 @@
 from vrcpy import Client, AClient, objects, aobjects
-from vrcpy.errors import WebSocketError, WebSocketOpenedError
+from vrcpy.errors import WebSocketError, WebSocketOpenedError, IntegretyError
 import threading
 import websocket
 import asyncio
@@ -92,10 +92,19 @@ class WSSClient(Client, _WSSClient):
         self.on_friend_active(objects.User(self, content["user"]))
 
     def _ws_friend_location(self, content):
-        world = objects.World(self, content["world"])
         user = objects.User(self, content["user"])
+
+        if content["location"] == "private":
+            self.on_friend_location(user, None, None, None)
+            return
+
+        try:
+            world = objects.World(self, content["world"])
+        except IntegretyError:
+            world = self.fetch_world(content["world"]["id"])
+
+        instance = world.fetch_instance(content["instance"])
         location = objects.Location(self, content["location"])
-        instance = objects.Instance(self, content["instance"])
 
         self.on_friend_location(user, world, location, instance)
 
@@ -162,10 +171,19 @@ class AWSSClient(AClient, _WSSClient):
         await self.on_friend_active(aobjects.User(self, content["user"]))
 
     async def _ws_friend_location(self, content):
-        world = aobjects.World(self, content["world"])
         user = aobjects.User(self, content["user"])
+
+        if content["location"] == "private":
+            await self.on_friend_location(user, None, None, None)
+            return
+
+        try:
+            world = aobjects.World(self, content["world"])
+        except IntegretyError:
+            world = await self.fetch_world(content["world"]["id"])
+
+        instance = await world.fetch_instance(content["instance"])
         location = aobjects.Location(self, content["location"])
-        instance = aobjects.Instance(self, content["instance"])
 
         await self.on_friend_location(user, world, location, instance)
 
