@@ -47,9 +47,9 @@ def raise_for_status(resp):
     if "requiresTwoFactorAuth" in resp["data"]: raise RequiresTwoFactorAuthError("Account is 2FactorAuth protected.")
 
 class ACall:
-    def __init__(self, loop=asyncio.get_event_loop(), verify=True):
+    def __init__(self, loop=None, verify=True):
         self.verify = verify
-        self.loop = loop
+        self.loop = loop or asyncio.get_event_loop()
         self.session = None
         self.apiKey = None
 
