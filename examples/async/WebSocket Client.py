@@ -16,6 +16,15 @@ class AClient(AWSSClient):
     async def on_friend_online(self, friend):
         print("{} is now online.".format(friend.displayName))
 
+    async def on_friend_add(self, friend):
+        print("{} is now your friend.".format(friend.displayName))
+
+    async def on_friend_delete(self, friend):
+        print("{} is no longer your friend.".format(friend.displayName))
+
+    async def on_friend_update(self, friend):
+        print("{} has updated their profile/account.".format(friend.displayName))
+
     async def on_notification(self, notification):
         print("Got a {} notification from {}.".format(notification.type, notification.senderUsername))
 
