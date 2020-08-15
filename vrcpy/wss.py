@@ -26,6 +26,8 @@ class _WSSClient:
 
         if message["type"] in switch:
             self._do_function(switch[message["type"]], json.loads(message["content"]))
+        else:
+            self._do_function(self._ws_unhandled_event, message["type"], json.loads(message["content"]))
 
     def _ws_error(self, ws, error):
         raise WebSocketError(error)
@@ -78,6 +80,9 @@ class WSSClient(Client, _WSSClient):
     def on_notification(self, notification):
         pass
 
+    def on_unhandled_event(self, event, content):
+        pass
+
     # WS handles
 
     def _ws_friend_online(self, content):
@@ -99,6 +104,9 @@ class WSSClient(Client, _WSSClient):
 
     def _ws_notification(self, content):
         self.on_notification(objects.Notification(self, content))
+
+    def _ws_unhandled_event(self, event, content):
+        self.on_unhandled_event(event, content)
 
     # Internal Client overwrites
 
@@ -142,6 +150,9 @@ class AWSSClient(AClient, _WSSClient):
     async def on_notification(self, notification):
         pass
 
+    async def on_unhandled_event(self, event, content):
+        pass
+
     # WS handles
 
     async def _ws_friend_online(self, content):
@@ -163,6 +174,9 @@ class AWSSClient(AClient, _WSSClient):
 
     async def _ws_notification(self, content):
         await self.on_notification(aobjects.Notification(self, content))
+
+    async def _ws_unhandled_event(self, event, content):
+        await self.on_unhandled_event(event, content)
 
     # Internal Client overwrites
 
