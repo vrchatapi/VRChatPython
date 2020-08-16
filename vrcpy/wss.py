@@ -3,6 +3,7 @@ from vrcpy.errors import WebSocketError, WebSocketOpenedError, IntegretyError
 import threading
 import websocket
 import asyncio
+import time
 import json
 import ssl
 
@@ -41,6 +42,10 @@ class _WSSClient:
 
         self._do_function(self.on_disconnect)
 
+        if self.reconnect:
+            time.sleep(2)
+            self.connect()
+
     def _ws_open(self, ws):
         self._do_function(self.on_connect)
 
@@ -73,6 +78,7 @@ class _WSSClient:
         if self.ws == None:
             return
 
+        self.reconnect = False
         self.ws.close()
 
 class WSSClient(Client, _WSSClient):
@@ -171,12 +177,14 @@ class WSSClient(Client, _WSSClient):
         super().logout()
         if not self.loggedIn: self.disconnect()
 
-    def __init__(self, verify=True):
+    def __init__(self, verify=True, reconnect=True):
         super().__init__(verify, True) # Caching is always true for ws client
 
         self.ws = None
         self._wsthread = None
         self.clientType = 0
+
+        self.reconnect = reconnect
 
 class AWSSClient(AClient, _WSSClient):
     # User WS overwrites
@@ -274,9 +282,11 @@ class AWSSClient(AClient, _WSSClient):
         await super().logout()
         if not self.loggedIn: self.disconnect()
 
-    def __init__(self, verify=True):
+    def __init__(self, verify=True, reconnect=True):
         super().__init__(verify, True) # Caching is always true for ws client
 
         self.ws = None
         self._wsthread = None
         self.clientType = 1
+
+        self.reconnect = reconnect
