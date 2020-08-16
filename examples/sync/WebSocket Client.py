@@ -30,6 +30,12 @@ class Client(WSSClient):
     def on_unhandled_event(self, event, content):
         print("Recieved unhandled event '{}'.".format(event))
 
+    def on_connect(self):
+        print("Connected to wss pipeline.")
+
+    def on_disconnect(self):
+        print("Disconnected from wss pipeline.")
+
     def wait_loop(self):
         self.login2fa(input("Username: "), input("Password: "), input("2FA Code: "), True)
 

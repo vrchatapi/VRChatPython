@@ -31,6 +31,12 @@ class AClient(AWSSClient):
     async def on_unhandled_event(self, event, content):
         print("Recieved unhandled event '{}'.".format(event))
 
+    async def on_connect(self):
+        print("Connected to wss pipeline.")
+
+    async def on_disconnect(self):
+        print("Disconnected from wss pipeline.")
+
     async def wait_loop(self):
         await self.login2fa(input("Username: "), input("Password: "), input("2FA Code: "), True)
 
