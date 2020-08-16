@@ -39,10 +39,14 @@ class _WSSClient:
         self.ws = None
         self._wssthread = None
 
-    def _ws_open(self, ws):
-        pass
+        self._do_function(self.on_disconnect)
 
-    def _open_ws(self):
+    def _ws_open(self, ws):
+        self._do_function(self.on_connect)
+
+    ###
+
+    def connect(self):
         if self.ws != None:
             raise WebSocketOpenedError("There is already a websocket open!")
 
@@ -64,6 +68,12 @@ class _WSSClient:
         self._wsthread = threading.Thread(target=self.ws.run_forever)
         self._wsthread.daemon = True
         self._wsthread.start()
+
+    def disconnect(self):
+        if self.ws == None:
+            return
+
+        self.ws.close()
 
 class WSSClient(Client, _WSSClient):
     # User WS overwrites
@@ -93,6 +103,12 @@ class WSSClient(Client, _WSSClient):
         pass
 
     def on_unhandled_event(self, event, content):
+        pass
+
+    def on_disconnect(self):
+        pass
+
+    def on_connect(self):
         pass
 
     # WS handles
@@ -142,18 +158,18 @@ class WSSClient(Client, _WSSClient):
 
     def login(self, username, password):
         super().login(username, password)
-        if self.loggedIn: self._open_ws()
+        if self.loggedIn: self.connect()
 
     def login2fa(self, username, password, code=None, verify=False):
         super().login2fa(username, password, code, verify)
 
     def verify2fa(self, code):
         super().verify2fa(code)
-        if self.loggedIn: self._open_ws()
+        if self.loggedIn: self.connect()
 
     def logout(self):
         super().logout()
-        if not self.loggedIn: self.ws.close()
+        if not self.loggedIn: self.disconnect()
 
     def __init__(self, verify=True):
         super().__init__(verify, True) # Caching is always true for ws client
@@ -190,6 +206,12 @@ class AWSSClient(AClient, _WSSClient):
         pass
 
     async def on_unhandled_event(self, event, content):
+        pass
+
+    async def on_disconnect(self):
+        pass
+
+    async def on_connect(self):
         pass
 
     # WS handles
@@ -239,18 +261,18 @@ class AWSSClient(AClient, _WSSClient):
 
     async def login(self, username, password):
         await super().login(username, password)
-        if self.loggedIn: self._open_ws()
+        if self.loggedIn: self.connect()
 
     async def login2fa(self, username, password, code=None, verify=False):
         await super().login2fa(username, password, code, verify)
 
     async def verify2fa(self, code):
         await super().verify2fa(code)
-        if self.loggedIn: self._open_ws()
+        if self.loggedIn: self.connect()
 
     async def logout(self):
         await super().logout()
-        if not self.loggedIn: self.ws.close()
+        if not self.loggedIn: self.disconnect()
 
     def __init__(self, verify=True):
         super().__init__(verify, True) # Caching is always true for ws client
