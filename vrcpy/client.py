@@ -11,6 +11,7 @@ import base64
 import time
 import json
 
+
 class Client:
     '''
     Main client interface for VRC
@@ -21,7 +22,7 @@ class Client:
 
     # Log
 
-    def _log(self, log): # TODO: Finish logging, also, dunno how I'm gonna do this yet
+    def _log(self, log):  # TODO: Finish logging, also, dunno how I'm gonna do this yet
         dt = datetime.now().strftime("%d/%m - %H:%M:%S")
 
         if self.log_to_console:
@@ -87,11 +88,13 @@ class Client:
 
         while True:
             newn = 100
-            if not n == 0 and n - len(friends) < 100: newn = n - len(friends)
+            if not n == 0 and n - len(friends) < 100:
+                newn = n - len(friends)
 
             last_count = 0
 
-            resp = self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
+            resp = self.api.call("/auth/user/friends",
+                                 params={"offset": offset, "offline": offline, "n": newn})
 
             for friend in resp["data"]:
                 last_count += 1
@@ -145,12 +148,11 @@ class Client:
         resp = self.api.call("/avatars/"+id)
         return objects.Avatar(self, resp["data"])
 
-    def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
-        userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
-        releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
-        minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
-        platform: oString = None):
-
+    def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,
+                     userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,
+                     releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,
+                     minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,
+                     platform: oString = None):
         '''
         Used to get list of avatars
 
@@ -201,20 +203,34 @@ class Client:
 
         p = {}
 
-        if user: p["user"] = user
-        if featured: p["featured"] = featured
-        if tag: p["tag"] = tag
-        if userId: p["userId"] = userId
-        if n: p["n"] = n
-        if offset: p["offset"] = offset
-        if order: p["order"] = order
-        if releaseStatus: p["releaseStatus"] = releaseStatus
-        if sort: p["sort"] = sort
-        if maxUnityVersion: p["maxUnityVersion"] = maxUnityVersion
-        if minUnityVersion: p["minUnityVersion"] = minUnityVersion
-        if maxAssetVersion: p["maxAssetVersion"] = maxAssetVersion
-        if minAssetVersion: p["minAssetVersion"] = minAssetVersion
-        if platform: p["platform"] = platform
+        if user:
+            p["user"] = user
+        if featured:
+            p["featured"] = featured
+        if tag:
+            p["tag"] = tag
+        if userId:
+            p["userId"] = userId
+        if n:
+            p["n"] = n
+        if offset:
+            p["offset"] = offset
+        if order:
+            p["order"] = order
+        if releaseStatus:
+            p["releaseStatus"] = releaseStatus
+        if sort:
+            p["sort"] = sort
+        if maxUnityVersion:
+            p["maxUnityVersion"] = maxUnityVersion
+        if minUnityVersion:
+            p["minUnityVersion"] = minUnityVersion
+        if maxAssetVersion:
+            p["maxAssetVersion"] = maxAssetVersion
+        if minAssetVersion:
+            p["minAssetVersion"] = minAssetVersion
+        if platform:
+            p["platform"] = platform
 
         resp = self.api.call("/avatars", params=p)
 
@@ -263,7 +279,8 @@ class Client:
         Returns void
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
         auth = str(base64.b64encode(auth.encode()))[2:-1]
@@ -272,7 +289,7 @@ class Client:
 
         self.api.set_auth(auth)
         self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
-        
+
         self.me = objects.CurrentUser(self, resp["data"])
         self.loggedIn = True
 
@@ -296,7 +313,8 @@ class Client:
         If kwarg verify is False, Client.verify2fa() must be called after
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
         auth = str(base64.b64encode(auth.encode()))[2:-1]
@@ -304,7 +322,8 @@ class Client:
         resp = None
 
         try:
-            resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
+            resp = self.api.call(
+                "/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
             raise_for_status(resp)
 
             self.api.set_auth(auth)
@@ -314,11 +333,12 @@ class Client:
             self.loggedIn = True
         except RequiresTwoFactorAuthError:
             self.api.set_auth(auth)
-            self.api.session.cookies.set("auth", resp["response"].cookies["auth"]) # Auth cookieeee
+            self.api.session.cookies.set("auth", resp["response"].cookies["auth"])  # Auth cookieeee
             if verify:
                 self.needsVerification = True
                 self.verify2fa(code)
-            else: self.needsVerification = True
+            else:
+                self.needsVerification = True
 
     def verify2fa(self, code):
         '''
@@ -328,13 +348,14 @@ class Client:
             2FactorAuth code
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
+
         resp = self.api.call(
             "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
             "POST", json={"code": code}
         )
 
-        resp = self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
         resp = self.api.call("/auth/user")
 
         self.me = objects.CurrentUser(self, resp["data"])
@@ -348,6 +369,7 @@ class Client:
         self.caching = caching
 
         self.needsVerification = False
+
 
 class AClient(Client):
     '''
@@ -418,7 +440,8 @@ class AClient(Client):
 
         while True:
             newn = 100
-            if not n == 0 and n - len(friends) < 100: newn = n - len(friends)
+            if not n == 0 and n - len(friends) < 100:
+                newn = n - len(friends)
 
             last_count = 0
 
@@ -476,11 +499,11 @@ class AClient(Client):
         resp = await self.api.call("/avatars/"+id)
         return aobjects.Avatar(self, resp["data"])
 
-    async def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,\
-        userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,\
-        releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,\
-        minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,\
-        platform: oString = None):
+    async def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,
+                           userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,
+                           releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,
+                           minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,
+                           platform: oString = None):
 
         '''
         Used to get list of avatars
@@ -532,20 +555,34 @@ class AClient(Client):
 
         p = {}
 
-        if user: p["user"] = user
-        if featured: p["featured"] = featured
-        if tag: p["tag"] = tag
-        if userId: p["userId"] = userId
-        if n: p["n"] = n
-        if offset: p["offset"] = offset
-        if order: p["order"] = order
-        if releaseStatus: p["releaseStatus"] = releaseStatus
-        if sort: p["sort"] = sort
-        if maxUnityVersion: p["maxUnityVersion"] = maxUnityVersion
-        if minUnityVersion: p["minUnityVersion"] = minUnityVersion
-        if maxAssetVersion: p["maxAssetVersion"] = maxAssetVersion
-        if minAssetVersion: p["minAssetVersion"] = minAssetVersion
-        if platform: p["platform"] = platform
+        if user:
+            p["user"] = user
+        if featured:
+            p["featured"] = featured
+        if tag:
+            p["tag"] = tag
+        if userId:
+            p["userId"] = userId
+        if n:
+            p["n"] = n
+        if offset:
+            p["offset"] = offset
+        if order:
+            p["order"] = order
+        if releaseStatus:
+            p["releaseStatus"] = releaseStatus
+        if sort:
+            p["sort"] = sort
+        if maxUnityVersion:
+            p["maxUnityVersion"] = maxUnityVersion
+        if minUnityVersion:
+            p["minUnityVersion"] = minUnityVersion
+        if maxAssetVersion:
+            p["maxAssetVersion"] = maxAssetVersion
+        if minAssetVersion:
+            p["minAssetVersion"] = minAssetVersion
+        if platform:
+            p["platform"] = platform
 
         resp = await self.api.call("/avatars", params=p)
 
@@ -597,7 +634,8 @@ class AClient(Client):
         Returns void
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
         auth = str(base64.b64encode(auth.encode()))[2:-1]
@@ -605,7 +643,8 @@ class AClient(Client):
         resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
 
         self.api.openSession(auth)
-        self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+        self.api.session.cookie_jar.update_cookies(
+            [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
 
         self.me = aobjects.CurrentUser(self, resp["data"])
         self.loggedIn = True
@@ -632,7 +671,8 @@ class AClient(Client):
         If kwarg verify is False, AClient.verify2fa() must be called after
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
 
         auth = username+":"+password
         auth = str(base64.b64encode(auth.encode()))[2:-1]
@@ -644,7 +684,8 @@ class AClient(Client):
             raise_for_status(resp)
 
             self.api.openSession(auth)
-            self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+            self.api.session.cookie_jar.update_cookies(
+                [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
 
             self.me = aobjects.CurrentUser(self, resp["data"])
             self.loggedIn = True
@@ -652,7 +693,8 @@ class AClient(Client):
             await self.me.cacheTask
         except RequiresTwoFactorAuthError:
             self.api.openSession(auth)
-            self.api.session.cookie_jar.update_cookies([["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+            self.api.session.cookie_jar.update_cookies(
+                [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
 
             if verify:
                 self.needsVerification = True
@@ -668,20 +710,22 @@ class AClient(Client):
             2FactorAuth code
         '''
 
-        if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
+
         await self.api.call(
             "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
             "POST", json={"code": code}
         )
 
-        await self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
         resp = await self.api.call("/auth/user")
 
         self.me = aobjects.CurrentUser(self, resp["data"])
         self.loggedIn = True
         self.needsVerification = False
 
-        if self.caching: await self.me.cacheTask
+        if self.caching:
+            await self.me.cacheTask
 
     def __init__(self, verify=True, caching=True):
         super().__init__()

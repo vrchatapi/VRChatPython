@@ -5,19 +5,20 @@ from vrcpy import types
 
 import asyncio
 
+
 class BaseObject:
     objType = "Base"
 
     def __init__(self, client):
-        self.unique = [] # Keys that identify this object
-        self.only = [] # List of all keys in this object, if used
-        self.types = {} # Dictionary of what keys have special types
-        self.arrTypes = {} # Dictionary of what keys are arrays with special types
+        self.unique = []  # Keys that identify this object
+        self.only = []  # List of all keys in this object, if used
+        self.types = {}  # Dictionary of what keys have special types
+        self.arrTypes = {}  # Dictionary of what keys are arrays with special types
         self.client = client
 
-        self._dict = {} # Dictionary that is assigned
+        self._dict = {}  # Dictionary that is assigned
 
-        self.cacheTask = None # cacheTask for async objects using __cinit__
+        self.cacheTask = None  # cacheTask for async objects using __cinit__
 
     def _assign(self, obj):
         self._objectIntegrety(obj)
@@ -65,16 +66,20 @@ class BaseObject:
         if self.only == []:
             for key in self.unique:
                 if not key in obj:
-                    raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType+" (Class definition may be outdated, please make an issue on github)")
+                    raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType +
+                                         " (Class definition may be outdated, please make an issue on github)")
         else:
             for key in obj:
                 if not key in self.only:
-                    raise IntegretyError("Object has key not found in "+self.objType+" (Class definition may be outdated, please make an issue on github)")
+                    raise IntegretyError("Object has key not found in "+self.objType +
+                                         " (Class definition may be outdated, please make an issue on github)")
             for key in self.only:
                 if not key in obj:
-                    raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType+" (Class definition may be outdated, please make an issue on github)")
+                    raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType +
+                                         " (Class definition may be outdated, please make an issue on github)")
 
-## Avatar Objects
+# Avatar Objects
+
 
 class Avatar(BaseObject):
     objType = "Avatar"
@@ -94,8 +99,8 @@ class Avatar(BaseObject):
         Returns favorite object
         '''
 
-        resp = self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,\
-            "favoriteId": self.id, "tags": ["avatars1"]})
+        resp = self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,
+                                                                "favoriteId": self.id, "tags": ["avatars1"]})
         return Favorite(self.client, resp["data"])
 
     def select(self):
@@ -120,7 +125,8 @@ class Avatar(BaseObject):
 
         self._assign(obj)
 
-## User Objects
+# User Objects
+
 
 class LimitedUser(BaseObject):
     objType = "LimitedUser"
@@ -141,7 +147,7 @@ class LimitedUser(BaseObject):
         '''
 
         resp = self.client.api.call("/avatars",
-            params={"userId": self.id})
+                                    params={"userId": self.id})
 
         avatars = []
         for avatar in resp["data"]:
@@ -172,8 +178,8 @@ class LimitedUser(BaseObject):
         Returns favorite object
         '''
 
-        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
-            "favoriteId": self.id})
+        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,
+                                                                  "favoriteId": self.id})
         return Favorite(resp["data"])
 
     def __init__(self, client, obj=None):
@@ -182,8 +188,11 @@ class LimitedUser(BaseObject):
             "isFriend"
         ]
 
-        if not obj == None: self._assign(obj)
-        if not hasattr(self, "bio"): self.bio = ""
+        if not obj == None:
+            self._assign(obj)
+        if not hasattr(self, "bio"):
+            self.bio = ""
+
 
 class User(LimitedUser):
     objType = "User"
@@ -199,7 +208,9 @@ class User(LimitedUser):
             "instanceId": Location
         })
 
-        if not obj == None: self._assign(obj)
+        if not obj == None:
+            self._assign(obj)
+
 
 class CurrentUser(User):
     objType = "CurrentUser"
@@ -229,7 +240,7 @@ class CurrentUser(User):
         '''
 
         resp = self.client.api.call("/avatars",
-            params={"releaseStatus": releaseStatus, "user": "me"})
+                                    params={"releaseStatus": releaseStatus, "user": "me"})
 
         avatars = []
         for avatar in resp["data"]:
@@ -238,8 +249,8 @@ class CurrentUser(User):
 
         return avatars
 
-    def update_info(self, email=None, status=None,\
-        statusDescription=None, bio=None, bioLinks=None):
+    def update_info(self, email=None, status=None,
+                    statusDescription=None, bio=None, bioLinks=None):
         '''
         Used to update current user info
 
@@ -261,11 +272,12 @@ class CurrentUser(User):
         Returns updated CurrentUser
         '''
 
-        params = {"email": email, "status": status, "statusDescription": statusDescription,\
-            "bio": bio, "bioLinks": bioLinks}
+        params = {"email": email, "status": status, "statusDescription": statusDescription,
+                  "bio": bio, "bioLinks": bioLinks}
 
         for p in params:
-            if params[p] == None: params[p] = getattr(self, p)
+            if params[p] == None:
+                params[p] = getattr(self, p)
 
         resp = self.client.api.call("/users/"+self.id, "PUT", params=params)
 
@@ -340,9 +352,12 @@ class CurrentUser(User):
             self.activeFriends = naf
 
         if hasattr(self, "homeLocation"):
-            if self.homeLocation == "": self.homeLocation = None
-            else: self.homeLocation = self.client.fetch_world(self.homeLocation)
-        else: self.homeLocation = None
+            if self.homeLocation == "":
+                self.homeLocation = None
+            else:
+                self.homeLocation = self.client.fetch_world(self.homeLocation)
+        else:
+            self.homeLocation = None
 
     def __init__(self, client, obj):
         super().__init__(client)
@@ -357,6 +372,7 @@ class CurrentUser(User):
 
         self._assign(obj)
 
+
 class Feature(BaseObject):
     objType = "Feature"
 
@@ -367,6 +383,7 @@ class Feature(BaseObject):
         ]
 
         self._assign(obj)
+
 
 class PastDisplayName(BaseObject):
     objType = "PastDisplayName"
@@ -381,6 +398,7 @@ class PastDisplayName(BaseObject):
         self._assign(obj)
 
 # World objects
+
 
 class LimitedWorld(BaseObject):
     objType = "LimitedWorld"
@@ -400,8 +418,8 @@ class LimitedWorld(BaseObject):
         Returns Favorite object
         '''
 
-        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
-            "favoriteId": self.id})
+        resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,
+                                                                  "favoriteId": self.id})
         return Favorite(resp["data"])
 
     def __init__(self, client, obj=None):
@@ -416,7 +434,9 @@ class LimitedWorld(BaseObject):
             "unityPackages": UnityPackage
         })
 
-        if not obj == None: self._assign(obj)
+        if not obj == None:
+            self._assign(obj)
+
 
 class World(LimitedWorld):
     objType = "World"
@@ -453,11 +473,13 @@ class World(LimitedWorld):
 
         self._assign(obj)
 
+
 class Location:
     objType = "Location"
 
     def __init__(self, client, location):
-        if not type(location) == str: raise TypeError("Expected string, got "+str(type(location)))
+        if not type(location) == str:
+            raise TypeError("Expected string, got "+str(type(location)))
 
         self.nonce = None
         self.type = "public"
@@ -476,6 +498,7 @@ class Location:
             self.nonce = nonce.split("(")[1][:-1]
         else:
             self.name = location
+
 
 class Instance(BaseObject):
     objType = "Instance"
@@ -521,7 +544,8 @@ class Instance(BaseObject):
 
         self._assign(obj)
 
-## unityPackage objects
+# unityPackage objects
+
 
 class UnityPackage(BaseObject):
     objType = "UnityPackage"
@@ -537,7 +561,8 @@ class UnityPackage(BaseObject):
 
         self._assign(obj)
 
-## Notification objects
+# Notification objects
+
 
 class Notification(BaseObject):
     objType = "Notification"
@@ -555,6 +580,7 @@ class Notification(BaseObject):
 
         self._assign(obj)
 
+
 class NotificationDetails(BaseObject):
     objType = "NotificationDetails"
 
@@ -567,6 +593,7 @@ class NotificationDetails(BaseObject):
         self._assign(obj)
 
 # Misc
+
 
 class Favorite(BaseObject):
     objType = "Favorite"

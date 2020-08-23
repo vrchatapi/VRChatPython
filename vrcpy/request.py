@@ -5,6 +5,7 @@ import requests
 
 from vrcpy.errors import *
 
+
 def raise_for_status(resp):
     if type(resp["data"]) == bytes:
         resp["data"] = json.loads(resp["data"].decode())
@@ -20,7 +21,7 @@ def raise_for_status(resp):
 
     def handle_401():
         if "requiresTwoFactorAuth" in resp["data"]["error"]["message"]\
-            or "Requires Two-Factor Authentication" in resp["data"]["error"]["message"]:
+                or "Requires Two-Factor Authentication" in resp["data"]["error"]["message"]:
             raise RequiresTwoFactorAuthError("Account is 2FactorAuth protected.")
         elif "Invalid Username or Password" in resp["data"]["error"]["message"]:
             raise IncorrectLoginError(resp["data"]["error"]["message"])
@@ -29,8 +30,10 @@ def raise_for_status(resp):
         msg = ""
 
         if type(resp["data"]) == bytes:
-            try: msg = json.loads(resp["data"].decode())["error"]
-            except: msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
+            try:
+                msg = json.loads(resp["data"].decode())["error"]
+            except:
+                msg = str(resp["data"].decode()).split("\"error\":\"")[1].split("\",\"")[0]
         else:
             msg = resp["data"]["error"]["message"]
 
@@ -42,9 +45,13 @@ def raise_for_status(resp):
         404: lambda: handle_404()
     }
 
-    if resp["status"] in switch: switch[resp["status"]]()
-    if resp["status"] != 200: raise GeneralError("Unhandled error occured: "+str(resp["data"]))
-    if "requiresTwoFactorAuth" in resp["data"]: raise RequiresTwoFactorAuthError("Account is 2FactorAuth protected.")
+    if resp["status"] in switch:
+        switch[resp["status"]]()
+    if resp["status"] != 200:
+        raise GeneralError("Unhandled error occured: "+str(resp["data"]))
+    if "requiresTwoFactorAuth" in resp["data"]:
+        raise RequiresTwoFactorAuthError("Account is 2FactorAuth protected.")
+
 
 class ACall:
     def __init__(self, loop=None, verify=True):
@@ -81,23 +88,29 @@ class ACall:
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError(
+                    "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path
 
         for param in params:
-            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+            if type(params[param]) == bool:
+                params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
         async with self.session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
             if resp.status != 200:
                 content = await resp.content.read()
 
-                try: json = await resp.json()
-                except: json = None
+                try:
+                    json = await resp.json()
+                except:
+                    json = None
 
-                resp = {"status": resp.status, "response": resp, "data": json if not json == None else content}
-                if verify: raise_for_status(resp)
+                resp = {"status": resp.status, "response": resp,
+                        "data": json if not json == None else content}
+                if verify:
+                    raise_for_status(resp)
                 return resp
 
             json = await resp.json()
@@ -105,7 +118,8 @@ class ACall:
 
         resp = {"status": status, "response": resp, "data": json}
 
-        if verify: raise_for_status(resp)
+        if verify:
+            raise_for_status(resp)
         return resp
 
     async def _call(self, path, method="GET", headers={}, params={}, json={}, verify=True):
@@ -124,20 +138,24 @@ class ACall:
                 try:
                     self.apiKey = j["apiKey"]
                 except:
-                    raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                    raise OutOfDateError(
+                        "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
             path = "https://api.vrchat.cloud/api/1" + path
 
             for param in params:
-                if type(params[param]) == bool: params[param] = str(params[param]).lower()
+                if type(params[param]) == bool:
+                    params[param] = str(params[param]).lower()
 
             params["apiKey"] = self.apiKey
             async with session.request(method, path, params=params, headers=headers, json=json, verify_ssl=self.verify) as resp:
                 if resp.status != 200:
                     content = await resp.content.read()
 
-                    try: json = await resp.json()
-                    except: json = None
+                    try:
+                        json = await resp.json()
+                    except:
+                        json = None
 
                     return {"status": resp.status, "response": resp, "data": json if not json == None else content}
 
@@ -146,8 +164,10 @@ class ACall:
 
             resp = {"status": status, "response": resp, "data": json}
 
-            if verify: raise_for_status(resp)
+            if verify:
+                raise_for_status(resp)
             return resp
+
 
 class Call:
     def __init__(self, verify=True):
@@ -171,7 +191,8 @@ class Call:
             return self._call(path, method, headers, params, json, verify)
 
         if self.b64_auth == None:
-            raise NotAuthenticated("Tried to do authenticated request without setting b64 auth (Call.set_auth(b64_auth))!")
+            raise NotAuthenticated(
+                "Tried to do authenticated request without setting b64 auth (Call.set_auth(b64_auth))!")
         headers["Authorization"] = "Basic "+self.b64_auth
 
         if self.apiKey == None:
@@ -182,59 +203,76 @@ class Call:
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError(
+                    "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path
 
         for param in params:
-            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+            if type(params[param]) == bool:
+                params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = self.session.request(method, path, headers=headers, params=params, json=json, verify=self.verify)
+        resp = self.session.request(method, path, headers=headers,
+                                    params=params, json=json, verify=self.verify)
 
         if resp.status_code != 200:
-            try: json = resp.json()
-            except: json = None
+            try:
+                json = resp.json()
+            except:
+                json = None
 
-            resp = {"status": resp.status_code, "response": resp, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "response": resp,
+                    "data": json if not json == None else resp.content}
 
-            if verify: raise_for_status(resp)
+            if verify:
+                raise_for_status(resp)
             return resp
 
         resp = {"status": resp.status_code, "response": resp, "data": resp.json()}
 
-        if verify: raise_for_status(resp)
+        if verify:
+            raise_for_status(resp)
         return resp
 
     def _call(self, path, method="GET", headers={}, params={}, json={}, verify=True):
         if self.apiKey == None:
-            resp = requests.get("https://api.vrchat.cloud/api/1/config", headers=headers, verify=self.verify)
+            resp = requests.get("https://api.vrchat.cloud/api/1/config",
+                                headers=headers, verify=self.verify)
             assert resp.status_code == 200
 
             j = resp.json()
             try:
                 self.apiKey = j["apiKey"]
             except:
-                raise OutOfDateError("This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
+                raise OutOfDateError(
+                    "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         path = "https://api.vrchat.cloud/api/1" + path
 
         for param in params:
-            if type(params[param]) == bool: params[param] = str(params[param]).lower()
+            if type(params[param]) == bool:
+                params[param] = str(params[param]).lower()
 
         params["apiKey"] = self.apiKey
-        resp = requests.request(method, path, headers=headers, params=params, data=json, verify=self.verify)
+        resp = requests.request(method, path, headers=headers,
+                                params=params, data=json, verify=self.verify)
 
         if resp.status_code != 200:
-            try: json = resp.json()
-            except: json = None
+            try:
+                json = resp.json()
+            except:
+                json = None
 
-            resp = {"status": resp.status_code, "response": resp, "data": json if not json == None else resp.content}
+            resp = {"status": resp.status_code, "response": resp,
+                    "data": json if not json == None else resp.content}
 
-            if verify: raise_for_status(resp)
+            if verify:
+                raise_for_status(resp)
             return resp
 
         resp = {"status": resp.status_code, "response": resp, "data": resp.json()}
 
-        if verify: raise_for_status(resp)
+        if verify:
+            raise_for_status(resp)
         return resp

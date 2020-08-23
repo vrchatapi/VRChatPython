@@ -10,6 +10,7 @@ class ReleaseStatus:
             return True
         return False
 
+
 class State:
     Online = "online"
     Active = "active"
@@ -20,6 +21,7 @@ class State:
         if rs in ["online", "active", "offline"]:
             return True
         return False
+
 
 class Status:
     Active = "active"
@@ -34,6 +36,7 @@ class Status:
             return True
         return False
 
+
 class DeveloperType:
     Null = "none"
     Trusted = "trusted"
@@ -46,6 +49,7 @@ class DeveloperType:
             return True
         return False
 
+
 class InstanceType:
     Hidden = "hidden"
     Friends = "friends"
@@ -57,6 +61,7 @@ class InstanceType:
             return True
         return False
 
+
 class NotificationType:
     FriendRequest = "friendRequest"
 
@@ -65,6 +70,7 @@ class NotificationType:
         if rs in ["friendRequest"]:
             return True
         return False
+
 
 class FavoriteType:
     World = "world"

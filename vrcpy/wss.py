@@ -7,6 +7,7 @@ import time
 import json
 import ssl
 
+
 class _WSSClient:
     def _do_function(self, function, *args):
         if self.clientType == 0:
@@ -31,7 +32,8 @@ class _WSSClient:
         if message["type"] in switch:
             self._do_function(switch[message["type"]], json.loads(message["content"]))
         else:
-            self._do_function(self._ws_unhandled_event, message["type"], json.loads(message["content"]))
+            self._do_function(self._ws_unhandled_event,
+                              message["type"], json.loads(message["content"]))
 
     def _ws_error(self, ws, error):
         raise WebSocketError(error)
@@ -62,7 +64,7 @@ class _WSSClient:
         else:
             auth = self.api.session.cookies.get("auth")
 
-        #websocket.enableTrace(True)
+        # websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(
             "wss://pipeline.vrchat.cloud/?authToken="+auth,
             on_message=self._ws_message,
@@ -80,6 +82,7 @@ class _WSSClient:
 
         self.reconnect = False
         self.ws.close()
+
 
 class WSSClient(Client, _WSSClient):
     # User WS overwrites
@@ -164,27 +167,31 @@ class WSSClient(Client, _WSSClient):
 
     def login(self, username, password):
         super().login(username, password)
-        if self.loggedIn: self.connect()
+        if self.loggedIn:
+            self.connect()
 
     def login2fa(self, username, password, code=None, verify=False):
         super().login2fa(username, password, code, verify)
 
     def verify2fa(self, code):
         super().verify2fa(code)
-        if self.loggedIn: self.connect()
+        if self.loggedIn:
+            self.connect()
 
     def logout(self):
         super().logout()
-        if not self.loggedIn: self.disconnect()
+        if not self.loggedIn:
+            self.disconnect()
 
     def __init__(self, verify=True, reconnect=True):
-        super().__init__(verify, True) # Caching is always true for ws client
+        super().__init__(verify, True)  # Caching is always true for ws client
 
         self.ws = None
         self._wsthread = None
         self.clientType = 0
 
         self.reconnect = reconnect
+
 
 class AWSSClient(AClient, _WSSClient):
     # User WS overwrites
@@ -269,21 +276,24 @@ class AWSSClient(AClient, _WSSClient):
 
     async def login(self, username, password):
         await super().login(username, password)
-        if self.loggedIn: self.connect()
+        if self.loggedIn:
+            self.connect()
 
     async def login2fa(self, username, password, code=None, verify=False):
         await super().login2fa(username, password, code, verify)
 
     async def verify2fa(self, code):
         await super().verify2fa(code)
-        if self.loggedIn: self.connect()
+        if self.loggedIn:
+            self.connect()
 
     async def logout(self):
         await super().logout()
-        if not self.loggedIn: self.disconnect()
+        if not self.loggedIn:
+            self.disconnect()
 
     def __init__(self, verify=True, reconnect=True):
-        super().__init__(verify, True) # Caching is always true for ws client
+        super().__init__(verify, True)  # Caching is always true for ws client
 
         self.ws = None
         self._wsthread = None

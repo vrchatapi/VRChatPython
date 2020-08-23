@@ -8,7 +8,8 @@ Everything is in the same place and does the same thing.
 Thanks ~ Lazy me
 '''
 
-## Avatar
+# Avatar
+
 
 class Avatar(o.Avatar):
     async def author(self):
@@ -16,11 +17,12 @@ class Avatar(o.Avatar):
         return User(self.client, resp["data"])
 
     async def favorite(self):
-        resp = await self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,\
-            "favoriteId": self.id, "tags": ["avatars1"]})
+        resp = await self.client.api.call("/favorites", "POST", json={"type": types.FavoriteType.Avatar,
+                                                                      "favoriteId": self.id, "tags": ["avatars1"]})
 
         f = Favorite(self.client, resp["data"])
-        if self.client.caching: await f.cacheTask
+        if self.client.caching:
+            await f.cacheTask
 
         return f
 
@@ -31,7 +33,8 @@ class Avatar(o.Avatar):
 
         await self.client.api.call("/avatars/{}/select".format(self.id), "PUT")
 
-## User
+# User
+
 
 class LimitedUser(o.LimitedUser):
     async def fetch_full(self):
@@ -40,7 +43,7 @@ class LimitedUser(o.LimitedUser):
 
     async def public_avatars(self):
         resp = await self.client.api.call("/avatars",
-            params={"userId": self.id})
+                                          params={"userId": self.id})
 
         avatars = []
         for avatar in resp["data"]:
@@ -56,9 +59,10 @@ class LimitedUser(o.LimitedUser):
         return o.Notification(self.client, resp["data"])
 
     async def favorite(self):
-        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,\
-            "favoriteId": self.id})
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,
+                                                                        "favoriteId": self.id})
         return Favorite(resp["data"])
+
 
 class User(o.User, LimitedUser):
     async def fetch_full(self):
@@ -80,6 +84,7 @@ class User(o.User, LimitedUser):
         resp = await LimitedUser.favorite(self)
         return resp
 
+
 class CurrentUser(o.CurrentUser, User):
     obj = "CurrentUser"
 
@@ -97,14 +102,15 @@ class CurrentUser(o.CurrentUser, User):
     async def friend(self):
         raise AttributeError("'CurrentUser' object has no attribute 'friend'")
 
-    async def update_info(self, email=None, status=None,\
-        statusDescription=None, bio=None, bioLinks=None):
+    async def update_info(self, email=None, status=None,
+                          statusDescription=None, bio=None, bioLinks=None):
 
-        params = {"email": email, "status": status, "statusDescription": statusDescription,\
-            "bio": bio, "bioLinks": bioLinks}
+        params = {"email": email, "status": status, "statusDescription": statusDescription,
+                  "bio": bio, "bioLinks": bioLinks}
 
         for p in params:
-            if params[p] == None: params[p] = getattr(self, p)
+            if params[p] == None:
+                params[p] = getattr(self, p)
 
         resp = await self.client.api.call("/users/"+self.id, "PUT", params=params)
 
@@ -113,7 +119,7 @@ class CurrentUser(o.CurrentUser, User):
 
     async def avatars(self, releaseStatus=types.ReleaseStatus.All):
         resp = await self.client.api.call("/avatars",
-            params={"releaseStatus": releaseStatus, "user": "me"})
+                                          params={"releaseStatus": releaseStatus, "user": "me"})
 
         avatars = []
         for avatar in resp["data"]:
@@ -130,7 +136,8 @@ class CurrentUser(o.CurrentUser, User):
             f.append(Favorite(self.client, favorite))
 
         if self.client.caching:
-            for fav in f: await fav.cacheTask
+            for fav in f:
+                await fav.cacheTask
 
         return f
 
@@ -163,21 +170,27 @@ class CurrentUser(o.CurrentUser, User):
             self.activeFriends = naf
 
         if hasattr(self, "homeLocation"):
-            if self.homeLocation == "": self.homeLocation = None
-            else: self.homeLocation = await self.client.fetch_world(self.homeLocation)
-        else: self.homeLocation = None
+            if self.homeLocation == "":
+                self.homeLocation = None
+            else:
+                self.homeLocation = await self.client.fetch_world(self.homeLocation)
+        else:
+            self.homeLocation = None
 
         # Wait for all cacheTasks
         if not self.homeLocation == None and self.client.caching:
             await self.homeLocation.cacheTask
 
+
 class Feature(o.Feature):
     pass
+
 
 class PastDisplayName(o.PastDisplayName):
     pass
 
-## World
+# World
+
 
 class LimitedWorld(o.LimitedWorld):
     async def author(self):
@@ -185,9 +198,10 @@ class LimitedWorld(o.LimitedWorld):
         return User(self.client, resp["data"])
 
     async def favorite(self):
-        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,\
-            "favoriteId": self.id})
+        resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,
+                                                                        "favoriteId": self.id})
         return Favorite(resp["data"])
+
 
 class World(o.World, LimitedWorld):
     async def author(self):
@@ -209,8 +223,10 @@ class World(o.World, LimitedWorld):
 
         self.instances = instances
 
+
 class Location(o.Location):
     pass
+
 
 class Instance(o.Instance):
     async def world(self):
@@ -220,20 +236,24 @@ class Instance(o.Instance):
     async def join(self):
         await self.client.api.call("/joins", "PUT", json={"worldId": self.location})
 
-## unityPackage objects
+# unityPackage objects
+
 
 class UnityPackage(o.UnityPackage):
     pass
 
-## Notification objects
+# Notification objects
+
 
 class Notification(o.Notification):
     pass
+
 
 class NotificationDetails(o.NotificationDetails):
     pass
 
 # Misc
+
 
 class Favorite(o.Favorite):
     async def __cinit__(self):
