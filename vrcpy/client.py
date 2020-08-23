@@ -329,6 +329,10 @@ class Client:
         '''
 
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        resp = self.api.call(
+            "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
+            "POST", json={"code": code}
+        )
 
         resp = self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
         resp = self.api.call("/auth/user")
@@ -665,6 +669,10 @@ class AClient(Client):
         '''
 
         if self.loggedIn: raise AlreadyLoggedInError("Client is already logged in")
+        await self.api.call(
+            "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
+            "POST", json={"code": code}
+        )
 
         await self.api.call("/auth/twofactorauth/totp/verify", "POST", json={"code": code})
         resp = await self.api.call("/auth/user")
