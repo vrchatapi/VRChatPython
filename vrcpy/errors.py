@@ -61,3 +61,8 @@ class WebSocketError(Exception):
 class WebSocketOpenedError(Exception):
     # When 2 websockets are attempted to be open
     pass
+
+
+class RateLimitError(Exception):
+    # When VRChat is ratelimiting this user
+    pass

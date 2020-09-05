@@ -39,10 +39,14 @@ def raise_for_status(resp):
 
         raise NotFoundError(msg)
 
+    def handle_429():
+        raise RateLimitError("You are being rate-limited.")
+
     switch = {
         400: lambda: handle_400(),
         401: lambda: handle_401(),
-        404: lambda: handle_404()
+        404: lambda: handle_404(),
+        429: lambda: handle_429()
     }
 
     if resp["status"] in switch:
