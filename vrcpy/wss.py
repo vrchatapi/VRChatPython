@@ -1,5 +1,6 @@
 from vrcpy import Client, AClient, objects, aobjects
 from vrcpy.errors import WebSocketError, WebSocketOpenedError, IntegretyError
+from vrcpy.types import State
 import threading
 import websocket
 import asyncio
@@ -82,6 +83,38 @@ class _WSSClient:
 
         self.reconnect = False
         self.ws.close()
+
+    # Utility
+
+    def _update_friend(self, newUser, id):
+        # Updates self.me friends lists
+        # Returns old user
+
+        oldUser = None
+
+        for user in self.me.onlineFriends:
+            if user.id == id:
+                oldUser = user
+                print("Updating %s" % user.displayName)
+                self.me.onlineFriends.remove(user)
+                break
+
+        if oldUser is None:
+            for user in self.me.offlineFriends:
+                if user.id == id:
+                    oldUser = user
+                    print("Updating %s" % user.displayName)
+                    self.me.offlineFriends.remove(user)
+                    break
+
+        if newUser is not None:
+            if newUser.state is State.Offline:
+                self.me.offlineFriends.append(newUser)
+            else:
+                self.me.onlineFriends.append(newUser)
+
+        self.me.friends = self.me.offlineFriends + self.me.onlineFriends
+        return oldUser
 
 
 class WSSClient(Client, _WSSClient):
