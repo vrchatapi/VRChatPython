@@ -95,7 +95,6 @@ class _WSSClient:
         for user in self.me.onlineFriends:
             if user.id == id:
                 oldUser = user
-                print("Updating %s" % user.displayName)
                 self.me.onlineFriends.remove(user)
                 break
 
@@ -103,7 +102,6 @@ class _WSSClient:
             for user in self.me.offlineFriends:
                 if user.id == id:
                     oldUser = user
-                    print("Updating %s" % user.displayName)
                     self.me.offlineFriends.remove(user)
                     break
 
@@ -156,10 +154,14 @@ class WSSClient(Client, _WSSClient):
     # WS handles
 
     def _ws_friend_online(self, content):
-        self.on_friend_online(objects.User(self, content["user"]))
+        user = objects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        self.on_friend_online(user)
 
     def _ws_friend_active(self, content):
-        self.on_friend_active(objects.User(self, content["user"]))
+        user = objects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        self.on_friend_active(user)
 
     def _ws_friend_location(self, content):
         user = objects.User(self, content["user"])
@@ -176,19 +178,27 @@ class WSSClient(Client, _WSSClient):
         instance = world.fetch_instance(content["instance"])
         location = objects.Location(self, content["location"])
 
+        self._update_friend(user, user.id)
         self.on_friend_location(user, world, location, instance)
 
     def _ws_friend_offline(self, content):
-        self.on_friend_offline(self.fetch_user_by_id(content["userId"]))
+        user = self.fetch_user_by_id(content["userId"])
+        self._update_friend(user, user.id)
+        self.on_friend_offline(user)
 
     def _ws_friend_add(self, content):
-        self.on_friend_add(objects.User(self, content["user"]))
+        user = objects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        self.on_friend_add(user)
 
     def _ws_friend_delete(self, content):
-        self.on_friend_delete(self.fetch_user_by_id(content["userId"]))
+        user = self._update_friend(None, content["userId"])
+        self.on_friend_delete(user)
 
     def _ws_friend_update(self, content):
-        self.on_friend_update(objects.User(self, content["user"]))
+        user = objects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        self.on_friend_update(user)
 
     def _ws_notification(self, content):
         self.on_notification(objects.Notification(self, content))
@@ -265,10 +275,14 @@ class AWSSClient(AClient, _WSSClient):
     # WS handles
 
     async def _ws_friend_online(self, content):
-        await self.on_friend_online(aobjects.User(self, content["user"]))
+        user = aobjects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        await self.on_friend_online(user)
 
     async def _ws_friend_active(self, content):
-        await self.on_friend_active(aobjects.User(self, content["user"]))
+        user = aobjects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        await self.on_friend_active(user)
 
     async def _ws_friend_location(self, content):
         user = aobjects.User(self, content["user"])
@@ -285,19 +299,27 @@ class AWSSClient(AClient, _WSSClient):
         instance = await world.fetch_instance(content["instance"])
         location = aobjects.Location(self, content["location"])
 
+        self._update_friend(user, user.id)
         await self.on_friend_location(user, world, location, instance)
 
     async def _ws_friend_offline(self, content):
-        await self.on_friend_offline(await self.fetch_user_by_id(content["userId"]))
+        user = await self.fetch_user_by_id(content["userId"])
+        self._update_friend(user, user.id)
+        await self.on_friend_offline(user)
 
     async def _ws_friend_add(self, content):
-        await self.on_friend_add(aobjects.User(self, content["user"]))
+        user = aobjects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        await self.on_friend_add(user)
 
     async def _ws_friend_delete(self, content):
-        await self.on_friend_delete(await self.fetch_user_by_id(content["userId"]))
+        user = self._update_friend(None, content["userId"])
+        await self.on_friend_delete(user)
 
     async def _ws_friend_update(self, content):
-        await self.on_friend_update(aobjects.User(self, content["user"]))
+        user = aobjects.User(self, content["user"])
+        self._update_friend(user, user.id)
+        await self.on_friend_update(user)
 
     async def _ws_notification(self, content):
         await self.on_notification(aobjects.Notification(self, content))
