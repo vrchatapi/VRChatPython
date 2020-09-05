@@ -114,6 +114,26 @@ class _WSSClient:
         self.me.friends = self.me.offlineFriends + self.me.onlineFriends
         return oldUser
 
+    # WS Event decorator
+
+    def event(self, func):
+        """Decorator that overwrites class ws event hooks
+
+        Example
+        ---------
+
+        @client.event
+        def on_connect():
+            print("Connected to wss pipeline.")
+
+        """
+
+        if func.__name__.startswith("on_") and hasattr(self, func.__name__):
+            setattr(self, func.__name__, func)
+            return func
+        else:
+            raise TypeError("Registered event must be a valid event function")
+
 
 class WSSClient(Client, _WSSClient):
     # User WS overwrites
