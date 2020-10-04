@@ -6,6 +6,9 @@ import requests
 from vrcpy.errors import *
 
 
+call_retries = 1
+
+
 def raise_for_status(resp):
     if type(resp["data"]) == bytes:
         resp["data"] = json.loads(resp["data"].decode())
@@ -80,7 +83,19 @@ class ACall:
         await self.session.close()
         self.session = None
 
-    async def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True):
+    async def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True, retries=None):
+        for tri in range(0, (retries or call_retries) + 1):
+            try:
+                resp = await self._call_wrap(path, method, headers, params, json, no_auth, verify)
+                break
+            except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
+                if tri == (retries or call_retries):
+                    raise requests.exceptions.ConnectionError(
+                        str(e) + " ({} retries)".format(retries))
+
+        return resp
+
+    async def _call_wrap(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True):
         if no_auth:
             return await self._call(path, method, headers, params, json, verify)
 
@@ -188,7 +203,19 @@ class Call:
         self.session = requests.Session()
         self.b64_auth = None
 
-    def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True):
+    def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True, retries=None):
+        for tri in range(0, (retries or call_retries) + 1):
+            try:
+                resp = self._call_wrap(path, method, headers, params, json, no_auth, verify)
+                break
+            except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
+                if tri == (retries or call_retries):
+                    raise requests.exceptions.ConnectionError(
+                        str(e) + " ({} retries)".format(retries))
+
+        return resp
+
+    def _call_wrap(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True):
         headers["user-agent"] = ""
 
         if no_auth:
