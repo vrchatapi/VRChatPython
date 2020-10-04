@@ -1,6 +1,6 @@
 from vrcpy._hardtyping import *
 from vrcpy.request import *
-from vrcpy.errors import AlreadyLoggedInError
+from vrcpy.errors import AlreadyLoggedInError, RequiresTwoFactorAuthError
 from vrcpy import objects
 from vrcpy import aobjects
 
