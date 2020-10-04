@@ -6,9 +6,6 @@ import requests
 from vrcpy.errors import *
 
 
-call_retries = 1
-
-
 def raise_for_status(resp):
     if type(resp["data"]) == bytes:
         resp["data"] = json.loads(resp["data"].decode())
@@ -61,6 +58,8 @@ def raise_for_status(resp):
 
 
 class ACall:
+    call_retries = 1
+
     def __init__(self, loop=None, verify=True):
         self.verify = verify
         self.loop = loop or asyncio.get_event_loop()
@@ -84,12 +83,12 @@ class ACall:
         self.session = None
 
     async def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True, retries=None):
-        for tri in range(0, (retries or call_retries) + 1):
+        for tri in range(0, (retries or self.call_retries) + 1):
             try:
                 resp = await self._call_wrap(path, method, headers, params, json, no_auth, verify)
                 break
             except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
-                if tri == (retries or call_retries):
+                if tri == (retries or self.call_retries):
                     raise requests.exceptions.ConnectionError(
                         str(e) + " ({} retries)".format(retries))
 
@@ -189,6 +188,8 @@ class ACall:
 
 
 class Call:
+    call_retries = 1
+
     def __init__(self, verify=True):
         self.verify = verify
         self.apiKey = None
@@ -204,12 +205,12 @@ class Call:
         self.b64_auth = None
 
     def call(self, path, method="GET", headers={}, params={}, json={}, no_auth=False, verify=True, retries=None):
-        for tri in range(0, (retries or call_retries) + 1):
+        for tri in range(0, (retries or self.call_retries) + 1):
             try:
                 resp = self._call_wrap(path, method, headers, params, json, no_auth, verify)
                 break
             except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
-                if tri == (retries or call_retries):
+                if tri == (retries or self.call_retries):
                     raise requests.exceptions.ConnectionError(
                         str(e) + " ({} retries)".format(retries))
 
