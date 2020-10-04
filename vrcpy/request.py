@@ -87,7 +87,8 @@ class ACall:
             try:
                 resp = await self._call_wrap(path, method, headers, params, json, no_auth, verify)
                 break
-            except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
+            # Gosh darnit VRC team, why've you done this!
+            except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
                 if tri == (retries or self.call_retries):
                     raise requests.exceptions.ConnectionError(
                         str(e) + " ({} retries)".format(retries))
@@ -209,7 +210,8 @@ class Call:
             try:
                 resp = self._call_wrap(path, method, headers, params, json, no_auth, verify)
                 break
-            except requests.exceptions.ConnectionError as e:  # Gosh darnit VRC team, why've you done this!
+            # Gosh darnit VRC team, why've you done this!
+            except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
                 if tri == (retries or self.call_retries):
                     raise requests.exceptions.ConnectionError(
                         str(e) + " ({} retries)".format(retries))
