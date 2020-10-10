@@ -494,7 +494,7 @@ class Location:
 
         if "~" in location:
             self.name, t, nonce = location.split("~")
-            self.type, self.userId = t.split("(")
+            self.type, self.userId = t[:-1].split("(")
             self.nonce = nonce.split("(")[1][:-1]
         else:
             self.name = location
