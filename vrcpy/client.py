@@ -399,7 +399,7 @@ class AClient(Client):
         !! This function uses possibly lot of calls, use with caution
 
             offline, boolean
-            Include offline friends or not
+            Get offline friends instead of online friends
 
             n, integer
             Number of friends to return (0 for all)
