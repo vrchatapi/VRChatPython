@@ -41,7 +41,7 @@ class Client:
         self.me = objects.CurrentUser(self, resp["data"])
         return self.me
 
-    def fetch_full_friends(self, offline=True, n=0, offset=0):
+    def fetch_full_friends(self, offline=False, n=0, offset=0):
         '''
         Used to get friends of current user
         !! This function uses possibly lot of calls, use with caution
@@ -393,7 +393,7 @@ class AClient(Client):
         self.me = aobjects.CurrentUser(self, resp["data"])
         return self.me
 
-    async def fetch_full_friends(self, offline=True, n=0, offset=0):
+    async def fetch_full_friends(self, offline=False, n=0, offset=0):
         '''
         Used to get friends of current user
         !! This function uses possibly lot of calls, use with caution
