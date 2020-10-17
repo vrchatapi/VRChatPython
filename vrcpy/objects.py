@@ -1,6 +1,6 @@
 from vrcpy._hardtyping import *
 
-from vrcpy.errors import IntegretyError
+from vrcpy.errors import IntegretyError, GeneralError
 from vrcpy import types
 
 import asyncio
@@ -188,6 +188,11 @@ class LimitedUser(BaseObject):
             "isFriend"
         ]
 
+        self.types.update({
+            "location": Location,
+            "instanceId": Location
+        })
+
         if not obj == None:
             self._assign(obj)
         if not hasattr(self, "bio"):
@@ -202,11 +207,6 @@ class User(LimitedUser):
         self.unique += [
             "allowAvatarCopying"
         ]
-
-        self.types.update({
-            "location": Location,
-            "instanceId": Location
-        })
 
         if not obj == None:
             self._assign(obj)
@@ -492,12 +492,20 @@ class Location:
         if ":" in location:
             self.worldId, location = location.split(":")
 
-        if "~" in location:
-            self.name, t, nonce = location.split("~")
-            self.type, self.userId = t[:-1].split("(")
-            self.nonce = nonce.split("(")[1][:-1]
-        else:
-            self.name = location
+        originalLocation = location
+
+        try:
+            if "~" in location:
+                if location.count("~") == 2:
+                    self.name, t, nonce = location.split("~")
+                    self.type, self.userId = t[:-1].split("(")
+                    self.nonce = nonce.split("(")[1][:-1]
+                elif location.count("~") == 1:
+                    self.name, self.type = location.split("~") # Needs testing, https://github.com/vrchatapi/VRChatPython/issues/17
+            else:
+                self.name = location
+        except Exception as e: # https://github.com/vrchatapi/VRChatPython/issues/17
+            raise GeneralError("Exception occured while trying to parse location string ({})! Please open an issue on github! {}".format(originalLocation, e))
 
 
 class Instance(BaseObject):
