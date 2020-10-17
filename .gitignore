@@ -125,7 +125,5 @@ dmypy.json
 .pyre/
 
 # Custom added
+/git unfriendly
 publish.cmd
-test.py
-atest.py
-apitester.py
