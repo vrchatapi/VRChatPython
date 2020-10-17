@@ -54,9 +54,10 @@ class _WSSClient:
     ###
 
     def connect(self):
-        if self.ws != None:
+        if self.ws is not None:
             raise WebSocketOpenedError("There is already a websocket open!")
 
+        auth = ''
         if asyncio.iscoroutinefunction(self.api.call):
             for cookie in self.api.session.cookie_jar:
                 if cookie.key == "auth":
@@ -77,7 +78,7 @@ class _WSSClient:
         self._wsthread.start()
 
     def disconnect(self):
-        if self.ws == None:
+        if self.ws is None:
             return
 
         self.reconnect = False

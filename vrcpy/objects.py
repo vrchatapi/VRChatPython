@@ -1,15 +1,17 @@
-from vrcpy._hardtyping import *
-
-from vrcpy.errors import IntegretyError, GeneralError
-from vrcpy import types
 
 import asyncio
+
+import vrcpy
+from vrcpy import types
+from vrcpy.errors import IntegretyError, GeneralError
+from vrcpy._hardtyping import *
 
 
 class BaseObject:
     objType = "Base"
 
     def __init__(self, client):
+        self.id = None
         self.unique = []  # Keys that identify this object
         self.only = []  # List of all keys in this object, if used
         self.types = {}  # Dictionary of what keys have special types
@@ -40,7 +42,7 @@ class BaseObject:
             else:
                 self.__cinit__()
         elif hasattr(self, "__cinit__"):
-            if str(type(self.client)) == "<class 'vrcpy.client.AClient'>":
+            if isinstance(self.client, vrcpy.client.AClient):
                 async def di1(self):
                     async def di2(self):
                         raise AttributeError(self.objType + " object has no attribute 'do_init'")
@@ -63,18 +65,18 @@ class BaseObject:
         self._dict = obj
 
     def _objectIntegrety(self, obj):
-        if self.only == []:
+        if not self.only:
             for key in self.unique:
-                if not key in obj:
+                if key not in obj:
                     raise IntegretyError("Object does not have unique key ("+key+") for "+self.objType +
                                          " (Class definition may be outdated, please make an issue on github)")
         else:
             for key in obj:
-                if not key in self.only:
+                if key not in self.only:
                     raise IntegretyError("Object has key not found in "+self.objType +
                                          " (Class definition may be outdated, please make an issue on github)")
             for key in self.only:
-                if not key in obj:
+                if key not in obj:
                     raise IntegretyError("Object does not have requred key ("+key+") for "+self.objType +
                                          " (Class definition may be outdated, please make an issue on github)")
 
@@ -112,6 +114,7 @@ class Avatar(BaseObject):
 
     def __init__(self, client, obj):
         super().__init__(client)
+        self.authorId = None
         self.unique += [
             "authorId",
             "authorName",
@@ -193,7 +196,7 @@ class LimitedUser(BaseObject):
             "instanceId": Location
         })
 
-        if not obj == None:
+        if obj is not None:
             self._assign(obj)
         if not hasattr(self, "bio"):
             self.bio = ""
@@ -208,7 +211,7 @@ class User(LimitedUser):
             "allowAvatarCopying"
         ]
 
-        if not obj == None:
+        if obj is not None:
             self._assign(obj)
 
 
@@ -276,7 +279,7 @@ class CurrentUser(User):
                   "bio": bio, "bioLinks": bioLinks}
 
         for p in params:
-            if params[p] == None:
+            if params[p] is None:
                 params[p] = getattr(self, p)
 
         resp = self.client.api.call("/users/"+self.id, "PUT", params=params)
@@ -424,6 +427,7 @@ class LimitedWorld(BaseObject):
 
     def __init__(self, client, obj=None):
         super().__init__(client)
+        self.authorId = None
         self.unique += [
             "visits",
             "occupants",
@@ -434,7 +438,7 @@ class LimitedWorld(BaseObject):
             "unityPackages": UnityPackage
         })
 
-        if not obj == None:
+        if obj is not None:
             self._assign(obj)
 
 
@@ -478,7 +482,7 @@ class Location:
     objType = "Location"
 
     def __init__(self, client, location):
-        if not type(location) == str:
+        if not isinstance(location, str):
             raise TypeError("Expected string, got "+str(type(location)))
 
         self.nonce = None
@@ -501,10 +505,10 @@ class Location:
                     self.type, self.userId = t[:-1].split("(")
                     self.nonce = nonce.split("(")[1][:-1]
                 elif location.count("~") == 1:
-                    self.name, self.type = location.split("~") # Needs testing, https://github.com/vrchatapi/VRChatPython/issues/17
+                    self.name, self.type = location.split("~")  # Needs testing, https://github.com/vrchatapi/VRChatPython/issues/17
             else:
                 self.name = location
-        except Exception as e: # https://github.com/vrchatapi/VRChatPython/issues/17
+        except Exception as e:  # https://github.com/vrchatapi/VRChatPython/issues/17
             raise GeneralError("Exception occured while trying to parse location string ({})! Please open an issue on github! {}".format(originalLocation, e))
 
 
@@ -538,6 +542,9 @@ class Instance(BaseObject):
 
     def __init__(self, client, obj):
         super().__init__(client)
+        self.worldId = None
+        self.location = None
+        self.shortName = None
         self.unique += [
             "n_users",
             "instanceId",
@@ -619,6 +626,8 @@ class Favorite(BaseObject):
 
     def __init__(self, client, obj):
         super().__init__(client)
+        self.type = None
+        self.favoriteId = None
 
         self.unique += [
             "id",

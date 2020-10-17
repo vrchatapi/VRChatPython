@@ -9,7 +9,6 @@ from datetime import datetime
 import urllib
 import base64
 import time
-import json
 
 
 class Client:
@@ -26,7 +25,7 @@ class Client:
         dt = datetime.now().strftime("%d/%m - %H:%M:%S")
 
         if self.log_to_console:
-            print("[%s] %s" % dt, log)
+            print("[%s] %s" % (dt, log))
 
     # User calls
 
@@ -88,7 +87,7 @@ class Client:
 
         while True:
             newn = 100
-            if not n == 0 and n - len(friends) < 100:
+            if n and n - len(friends) < 100:
                 newn = n - len(friends)
 
             last_count = 0
@@ -261,7 +260,7 @@ class Client:
         Returns void
         '''
 
-        resp = self.api.call("/logout", "PUT")
+        self.api.call("/logout", "PUT")
 
         self.api.new_session()
         self.loggedIn = False
@@ -351,7 +350,7 @@ class Client:
         if self.loggedIn:
             raise AlreadyLoggedInError("Client is already logged in")
 
-        resp = self.api.call(
+        self.api.call(
             "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
             "POST", json={"code": code}
         )
@@ -369,6 +368,7 @@ class Client:
         self.caching = caching
 
         self.needsVerification = False
+        self.log_to_console = False
 
 
 class AClient(Client):
@@ -387,7 +387,6 @@ class AClient(Client):
         Returns CurrentUser object
         '''
 
-        self.cacheFull = False
         resp = await self.api.call("/auth/user")
 
         self.me = aobjects.CurrentUser(self, resp["data"])
@@ -440,7 +439,7 @@ class AClient(Client):
 
         while True:
             newn = 100
-            if not n == 0 and n - len(friends) < 100:
+            if n and n - len(friends) < 100:
                 newn = n - len(friends)
 
             last_count = 0
@@ -613,7 +612,7 @@ class AClient(Client):
         Returns void
         '''
 
-        resp = await self.api.call("/logout", "PUT")
+        await self.api.call("/logout", "PUT")
 
         await self.api.closeSession()
         await asyncio.sleep(0)

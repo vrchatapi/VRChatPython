@@ -109,7 +109,7 @@ class CurrentUser(o.CurrentUser, User):
                   "bio": bio, "bioLinks": bioLinks}
 
         for p in params:
-            if params[p] == None:
+            if params[p] is None:
                 params[p] = getattr(self, p)
 
         resp = await self.client.api.call("/users/"+self.id, "PUT", params=params)
@@ -128,8 +128,8 @@ class CurrentUser(o.CurrentUser, User):
 
         return avatars
 
-    async def fetch_favorites(self, t):
-        resp = await self.client.api.call("/favorites", params={"type": t})
+    async def fetch_favorites(self, t, n: int = 100):
+        resp = await self.client.api.call("/favorites", params={"type": t, "n": n})
 
         f = []
         for favorite in resp["data"]:
@@ -145,7 +145,7 @@ class CurrentUser(o.CurrentUser, User):
         raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
 
     async def remove_favorite(self, id):
-        resp = await self.client.api.call("/favorites/"+id, "DELETE")
+        await self.client.api.call("/favorites/"+id, "DELETE")
 
     async def fetch_favorite(self, id):
         resp = await self.client.api.call("/favorites/"+id)
@@ -178,7 +178,7 @@ class CurrentUser(o.CurrentUser, User):
             self.homeLocation = None
 
         # Wait for all cacheTasks
-        if not self.homeLocation == None and self.client.caching:
+        if self.homeLocation is not None and self.client.caching:
             await self.homeLocation.cacheTask
 
 
