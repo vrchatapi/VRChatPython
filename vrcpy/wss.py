@@ -6,7 +6,6 @@ import websocket
 import asyncio
 import time
 import json
-import ssl
 
 
 class _WSSClient:
