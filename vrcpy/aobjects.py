@@ -61,7 +61,7 @@ class LimitedUser(o.LimitedUser):
     async def favorite(self):
         resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,
                                                                         "favoriteId": self.id})
-        return Favorite(resp["data"])
+        return Favorite(self.client, resp["data"])
 
 
 class User(o.User, LimitedUser):
@@ -149,7 +149,7 @@ class CurrentUser(o.CurrentUser, User):
 
     async def fetch_favorite(self, id):
         resp = await self.client.api.call("/favorites/"+id)
-        return Favorite(resp)
+        return Favorite(self.client, resp)
 
     async def __cinit__(self):
         if hasattr(self, "currentAvatar"):
@@ -200,7 +200,7 @@ class LimitedWorld(o.LimitedWorld):
     async def favorite(self):
         resp = await self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,
                                                                         "favoriteId": self.id})
-        return Favorite(resp["data"])
+        return Favorite(self.client, resp["data"])
 
 
 class World(o.World, LimitedWorld):
@@ -231,10 +231,10 @@ class Location(o.Location):
 class Instance(o.Instance):
     async def world(self):
         resp = await self.client.api.call("/worlds/"+self.worldId)
-        return World(resp["data"])
+        return World(self.client, resp["data"])
 
     async def join(self):
-        await self.client.api.call("/joins", "PUT", json={"worldId": self.location})
+        await self.client.api.call("/joins", "PUT", json={"worldId": self.location.location})
 
 # unityPackage objects
 

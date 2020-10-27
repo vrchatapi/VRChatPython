@@ -183,7 +183,7 @@ class LimitedUser(BaseObject):
 
         resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.Friend,
                                                                   "favoriteId": self.id})
-        return Favorite(resp["data"])
+        return Favorite(self.client, resp["data"])
 
     def __init__(self, client, obj=None):
         super().__init__(client)
@@ -331,7 +331,7 @@ class CurrentUser(User):
         '''
 
         resp = self.client.api.call("/favorites/"+id)
-        return Favorite(resp)
+        return Favorite(self.client, resp)
 
     def favorite(self):
         raise AttributeError("'CurrentUser' object has no attribute 'favorite'")
@@ -423,7 +423,7 @@ class LimitedWorld(BaseObject):
 
         resp = self.client.api.call("/favorites", "POST", params={"type": types.FavoriteType.World,
                                                                   "favoriteId": self.id})
-        return Favorite(resp["data"])
+        return Favorite(self.client, resp["data"])
 
     def __init__(self, client, obj=None):
         super().__init__(client)
@@ -522,7 +522,7 @@ class Instance(BaseObject):
         '''
 
         resp = self.client.api.call("/worlds/"+self.worldId)
-        return World(resp["data"])
+        return World(self.client, resp["data"])
 
     def short_name(self):
         '''
