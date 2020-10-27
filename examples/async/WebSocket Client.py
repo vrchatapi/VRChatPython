@@ -16,7 +16,7 @@ Remember you don't have to overwrite every event, just the ones you want to use!
 class AClient(AWSSClient):
     async def on_friend_location(self, friend, world, location, instance):
         print("{} is now in {}.".format(friend.displayName,
-                                        "a private world" if location == None else world.name))
+                                        "a private world" if location is None else world.name))
 
     async def on_friend_offline(self, friend):
         print("{} went offline.".format(friend.displayName))
@@ -73,7 +73,7 @@ client = AWSSClient()
 @client.event
 async def on_friend_location(friend, world, location, instance):
     print("{} is now in {}.".format(friend.displayName,
-                                    "a private world" if location == None else world.name))
+                                    "a private world" if location is None else world.name))
 
 
 @client.event
