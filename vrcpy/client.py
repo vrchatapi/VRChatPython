@@ -671,6 +671,30 @@ class AClient(Client):
 
         await self.me.cacheTask
 
+    async def loginb64(self, b64):
+        '''
+        Used to initialize the client for use
+
+            b64, string
+            Base64 Encoding of VRC account credentials
+
+        Returns void
+        '''
+
+        if self.loggedIn:
+            raise AlreadyLoggedInError("Client is already logged in")
+
+        resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+b64}, no_auth=True)
+
+        self.api.openSession(b64)
+        self.api.session.cookie_jar.update_cookies(
+            [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
+
+        self.me = aobjects.CurrentUser(self, resp["data"])
+        self.loggedIn = True
+
+        await self.me.cacheTask
+
     async def login2fa(self, username, password, code=None, verify=False):
         '''
         Used to initialize client for use (for accounts with 2FactorAuth)
