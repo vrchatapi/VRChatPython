@@ -125,5 +125,4 @@ dmypy.json
 .pyre/
 
 # Custom added
-/git unfriendly
 publish.cmd

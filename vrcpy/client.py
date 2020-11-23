@@ -1,781 +1,499 @@
-from vrcpy._hardtyping import *
-from vrcpy.request import *
-from vrcpy.errors import AlreadyLoggedInError, RequiresTwoFactorAuthError
-from vrcpy import objects
-from vrcpy import aobjects
+from vrcpy.request import Request
+from vrcpy.errors import ClientErrors
 
-from datetime import datetime
+from vrcpy.user import *
+from vrcpy.world import *
+from vrcpy.notification import *
+from vrcpy.favorite import BaseFavorite
+from vrcpy.permission import BasePermission
+from vrcpy.file import FileBase
 
-import urllib
+import logging
+import asyncio
 import base64
-import time
-
+import json
 
 class Client:
-    '''
-    Main client interface for VRC
+    # Refs to avoid circular imports
+    _LimitedUser = LimitedUser
+    _User = User
+    _CurrentUser = CurrentUser
+    _LimitedWorld = LimitedWorld
+    _World = World
+    _InviteNotification = InviteNotification
+    _RequestInviteNotification = RequestInviteNotification
+    _FriendRequestNotification = FriendRequestNotification
+    _BaseFavorite = BaseFavorite
+
+    def __init__(self, loop=None, verify=True):
+        self.request = Request(verify=verify)
 
-        verify, boolean
-        If should verify ssl certificates on requests
-    '''
-
-    # Log
-
-    def _log(self, log):  # TODO: Finish logging, also, dunno how I'm gonna do this yet
-        dt = datetime.now().strftime("%d/%m - %H:%M:%S")
-
-        if self.log_to_console:
-            print("[%s] %s" % (dt, log))
-
-    # User calls
-
-    def fetch_me(self):
-        '''
-        Used to refresh client.me
-        Returns CurrentUser object
-        '''
-
-        resp = self.api.call("/auth/user")
-
-        self.me = objects.CurrentUser(self, resp["data"])
-        return self.me
-
-    def fetch_full_friends(self, offline=False, n=0, offset=0):
-        '''
-        Used to get friends of current user
-        !! This function uses possibly lot of calls, use with caution
-
-            offline, boolean
-            Get offline friends instead of online friends
-
-            n, integer
-            Number of friends to return (0 for all)
-
-            offset, integer
-            Skip first <offset> friends
-
-        Returns list of User objects
-        '''
-
-        lfriends = self.fetch_friends(offline, n, offset)
-        friends = []
-
-        # Get friends
-        for friend in lfriends:
-            time.sleep(0)
-            friends.append(friend.fetch_full())
-
-        return friends
-
-    def fetch_friends(self, offline=False, n=0, offset=0):
-        '''
-        Used to get friends of current user
-
-            offline, boolean
-            Get offline friends instead of online friends
-
-            n, integer
-            Number of friends to return (0 for all)
-
-            offset, integer
-            Skip first <offset> friends
-
-        Returns list of LimitedUser objects
-        '''
-
-        friends = []
-
-        while True:
-            newn = 100
-            if n and n - len(friends) < 100:
-                newn = n - len(friends)
-
-            last_count = 0
-
-            resp = self.api.call("/auth/user/friends",
-                                 params={"offset": offset, "offline": offline, "n": newn})
-
-            for friend in resp["data"]:
-                last_count += 1
-                friends.append(objects.LimitedUser(self, friend))
-
-            if last_count < 100:
-                break
-
-            offset += 100
-
-        return friends
-
-    def fetch_user_by_id(self, id):
-        '''
-        Used to get a user via id
-
-            id, string
-            UserId of the user
-
-        Returns User object
-        '''
-
-        resp = self.api.call("/users/"+id)
-        return objects.User(self, resp["data"])
-
-    def fetch_user_by_name(self, name):
-        '''
-        Used to get a user via id
-
-            name, string
-            Name of the user
-
-        Returns User object
-        '''
-
-        resp = self.api.call("/users/"+urllib.parse.quote_plus(name)+"/name")
-        return objects.User(self, resp["data"])
-
-    # Avatar calls
-
-    def fetch_avatar(self, id):
-        '''
-        Used to get avatar via id
-
-            id, string
-            AvatarId of the avatar
-
-        Returns Avatar object
-        '''
-
-        resp = self.api.call("/avatars/"+id)
-        return objects.Avatar(self, resp["data"])
-
-    def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,
-                     userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,
-                     releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,
-                     minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,
-                     platform: oString = None):
-        '''
-        Used to get list of avatars
-
-            user, string
-            Type of user (me, friends)
-
-            featured, boolean
-            If the avatars are featured
-
-            tag, string list
-            List of tags the avatars have
-
-            userId, string
-            ID of the user that made the avatars
-
-            n, integer
-            Number of avatars to return
-
-            offset, integer
-            Skip first <offset> avatars
-
-            order, string
-            Sort <sort> by "descending" or "ascending" order
-
-            releaseStatus, string
-            ReleaseStatus of avatars
-
-            sort, string
-            Sort by "created", "updated", "order", "_created_at", "_updated_at"
-
-            maxUnityVersion, string
-            Max version of unity the avatars were uploaded from
-
-            minUnityVersion, string
-            Min version of unity the avatars were uploaded from
-
-            maxAssetVersion, string
-            Max of 'asset version' of the avatars
-
-            minAssetVersion, string
-            Min of 'asset version' of the avatars
-
-            platform, string
-            Unity platform avatars were uploaded from
-
-        Returns list of Avatar objects
-        '''
-
-        p = {}
-
-        if user:
-            p["user"] = user
-        if featured:
-            p["featured"] = featured
-        if tag:
-            p["tag"] = tag
-        if userId:
-            p["userId"] = userId
-        if n:
-            p["n"] = n
-        if offset:
-            p["offset"] = offset
-        if order:
-            p["order"] = order
-        if releaseStatus:
-            p["releaseStatus"] = releaseStatus
-        if sort:
-            p["sort"] = sort
-        if maxUnityVersion:
-            p["maxUnityVersion"] = maxUnityVersion
-        if minUnityVersion:
-            p["minUnityVersion"] = minUnityVersion
-        if maxAssetVersion:
-            p["maxAssetVersion"] = maxAssetVersion
-        if minAssetVersion:
-            p["minAssetVersion"] = minAssetVersion
-        if platform:
-            p["platform"] = platform
-
-        resp = self.api.call("/avatars", params=p)
-
-        avatars = []
-        for avatar in resp["data"]:
-            avatars.append(objects.Avatar(self, avatar))
-
-        return avatars
-
-    # World calls
-
-    def fetch_world(self, id):
-        '''
-        Used to get world via id
-
-            id, string
-            ID of the world
-
-        Returns World object
-        '''
-
-        resp = self.api.call("/worlds/"+id)
-        return objects.World(self, resp["data"])
-
-    def logout(self):
-        '''
-        Closes client session, invalidates auth cookie
-        Returns void
-        '''
-
-        self.api.call("/logout", "PUT")
-
-        self.api.new_session()
-        self.loggedIn = False
-
-    def login(self, username, password):
-        '''
-        Used to initialize the client for use
-
-            username, string
-            Username of VRC account
-
-            password, string
-            Password of VRC account
-
-        Returns void
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        auth = username+":"+password
-        auth = str(base64.b64encode(auth.encode()))[2:-1]
-
-        resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-
-        self.api.set_auth(auth)
-        self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
-
-        self.me = objects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-
-    def loginb64(self, b64):
-        '''
-        Used to initialize the client for use
-
-            b64, string
-            Base64 Encoding of VRC account credentials
-
-        Returns void
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        resp = self.api.call("/auth/user", headers={"Authorization": "Basic "+b64}, no_auth=True)
-
-        self.api.set_auth(b64)
-        self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
-
-        self.me = objects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-
-    def login2fa(self, username, password, code=None, verify=False):
-        '''
-        Used to initialize client for use (for accounts with 2FactorAuth)
-
-            username, string
-            Username of VRC account
-
-            password, string
-            Password of VRC account
-
-            code, string
-            2FactorAuth code
-
-            verify, boolean
-            Whether to verify 2FactorAuth code, or leave for later
-
-        This will ignore the RequiresTwoFactorAuthError exception, so be careful!
-        If kwarg verify is False, Client.verify2fa() must be called after
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        auth = username+":"+password
-        auth = str(base64.b64encode(auth.encode()))[2:-1]
-
-        resp = None
-
-        try:
-            resp = self.api.call(
-                "/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
-            raise_for_status(resp)
-
-            self.api.set_auth(auth)
-            self.api.session.cookies.set("auth", resp["response"].cookies["auth"])
-
-            self.me = objects.CurrentUser(self, resp["data"])
-            self.loggedIn = True
-        except RequiresTwoFactorAuthError:
-            self.api.set_auth(auth)
-            self.api.session.cookies.set("auth", resp["response"].cookies["auth"])  # Auth cookieeee
-            if verify:
-                self.needsVerification = True
-                self.verify2fa(code)
-            else:
-                self.needsVerification = True
-
-    def verify2fa(self, code):
-        '''
-        Used to finish initializing client for use after Client.login2fa()
-
-            code, string
-            2FactorAuth code
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        self.api.call(
-            "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
-            "POST", json={"code": code}
-        )
-
-        resp = self.api.call("/auth/user")
-
-        self.me = objects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-        self.needsVerification = False
-
-    def __init__(self, verify=True, caching=True):
-        self.api = Call(verify)
-        self.loggedIn = False
         self.me = None
-        self.caching = caching
 
-        self.needsVerification = False
-        self.log_to_console = False
-
-
-class AClient(Client):
-    '''
-    Main client interface for VRC
-
-        verify, boolean
-        If should verify ssl certificates on requests
-    '''
-
-    # User calls
-
-    async def fetch_me(self):
         '''
-        Used to refresh client.me
-        Returns CurrentUser object
+        This is a list of LimitedUser objects
+        It slowly gets made a list of User objects via ws events
+        You can force all User objects from the start using
+            await client.upgrade_friends()
+        In "on_connect" event or after
         '''
 
-        resp = await self.api.call("/auth/user")
+        self.friends = []
 
-        self.me = aobjects.CurrentUser(self, resp["data"])
-        return self.me
+        self.ws = None
+        self.loop = loop or asyncio.get_event_loop()
 
-    async def fetch_full_friends(self, offline=False, n=0, offset=0):
+        if loop is not None:
+            asyncio.set_event_loop(loop)
+
+    async def _ws_loop(self):
+        self.friends = await self.me.fetch_friends()
+        self.loop.create_task(self.on_connect())
+
+        async for message in self.ws:
+            message = message.json()
+            content = json.loads(message["content"])
+
+            logging.debug("Got ws message (%s)" % message["type"] )
+
+            switch = {
+                "friend-location": self._on_friend_location,
+                "friend-online": self._on_friend_online,
+                "friend-offline": self._on_friend_offline,
+                "friend-active": self._on_friend_active,
+                "friend-add": self._on_friend_add,
+                "friend-delete": self._on_friend_delete,
+                "friend-update": self._on_friend_update,
+                "notification": self._on_notification
+            }
+
+            if message["type"] in switch:
+                self.loop.create_task(switch[message["type"]](content))
+
+        self.loop.create_task(self.on_disconnect())
+
+    # Utility
+
+    def get_friend(self, id):
         '''
-        Used to get friends of current user
-        !! This function uses possibly lot of calls, use with caution
+        Gets a cached friend
+        May be LimitedUser or User
 
-            offline, boolean
-            Get offline friends instead of online friends
-
-            n, integer
-            Number of friends to return (0 for all)
-
-            offset, integer
-            Skip first <offset> friends
-
-        Returns list of User objects
+            id, str
+            ID of the user to get
         '''
 
-        lfriends = await self.fetch_friends(offline, n, offset)
+        logging.info("Getting cached friend with id " + id)
+
+        for user in self.friends:
+            if user.id == id:
+                return user
+
+        return None
+
+    async def fetch_user_via_id(self, id):
+        '''
+        Gets a non-cached friend
+        Returns a User object
+
+            id, str
+            ID of the user to get
+        '''
+
+        logging.info("Getting user via id " + id)
+
+        user = await self.request.call("/users/" + id)
+        return User(self, user["data"], loop=self.loop)
+
+    async def fetch_instance_via_id(self, world_id, instance_id):
+        '''
+        Gets instance object
+
+            world_id, str
+            ID of the world of the instance
+
+            instance_id, str
+            ID of the specific instance
+        '''
+
+        logging.info("Getting instance %s:%s" % (world_id, instance_id))
+
+        instance = await self.request.call("/worlds/%s/%s" % (world_id, instance_id))
+        return Instance(self, instance["data"], self.loop)
+
+    async def fetch_permissions(self, condensed=False):
+        '''
+        Gets users permissions
+        Returns list of different Permission objects
+
+            condensed, bool
+            Whether to return condensed perms or not
+            If this is true then return will be a dict of single key-value pairs
+        '''
+
+        logging.info("Getting permissions (%scondensed)" % ("" if condensed else "not "))
+
+        if condensed:
+            perms = await self.request.call("/auth/permissions", params={"condensed": True})
+            return perms["data"]
+        else:
+            perms = await self.request.call("/auth/permissions")
+            return [BasePermission.build_permission(self, perm, self.loop) for perm in perms["data"]]
+
+    async def get_files(self, tag=None, n=100):
+        '''
+        Gets user icons
+        Returns list of IconFile objects
+
+            tag, str
+            Tag to filter files
+
+            n, int
+            Number of files to return (max might be 100?)
+        '''
+
+        logging.info("Getting files (tag is %s)" % tag)
+
+        params = {"n": n}
+        if tag is not None:
+            params.update({"tag": tag})
+
+        files = await self.request.call("/files", params=params)
+        return [FileBase.build_file(self, file, self.loop) for file in files["data"]]
+
+    async def upgrade_friends(self):
+        '''
+        Forces all client.friends LimitedUser objects
+        to become User objects
+        '''
+
         friends = []
 
-        # Get friends
-        for friend in lfriends:
-            time.sleep(0)
+        for friend in self.friends:
+            logging.debug("Upgrading " + friend.display_name)
             friends.append(await friend.fetch_full())
 
-        return friends
+        self.friends = friends
+        logging.info("Finished upgrading friends")
 
-    async def fetch_friends(self, offline=False, n=0, offset=0):
+    # Main
+
+    async def fetch_me(self, **kwargs):
         '''
-        Used to get friends of current user
-
-            offline, boolean
-            Get offline friends instead of online friends
-
-            n, integer
-            Number of friends to return (0 for all)
-
-            offset, integer
-            Skip first <offset> friends
-
-        Returns list of LimitedUser objects
+        Gets new CurrentUser object
+        kwargs are extra options to pass to request.call
         '''
 
-        friends = []
+        logging.info("Fetching me")
 
-        while True:
-            newn = 100
-            if n and n - len(friends) < 100:
-                newn = n - len(friends)
+        me = await self.request.call("/auth/user", **kwargs)
+        me = CurrentUser(
+            self,
+            me["data"],
+            loop=self.loop
+        )
 
-            last_count = 0
+        self.me = me
+        return me
 
-            resp = await self.api.call("/auth/user/friends", params={"offset": offset, "offline": offline, "n": newn})
+    async def login(self, username=None, password=None, b64=None, create_session=True):
+        '''
+        Used to login as a VRC user
 
-            for friend in resp["data"]:
-                last_count += 1
-                friends.append(aobjects.LimitedUser(self, friend))
+        Must include one of the combinations:
+            Username/Password login
+                username, string
+                Username/email of VRC account
 
-            if last_count < 100:
+                password, string
+                Password of VRC account
+
+            b64 login
+                b64, string
+                Base64 encoded username:password
+
+        Optional:
+            create_session, bool
+            Create a new session or not, defaults to True
+        '''
+
+        logging.info("Doing logon (%screating new session)" % ("" if not create_session else "not "))
+
+        if b64 is None:
+            if username is None or password is None:
+                raise ClientErrors.MissingCredentials("Did not pass username+password or b64 for login")
+
+            b64 = base64.b64encode((username+":"+password).encode()).decode()
+
+        resp = await self.request.call(
+            "/auth/user",
+            headers={"Authorization": "Basic " + b64},
+            no_auth=create_session
+        )
+
+        cookie = None
+        for cookie in resp["response"].headers.getall("Set-Cookie"):
+            if "auth=authcookie" in cookie:
                 break
 
-            offset += 100
+        if create_session:
+            self.request.new_session(b64)
+            self.request.session.cookie_jar.update_cookies(
+                [["auth", cookie[5:]]]
+            )
 
-        return friends
+        if "requiresTwoFactorAuth" in resp["data"]:
+            raise ClientErrors.MfaRequired("Account login requires 2fa")
 
-    async def fetch_user_by_id(self, id):
+        self.me = CurrentUser(self, resp["data"], self.loop)
+
+    async def login2fa(self, username=None, password=None, b64=None, mfa=None):
         '''
-        Used to get a user via id
+        Used to login as a VRC user
 
-            id, string
-            UserId of the user
+        Must include one of the combinations:
+            Username/Password login
+                username, string
+                Username/email of VRC account
 
-        Returns User object
-        '''
+                password, string
+                Password of VRC account
 
-        resp = await self.api.call("/users/"+id)
-        return aobjects.User(self, resp["data"])
+            b64 login
+                b64, string
+                Base64 encoded username:password
 
-    async def fetch_user_by_name(self, name):
-        '''
-        Used to get a user via id
-
-            name, string
-            Name of the user
-
-        Returns User object
-        '''
-
-        resp = await self.api.call("/users/"+urllib.parse.quote_plus(name)+"/name")
-        return aobjects.User(self, resp["data"])
-
-    # Avatar calls
-
-    async def fetch_avatar(self, id):
-        '''
-        Used to get avatar via id
-
-            id, string
-            AvatarId of the avatar
-
-        Returns Avatar object
+        Optional:
+            mfa, string
+            TOTP or OTP code to verify authtoken
         '''
 
-        resp = await self.api.call("/avatars/"+id)
-        return aobjects.Avatar(self, resp["data"])
-
-    async def list_avatars(self, user: oString = None, featured: oBoolean = None, tag: oString = None,
-                           userId: oString = None, n: oInteger = None, offset: oInteger = None, order: oString = None,
-                           releaseStatus: oString = None, sort: oString = None, maxUnityVersion: oString = None,
-                           minUnityVersion: oString = None, maxAssetVersion: oString = None, minAssetVersion: oString = None,
-                           platform: oString = None):
-
-        '''
-        Used to get list of avatars
-
-            user, string
-            Type of user (me, friends)
-
-            featured, boolean
-            If the avatars are featured
-
-            tag, string list
-            List of tags the avatars have
-
-            userId, string
-            ID of the user that made the avatars
-
-            n, integer
-            Number of avatars to return
-
-            offset, integer
-            Skip first <offset> avatars
-
-            order, string
-            Sort <sort> by "descending" or "ascending" order
-
-            releaseStatus, string
-            ReleaseStatus of avatars
-
-            sort, string
-            Sort by "created", "updated", "order", "_created_at", "_updated_at"
-
-            maxUnityVersion, string
-            Max version of unity the avatars were uploaded from
-
-            minUnityVersion, string
-            Min version of unity the avatars were uploaded from
-
-            maxAssetVersion, string
-            Max of 'asset version' of the avatars
-
-            minAssetVersion, string
-            Min of 'asset version' of the avatars
-
-            platform, string
-            Unity platform avatars were uploaded from
-
-        Returns list of Avatar objects
-        '''
-
-        p = {}
-
-        if user:
-            p["user"] = user
-        if featured:
-            p["featured"] = featured
-        if tag:
-            p["tag"] = tag
-        if userId:
-            p["userId"] = userId
-        if n:
-            p["n"] = n
-        if offset:
-            p["offset"] = offset
-        if order:
-            p["order"] = order
-        if releaseStatus:
-            p["releaseStatus"] = releaseStatus
-        if sort:
-            p["sort"] = sort
-        if maxUnityVersion:
-            p["maxUnityVersion"] = maxUnityVersion
-        if minUnityVersion:
-            p["minUnityVersion"] = minUnityVersion
-        if maxAssetVersion:
-            p["maxAssetVersion"] = maxAssetVersion
-        if minAssetVersion:
-            p["minAssetVersion"] = minAssetVersion
-        if platform:
-            p["platform"] = platform
-
-        resp = await self.api.call("/avatars", params=p)
-
-        avatars = []
-        for avatar in resp["data"]:
-            avatars.append(aobjects.Avatar(self, avatar))
-
-        return avatars
-
-    # World calls
-
-    async def fetch_world(self, id):
-        '''
-        Used to get world via id
-
-            id, string
-            ID of the world
-
-        Returns World object
-        '''
-
-        resp = await self.api.call("/worlds/"+id)
-        return aobjects.World(self, resp["data"])
-
-    async def logout(self):
-        '''
-        Closes client session, invalidates auth cookie
-        Returns void
-        '''
-
-        await self.api.call("/logout", "PUT")
-
-        await self.api.closeSession()
-        await asyncio.sleep(0)
-
-        self.api = ACall()
-        self.loggedIn = False
-
-    async def login(self, username, password):
-        '''
-        Used to initialize the client for use
-
-            username, string
-            Username of VRC account
-
-            password, string
-            Password of VRC account
-
-        Returns void
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        auth = username+":"+password
-        auth = str(base64.b64encode(auth.encode()))[2:-1]
-
-        resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True)
-
-        self.api.openSession(auth)
-        self.api.session.cookie_jar.update_cookies(
-            [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
-
-        self.me = aobjects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-
-        await self.me.cacheTask
-
-    async def loginb64(self, b64):
-        '''
-        Used to initialize the client for use
-
-            b64, string
-            Base64 Encoding of VRC account credentials
-
-        Returns void
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+b64}, no_auth=True)
-
-        self.api.openSession(b64)
-        self.api.session.cookie_jar.update_cookies(
-            [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
-
-        self.me = aobjects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-
-        await self.me.cacheTask
-
-    async def login2fa(self, username, password, code=None, verify=False):
-        '''
-        Used to initialize client for use (for accounts with 2FactorAuth)
-
-            username, string
-            Username of VRC account
-
-            password, string
-            Password of VRC account
-
-            code, string
-            2FactorAuth code
-
-            verify, boolean
-            Whether to verify 2FactorAuth code, or leave for later
-
-        This will ignore the RequiresTwoFactorAuthError exception, so be careful!
-        If kwarg verify is False, AClient.verify2fa() must be called after
-        '''
-
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
-
-        auth = username+":"+password
-        auth = str(base64.b64encode(auth.encode()))[2:-1]
-
-        resp = None
+        logging.info("Doing 2falogon")
 
         try:
-            resp = await self.api.call("/auth/user", headers={"Authorization": "Basic "+auth}, no_auth=True, verify=False)
-            raise_for_status(resp)
-
-            self.api.openSession(auth)
-            self.api.session.cookie_jar.update_cookies(
-                [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
-
-            self.me = aobjects.CurrentUser(self, resp["data"])
-            self.loggedIn = True
-
-            await self.me.cacheTask
-        except RequiresTwoFactorAuthError:
-            self.api.openSession(auth)
-            self.api.session.cookie_jar.update_cookies(
-                [["auth", resp["response"].headers["Set-Cookie"].split(';')[0].split("=")[1]]])
-
-            if verify:
-                self.needsVerification = True
-                await self.verify2fa(code)
-            else:
-                self.needsVerification = True
+            await self.login(username, password, b64)
+        except ClientErrors.MfaRequired:
+            await self.verify2fa(mfa)
+            await self.login(username, password, b64, False)
 
     async def verify2fa(self, code):
         '''
-        Used to finish initializing client for use after AClient.login2fa()
+        Used to verify authtoken on 2fa enabled accounts
 
             code, string
-            2FactorAuth code
+            2FactorAuth code (totp or otp)
         '''
 
-        if self.loggedIn:
-            raise AlreadyLoggedInError("Client is already logged in")
+        logging.info("Verifying 2fa authtoken")
 
-        await self.api.call(
-            "/auth/twofactorauth/{}/verify".format("totp" if len(code) == 6 else "otp"),
-            "POST", json={"code": code}
-        )
+        if type(code) is not str:
+            raise ClientErrors.MfaInvalid("{} is not a valid 2fa code".format(code))
 
-        resp = await self.api.call("/auth/user")
+        resp = await self.request.call("/auth/twofactorauth/{}/verify".format(
+                "totp" if len(code) == 6 else "otp"
+            ), "POST", jdict={"code": code})
 
-        self.me = aobjects.CurrentUser(self, resp["data"])
-        self.loggedIn = True
-        self.needsVerification = False
+    async def logout(self, unauth=True):
+        '''
+        Closes client session and logs out VRC user
 
-        if self.caching:
-            await self.me.cacheTask
+            unauth, bool
+            If should unauth the session cookie
+        '''
 
-    def __init__(self, verify=True, caching=True):
-        super().__init__()
-        self.api = ACall(verify=verify)
-        self.loggedIn = False
+        logging.info("Doing logout (%sdeauthing authtoken)" % ("" if unauth else "not "))
+
         self.me = None
-        self.caching = caching
+        self.friends = None
 
-        self.needsVerification = False
+        if unauth:
+            await self.request.call("/logout", "PUT")
+        await self.request.close_session()
+
+        if self.ws is not None:
+            await self.ws.close()
+
+        await asyncio.sleep(0)
+
+    def run(self, username=None, password=None, b64=None, mfa=None):
+        '''
+        Automates login+start
+        This function is blocking
+        '''
+
+        try:
+            self.loop.run_until_complete(self._run(username, password, b64, mfa))
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.loop.run_until_complete(self.logout())
+
+    async def _run(self, username=None, password=None, b64=None, mfa=None):
+        await self.login2fa(username, password, b64, mfa)
+        await self.start()
+
+    # Websocket Stuff
+
+    async def start(self):
+        '''
+        Starts the ws event _ws_loop
+        This function is blocking
+        '''
+
+        logging.info("Starting ws loop")
+
+        authToken = ""
+        for cookie in self.request.session.cookie_jar:
+            if cookie.key == "auth":
+                authToken = cookie.value.split(";")[0]
+
+        self.ws = await self.request.session.ws_connect("wss://pipeline.vrchat.cloud/?authToken="+authToken)
+        await self._ws_loop()
+
+    async def event(self, func):
+        '''
+        Decorator that overwrites class ws event hooks
+
+        Example
+        --------
+
+        @client.event
+        def on_connect():
+            print("Connected to wss pipeline.")
+
+        '''
+
+        if func.__name__.startswith("on_") and hasattr(self, func.__name__):
+            logging.debug("Replacing %s via decorator" % func.__name__)
+            setattr(self, func.__name__, func)
+            return func
+
+        raise ClientErrors.InvalidEventFunction("{} is not a valid event".format(func.__name__))
+
+    async def on_connect(self):
+        # Called at the start of ws event loop
+        pass
+
+    async def on_disconnect(self):
+        # Called at the end of ws event loop
+        pass
+
+    async def _on_friend_online(self, obj):
+        user = User(self, obj["user"], self.loop)
+        friend = self.get_friend(user.id)
+
+        if friend is not None:
+            self.friends.remove(friend)
+        self.friends.append(user)
+
+        await self.on_friend_online(user)
+
+    async def on_friend_online(self, friend):
+        # Called when a friend comes online
+        pass
+
+    async def _on_friend_offline(self, obj):
+        user = await self.fetch_user_via_id(obj["userId"])
+        friend = self.get_friend(user.id)
+
+        if friend is not None:
+            self.friends.remove(friend)
+        self.friends.append(user)
+
+        await self.on_friend_offline(user)
+
+    async def on_friend_offline(self, friend):
+        # Called when a friend goes offline
+        pass
+
+    async def _on_friend_active(self, obj):
+        user = User(self, obj["user"], self.loop)
+        friend = self.get_friend(user.id)
+
+        if friend is not None:
+            self.friends.remove(friend)
+        self.friends.append(user)
+
+        await self.on_friend_active(user)
+
+    async def on_friend_active(self, friend):
+        # Called when a friend becomes active
+        pass
+
+    async def _on_friend_add(self, obj):
+        user = User(self, obj["user"], self.loop)
+        friend = self.get_friend(user.id)
+
+        if friend is not None:
+            self.friends.remove(friend)
+        self.friends.append(user)
+
+        await self.on_friend_add(user)
+
+    async def on_friend_add(self, friend):
+        # Called when a new friend is added to your account
+        pass
+
+    async def _on_friend_delete(self, obj):
+        user = await self.fetch_user_via_id(obj["userId"])
+        friend = self.get_friend(user.id)
+
+        if friend is not None:
+            self.friends.remove(friend)
+
+        await self.on_friend_delete(user)
+
+    async def on_friend_delete(self, friend):
+        # Called when a friend is unfriended
+        pass
+
+    async def _on_friend_update(self, obj):
+        user = User(self, obj["user"], self.loop)
+        ouser = self.get_friend(user.id)
+
+        if ouser is not None:
+            self.friends.remove(ouser)
+        self.friends.append(user)
+
+        await self.on_friend_update(ouser, user)
+
+    async def on_friend_update(self, before, after):
+        '''
+        Called when a friend makes an update to their profile
+
+            before, User
+            User before they updated their profile
+
+            after, User
+            User after they updated their profile
+        '''
+        pass
+
+    async def _on_friend_location(self, obj):
+        user = User(self, obj["user"], self.loop)
+        ouser = self.get_friend(user.id)
+
+        if ouser is not None:
+            self.friends.remove(ouser)
+        self.friends.append(user)
+
+        await self.on_friend_location(ouser, user)
+
+    async def on_friend_location(self, before, after):
+        '''
+        Called when a friend changes location
+
+            before, User
+            User before they changed location
+
+            after, User
+            User after they changed location
+        '''
+        pass
+
+    async def _on_notification(self, obj):
+        await self.on_notification(obj)
+
+    async def on_notification(self, notification):
+        # Called when recieved a notification
+        pass
