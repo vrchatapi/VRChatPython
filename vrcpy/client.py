@@ -7,6 +7,7 @@ from vrcpy.notification import *
 from vrcpy.favorite import BaseFavorite
 from vrcpy.permission import BasePermission
 from vrcpy.file import FileBase
+from vrcpy.moderation import PlayerModeration
 
 import logging
 import asyncio
@@ -24,6 +25,7 @@ class Client:
     _RequestInviteNotification = RequestInviteNotification
     _FriendRequestNotification = FriendRequestNotification
     _BaseFavorite = BaseFavorite
+    _PlayerModeration = PlayerModeration
 
     def __init__(self, loop=None, verify=True):
         self.request = Request(verify=verify)
