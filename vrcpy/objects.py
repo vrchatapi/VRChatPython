@@ -381,9 +381,6 @@ class Feature(BaseObject):
 
     def __init__(self, client, obj):
         super().__init__(client)
-        self.only += [
-            "twoFactorAuth"
-        ]
 
         self._assign(obj)
 
