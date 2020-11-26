@@ -131,6 +131,21 @@ class LimitedUser(BaseObject):
 
         return self.client._BaseFavorite.build_favorite(self.client, resp["data"], self.loop)
 
+    async def add_moderation(self, t):
+        '''
+        Adds a moderation against this user
+        Returns a PlayerModeration
+
+            t, str (use enum.PlayerModerationType for convenience)
+            Type of moderation
+        '''
+
+        moderation = await self.client._PlayerModeration.create_moderation(
+            t, self.id, self.client, self.loop
+        )
+
+        return moderation
+
 class User(LimitedUser):
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
