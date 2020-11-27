@@ -45,6 +45,10 @@ class ClientErrors:
         # Raised when trying to @client.event a func without a valid event name
         pass
 
+    class InvalidAuthToken(Exception):
+        # Raised when AuthToken isn't valid
+        pass
+
 class ObjectErrors:
     # Errors for vrcpy/objects.py
 
