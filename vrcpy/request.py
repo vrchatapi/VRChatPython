@@ -126,7 +126,12 @@ class Request:
                 raise ClientErrors.MfaInvalid("2FA code is invalid!")
 
         def handle_401():
-            pass
+            if resp["data"] == None:
+                if resp["response"]:
+                    raise RequestErrors.Unauthorized("at %s" % resp["response"].url)
+
+            elif resp["data"]["error"]["message"] == "\"Missing Credentials\"":
+                raise ClientErrors.MissingCredentials("Missing Credentials")
 
         def handle_404():
             pass
