@@ -45,6 +45,9 @@ class Request:
                 resp = await self._call(path, method, headers, params, jdict, no_auth, verify)
                 break
             except Exception as e:
+                if type(e) in RequestErrors.errors + ClientErrors.errors:
+                    raise e.__class__(str(e))
+
                 if attempt == retries:
                     raise RequestErrors.RequestError(
                         "{} ({} retries)".format(e, retries)
