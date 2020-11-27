@@ -294,11 +294,11 @@ class Client:
 
         logging.info("Verifying 2fa authtoken")
 
-        if type(code) is not str:
-            raise ClientErrors.MfaInvalid("{} is not a valid 2fa code".format(code))
+        if type(mfa) is not str:
+            raise ClientErrors.MfaInvalid("{} is not a valid 2fa code".format(mfa))
 
         resp = await self.request.call("/auth/twofactorauth/{}/verify".format(
-                "totp" if len(code) == 6 else "otp"
+                "totp" if len(mfa) == 6 else "otp"
             ), "POST", jdict={"code": mfa})
 
     async def logout(self, unauth=True):
