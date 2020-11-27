@@ -284,7 +284,30 @@ class Client:
             await self.verify2fa(mfa)
             await self.login(username, password, b64, False)
 
-    async def verify2fa(self, code):
+    async def login_auth_token(self, token):
+        '''
+        Used to login as a VRC user using an existing auth token
+
+            token, str
+            Authtoken to login with
+        '''
+
+        logging.info("Doing logon with pre-existing auth token")
+
+        self.request.new_session()
+        self.request.session.cookie_jar.update_cookies([["auth", token]])
+
+        try:
+            resp = await self.request.call("/auth")
+        except ClientErrors.MissingCredentials:
+            raise ClientErrors.InvalidAuthToken("Passed auth token is not valid")
+
+        if not resp["data"]["ok"]:
+            raise ClientErrors.InvalidAuthToken("Passed auth token is not valid")
+
+        await self.fetch_me()
+
+    async def verify2fa(self, mfa):
         '''
         Used to verify authtoken on 2fa enabled accounts
 
