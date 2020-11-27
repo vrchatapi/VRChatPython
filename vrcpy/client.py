@@ -98,6 +98,24 @@ class Client:
 
         return None
 
+    async def fetch_me(self, **kwargs):
+        '''
+        Gets new CurrentUser object
+        kwargs are extra options to pass to request.call
+        '''
+
+        logging.info("Fetching me")
+
+        me = await self.request.call("/auth/user", **kwargs)
+        me = CurrentUser(
+            self,
+            me["data"],
+            loop=self.loop
+        )
+
+        self.me = me
+        return me
+
     async def fetch_user_via_id(self, id):
         '''
         Gets a non-cached friend
@@ -184,24 +202,6 @@ class Client:
         logging.info("Finished upgrading friends")
 
     # Main
-
-    async def fetch_me(self, **kwargs):
-        '''
-        Gets new CurrentUser object
-        kwargs are extra options to pass to request.call
-        '''
-
-        logging.info("Fetching me")
-
-        me = await self.request.call("/auth/user", **kwargs)
-        me = CurrentUser(
-            self,
-            me["data"],
-            loop=self.loop
-        )
-
-        self.me = me
-        return me
 
     async def login(self, username=None, password=None, b64=None, create_session=True):
         '''
