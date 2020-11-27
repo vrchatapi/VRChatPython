@@ -315,7 +315,10 @@ class Client:
         self.friends = None
 
         if unauth:
-            await self.request.call("/logout", "PUT")
+            # Sending json with this makes it not 401 for some reason
+            # Hey, works for me
+            await self.request.call("/logout", "PUT", jdict={})
+
         await self.request.close_session()
 
         if self.ws is not None:
