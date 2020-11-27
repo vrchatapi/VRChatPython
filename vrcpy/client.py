@@ -421,7 +421,7 @@ class Client:
         self.ws = await self.request.session.ws_connect("wss://pipeline.vrchat.cloud/?authToken="+authToken)
         await self._ws_loop()
 
-    async def event(self, func):
+    def event(self, func):
         '''
         Decorator that overwrites class ws event hooks
 
