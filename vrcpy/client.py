@@ -74,6 +74,11 @@ class Client:
 
         self.loop.create_task(self.on_disconnect())
 
+    def _remove_authorization_header(self):
+        if hasattr(self.request.session, "headers"):
+            if "Authorization" in self.request.session.headers:
+                del self.request.session.headers["Authorization"]
+
     # Utility
 
     def get_friend(self, id):
@@ -247,6 +252,7 @@ class Client:
         if "requiresTwoFactorAuth" in resp["data"]:
             raise ClientErrors.MfaRequired("Account login requires 2fa")
 
+        self._remove_authorization_header()
         self.me = CurrentUser(self, resp["data"], self.loop)
 
     async def login2fa(self, username=None, password=None, b64=None, mfa=None):
