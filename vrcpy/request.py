@@ -17,15 +17,17 @@ class Request:
         self.apiKey = None
         self.base = "https://api.vrchat.cloud/api/1"
 
-    def new_session(self, b64_auth):
+    def new_session(self, b64_auth=None):
         if self.session is not None:
             raise RequestErrors.SessionExists("Session already exists")
 
         # Assume good b64_auth
         headers = {
-            "user-agent": self.user_agent,
-            "Authorization": "Basic "+b64_auth
+            "user-agent": self.user_agent
         }
+
+        if b64_auth is not None:
+            headers["Authorization"] = "Basic "+b64_auth
 
         self.session = aiohttp.ClientSession(headers=headers)
 
