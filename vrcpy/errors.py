@@ -21,6 +21,8 @@ class RequestErrors:
         # Raised with regular 401 responses
         pass
 
+    errors = [NoSession, SessionExists, RequestError, RateLimit, Unauthorized]
+
 class ClientErrors:
     # Errors for vrcpy/client.py
 
@@ -49,6 +51,9 @@ class ClientErrors:
         # Raised when AuthToken isn't valid
         pass
 
+    errors = [OutOfDate, MissingCredentials, MfaRequired, MfaInvalid,
+        InvalidEventFunction, InvalidAuthToken]
+
 class ObjectErrors:
     # Errors for vrcpy/objects.py
 
@@ -67,3 +72,5 @@ class ObjectErrors:
     class InvalidGroupName(Exception):
         # Raised when group name is invalid
         pass
+
+    errors = [IntegretyError, NotFriends, AlreadyFriends, InvalidGroupName]
