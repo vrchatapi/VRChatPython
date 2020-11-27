@@ -282,7 +282,7 @@ class Client:
         '''
         Used to verify authtoken on 2fa enabled accounts
 
-            code, string
+            mfa, string
             2FactorAuth code (totp or otp)
         '''
 
@@ -293,7 +293,7 @@ class Client:
 
         resp = await self.request.call("/auth/twofactorauth/{}/verify".format(
                 "totp" if len(code) == 6 else "otp"
-            ), "POST", jdict={"code": code})
+            ), "POST", jdict={"code": mfa})
 
     async def logout(self, unauth=True):
         '''
