@@ -143,4 +143,6 @@ class Request:
 
         if resp["response"].status in switch:
             switch[resp["response"].status]()
+
         print(resp)
+        resp["response"].raise_for_status()
