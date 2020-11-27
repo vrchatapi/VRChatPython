@@ -17,6 +17,10 @@ class RequestErrors:
         # Raised when received a 429 http response
         pass
 
+    class Unauthorized(Exception):
+        # Raised with regular 401 responses
+        pass
+
 class ClientErrors:
     # Errors for vrcpy/client.py
 
