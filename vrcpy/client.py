@@ -349,21 +349,58 @@ class Client:
 
         await asyncio.sleep(0)
 
-    def run(self, username=None, password=None, b64=None, mfa=None):
+    def run(self, username=None, password=None, b64=None, mfa=None, token=None,
+            unauth=True):
         '''
         Automates login+start
         This function is blocking
+
+        Must pass one of these combinations of kwargs:
+            Username/Password login
+                username, string
+                Username/email of VRC account
+
+                password, string
+                Password of VRC account
+
+                mfa, string, optional
+                2FactorAuth code (totp or otp)
+
+            b64 login
+                b64, string
+                Base64 encoded username:password
+
+                mfa, string, optional
+                2FactorAuth code (totp or otp)
+
+            token login
+                token, str
+                Authtoken to login with
+
+        Can also include:
+            unauth, bool
+            If should unauth the session cookie
         '''
 
         try:
-            self.loop.run_until_complete(self._run(username, password, b64, mfa))
+            self.loop.run_until_complete(self._run(
+                username,
+                password,
+                b64,
+                mfa,
+                token
+            ))
         except KeyboardInterrupt:
             pass
-        finally:
-            self.loop.run_until_complete(self.logout())
 
-    async def _run(self, username=None, password=None, b64=None, mfa=None):
-        await self.login2fa(username, password, b64, mfa)
+        self.loop.run_until_complete(self.logout(unauth))
+
+    async def _run(self, username=None, password=None, b64=None, mfa=None, token=None):
+        if token is None:
+            await self.login2fa(username, password, b64, mfa)
+        else:
+            await self.login_auth_token(token)
+
         await self.start()
 
     # Websocket Stuff
