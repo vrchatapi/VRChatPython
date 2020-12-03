@@ -80,6 +80,17 @@ class BaseNotification(BaseObject):
             "PUT", params={"notificationId": self.id})
         return self.__class__(self.client, notif["data"], self.loop)
 
+    async def hide(self):
+        '''
+        Tells VRC not to show this notification as new
+        Returns updated class of this notification
+        '''
+
+        notif = await self.client.request.call(
+            "/auth/user/notifications/%s/hide" % self.id,
+            "PUT", params={"notificationId": self.id})
+        return self.__class__(self.client, notif["data"], self.loop)
+
 class InviteNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
