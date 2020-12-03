@@ -3,6 +3,28 @@ from vrcpy.baseobject import BaseObject
 
 import logging
 
+class FriendStatus(BaseObject):
+    def __init__(self, obj, user_id):
+        super(None, None)
+
+        self.required.update({
+            "incoming_request": {
+                "dict_key": "incomingRequest",
+                "type": bool
+            },
+            "is_friend": {
+                "dict_key": "isFriend",
+                "type": bool
+            },
+            "outgoing_request": {
+                "dict_key": "outgoingRequest",
+                "type": bool
+            }
+        })
+
+        self.user_id = user_id
+        self._assign(obj)
+
 class LimitedUser(BaseObject):
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
