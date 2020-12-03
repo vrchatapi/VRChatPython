@@ -69,6 +69,17 @@ class BaseNotification(BaseObject):
 
         del self.detail_required
 
+    async def mark_seen(self):
+        '''
+        Tells VRC that this notification has been seen
+        Returns updated class of this notification
+        '''
+
+        notif = await self.client.request.call(
+            "/auth/user/notifications/%s/see" % self.id,
+            "PUT", params={"notificationId": self.id})
+        return self.__class__(self.client, notif["data"], self.loop)
+
 class InviteNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
