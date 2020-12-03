@@ -95,6 +95,16 @@ class LimitedUser(BaseObject):
 
         return await self.client.fetch_user_via_id(self.id)
 
+    async def fetch_friend_status(self):
+        '''
+        Gets friend request and is_friend status'
+        Returns FriendStatus object
+        '''
+
+        friend_status = await self.client.request.call(
+            "/user/%s/friendStatus" % self.id)
+        return FriendStatus(friend_status["data"], self.id)
+
     async def send_friend_request(self):
         '''
         Sends a friend request notification to this user
