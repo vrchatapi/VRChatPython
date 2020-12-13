@@ -146,6 +146,21 @@ class Client:
         instance = await self.request.call("/worlds/%s/%s" % (world_id, instance_id))
         return Instance(self, instance["data"], self.loop)
 
+    
+    async def fetch_world_via_id(self, world_id):
+        '''
+        Gets world object
+
+            world_id, str
+            ID of the world
+        '''
+
+        logging.info("Getting world %s" % (world_id))
+
+        world = await self.request.call("/worlds/%s" % (world_id))
+        return World(self, world["data"], self.loop)
+    
+    
     async def fetch_permissions(self, condensed=False):
         '''
         Gets users permissions
