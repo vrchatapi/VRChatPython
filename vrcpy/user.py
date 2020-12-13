@@ -65,6 +65,14 @@ class LimitedUser(BaseObject):
             "is_friend": {
                 "dict_key": "isFriend",
                 "type": bool
+            },
+            "status_description": {
+                "dict_key": "statusDescription",
+                "type": str
+            },
+            "last_login": {
+                "dict_key": "last_login",
+                "type": str
             }
         })
 
@@ -182,16 +190,11 @@ class User(LimitedUser):
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
 
+        '''
         self.required.update({
-            "status_description": {
-                "dict_key": "statusDescription",
-                "type": str
-            },
-            "last_login": {
-                "dict_key": "last_login",
-                "type": str
-            }
+
         })
+        '''
 
         self.optional.update({
             "bio_links": {
