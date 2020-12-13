@@ -159,7 +159,7 @@ class Client:
 
         world = await self.request.call("/worlds/%s" % (world_id))
         #return World(self, world["data"], self.loop)
-        return world
+        return world(self, world["data"], obj=None, self.loop)
     
     
     async def fetch_permissions(self, condensed=False):
