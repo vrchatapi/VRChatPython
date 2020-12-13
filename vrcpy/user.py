@@ -354,7 +354,7 @@ class CurrentUser(User):
                 "offline": False})
 
             for user in resp["data"]:
-                friends.append(User(self.client, user, self.loop))
+                friends.append(LimitedUser(self.client, user, self.loop))
 
         for offset in range(0, len(self.offline_friends), 100):
             resp = await self.client.request.call("/auth/user/friends", params={
@@ -363,6 +363,6 @@ class CurrentUser(User):
                 "offline": True})
 
             for user in resp["data"]:
-                friends.append(User(self.client, user, self.loop))
+                friends.append(LimitedUser(self.client, user, self.loop))
 
         return friends
