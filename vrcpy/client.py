@@ -541,6 +541,13 @@ class Client:
         pass
 
     async def _on_friend_location(self, obj):
+        # Add location data
+        obj["user"].update({
+            "location": obj["location"],
+            "instanceId": obj["location"].split(":")[1] if ":" in obj["location"] else obj["location"],
+            "worldId": obj["location"].split(":")[0] if ":" in obj["location"] else obj["location"]
+        })
+
         user = User(self, obj["user"], self.loop)
         ouser = self.get_friend(user.id)
 
