@@ -356,6 +356,8 @@ class AWSSClient(AClient, _WSSClient):
 
     async def login2fa(self, username, password, code=None, verify=False):
         await super().login2fa(username, password, code, verify)
+        if self.loggedIn:
+            self.connect()
 
     async def verify2fa(self, code):
         await super().verify2fa(code)
