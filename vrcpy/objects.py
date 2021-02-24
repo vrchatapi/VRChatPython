@@ -467,7 +467,6 @@ class World(LimitedWorld):
 
         self.unique += [
             "namespace",
-            "pluginUrl",
             "previewYoutubeId",
             "instances"
         ]
