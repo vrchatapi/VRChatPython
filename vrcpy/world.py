@@ -111,7 +111,7 @@ class LimitedWorld(BaseObject):
 
 class World(LimitedWorld):
     def __init__(self, client, obj, loop=None):
-        super().__init__(client, loop)
+        super().__init__(client, loop=loop)
 
         self.required.update({
             "description": {

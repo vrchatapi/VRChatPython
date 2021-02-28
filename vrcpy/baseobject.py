@@ -60,7 +60,6 @@ class BaseObject:
     def _object_integrety(self, obj):
         for key in self.required:
             if self.required[key]["dict_key"] not in obj:
-                print(obj.keys())
                 raise ObjectErrors.IntegretyError(
                     "{} object missing required key {}".format(
                         self.__class__.__name__, self.required[key]["dict_key"]
