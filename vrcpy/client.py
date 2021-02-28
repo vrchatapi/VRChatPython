@@ -154,6 +154,9 @@ class Client:
     async def fetch_world(self, world_id):
         '''
         Gets world object by ID
+
+            world_id, str
+            ID of the world to fetch
         '''
 
         logging.info("Getting world of id " + world_id)
