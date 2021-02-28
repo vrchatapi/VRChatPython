@@ -120,7 +120,7 @@ class Client:
         self.me = me
         return me
 
-    async def fetch_user_via_id(self, id):
+    async def fetch_user(self, id):
         '''
         Gets a non-cached friend
         Returns a User object
@@ -134,7 +134,7 @@ class Client:
         user = await self.request.call("/users/" + id)
         return User(self, user["data"], loop=self.loop)
 
-    async def fetch_instance_via_id(self, world_id, instance_id):
+    async def fetch_instance(self, world_id, instance_id):
         '''
         Gets instance object
 
@@ -187,7 +187,7 @@ class Client:
             return [BasePermission.build_permission(
                 self, perm, self.loop) for perm in perms["data"]]
 
-    async def get_files(self, tag=None, n=100):
+    async def fetch_files(self, tag=None, n=100):
         '''
         Gets user icons
         Returns list of IconFile objects
