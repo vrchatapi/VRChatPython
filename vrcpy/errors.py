@@ -6,7 +6,7 @@ class RequestErrors:
         pass
 
     class SessionExists(Exception):
-        # Raised when trying to make a second new session without closing the first
+        # Raised when trying to make second new session without closing first
         pass
 
     class RequestError(Exception):
@@ -22,6 +22,7 @@ class RequestErrors:
         pass
 
     errors = [NoSession, SessionExists, RequestError, RateLimit, Unauthorized]
+
 
 class ClientErrors:
     # Errors for vrcpy/client.py
@@ -52,7 +53,8 @@ class ClientErrors:
         pass
 
     errors = [OutOfDate, MissingCredentials, MfaRequired, MfaInvalid,
-        InvalidEventFunction, InvalidAuthToken]
+              InvalidEventFunction, InvalidAuthToken]
+
 
 class ObjectErrors:
     # Errors for vrcpy/objects.py

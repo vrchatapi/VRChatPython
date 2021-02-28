@@ -3,7 +3,8 @@ import asyncio
 import aiohttp
 import logging
 
-from vrcpy.errors import *
+from vrcpy.errors import RequestErrors, ClientErrors, GeneralErrors
+
 
 class Request:
     request_retries = 1
@@ -36,7 +37,7 @@ class Request:
         self.session = None
 
     async def call(self, path, method="GET", headers={}, params={}, jdict={},
-        no_auth=False, retries=None, verify=None):
+                   no_auth=False, retries=None, verify=None):
 
         retries = retries or self.request_retries
         verify = verify or self.verify
@@ -44,7 +45,8 @@ class Request:
         resp = None
         for attempt in range(0, retries + 1):
             try:
-                resp = await self._call(path, method, headers, params, jdict, no_auth, verify)
+                resp = await self._call(
+                    path, method, headers, params, jdict, no_auth, verify)
                 break
             except Exception as e:
                 if type(e) in RequestErrors.errors + ClientErrors.errors:
@@ -58,7 +60,7 @@ class Request:
         return resp
 
     async def _call(self, path, method="GET", headers={}, params={},
-        jdict={}, no_auth=False, verify=None):
+                    jdict={}, no_auth=False, verify=None):
 
         verify = verify or self.verify
 
@@ -67,17 +69,18 @@ class Request:
 
             j = None
 
-            async with aiohttp.ClientSession(headers={"user-agent": self.user_agent}) as session:
+            async with aiohttp.ClientSession(headers={
+                    "user-agent": self.user_agent}) as session:
+
                 async with session.get(self.base + "/config") as resp:
                     assert resp.status == 200
                     j = await resp.json()
 
             try:
                 self.apiKey = j["apiKey"]
-            except:
+            except Exception:
                 raise GeneralErrors.OutOfDate(
-                    "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)"
-                )
+                    "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         # Conversion to support py bools in request params
         for param in params:
@@ -86,16 +89,19 @@ class Request:
 
         params["apiKey"] = self.apiKey
         if no_auth:
-            session = aiohttp.ClientSession(headers={"user-agent": self.user_agent})
-            resp = await session.request(method, self.base + path, params=params,
-                headers=headers, json=jdict, ssl=self.verify)
+            session = aiohttp.ClientSession(
+                headers={"user-agent": self.user_agent})
+            resp = await session.request(
+                method, self.base + path, params=params, headers=headers,
+                json=jdict, ssl=self.verify)
         else:
             if self.session is None:
                 raise RequestErrors.NoSession("No session, not logged in")
 
             session = None
-            resp = await self.session.request(method, self.base + path, params=params,
-                headers=headers, json=jdict, ssl=self.verify)
+            resp = await self.session.request(
+                method, self.base + path, params=params, headers=headers,
+                json=jdict, ssl=self.verify)
 
         logging.debug("%s request at %s -> %s" % (method, path, resp.status))
 
@@ -104,15 +110,17 @@ class Request:
 
             try:
                 json = await resp.json()
-            except:
+            except Exception:
                 json = None
 
-            Request.raise_for_status({"status": resp.status, "response": resp,
-                "data": json if json is not None else content})
+            Request.raise_for_status(
+                {"status": resp.status, "response": resp,
+                    "data": json if json is not None else content})
 
             raise Exception("Something horrible has gone wrong!")
 
-        response = {"status": resp.status, "response": resp, "data": await resp.json()}
+        response = {
+            "status": resp.status, "response": resp, "data": await resp.json()}
 
         # We have to do this since we didn't async with
         await resp.release()
@@ -131,9 +139,10 @@ class Request:
                 raise ClientErrors.MfaInvalid("2FA code is invalid!")
 
         def handle_401():
-            if resp["data"] == None:
+            if resp["data"] is None:
                 if resp["response"]:
-                    raise RequestErrors.Unauthorized("at %s" % resp["response"].url)
+                    raise RequestErrors.Unauthorized(
+                        "at %s" % resp["response"].url)
 
             elif resp["data"]["error"]["message"] == "\"Missing Credentials\"":
                 raise ClientErrors.MissingCredentials("Missing Credentials")

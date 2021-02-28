@@ -3,6 +3,7 @@ from vrcpy.baseobject import BaseObject
 
 import logging
 
+
 class FriendStatus(BaseObject):
     def __init__(self, obj, user_id):
         super(None, None)
@@ -24,6 +25,7 @@ class FriendStatus(BaseObject):
 
         self.user_id = user_id
         self._assign(obj)
+
 
 class LimitedUser(BaseObject):
     def __init__(self, client, obj=None, loop=None):
@@ -121,9 +123,11 @@ class LimitedUser(BaseObject):
         logging.info("Sending friend request to " + self.username)
 
         if self.is_friend:
-            raise ObjectErrors.AlreadyFriends("You are already friends with " + self.display_name)
+            raise ObjectErrors.AlreadyFriends(
+                "You are already friends with " + self.display_name)
 
-        await self.client.request.call("/user/%s/friendRequest" % self.id, "POST")
+        await self.client.request.call(
+            "/user/%s/friendRequest" % self.id, "POST")
 
     async def unfriend(self):
         '''
@@ -133,9 +137,11 @@ class LimitedUser(BaseObject):
         logging.info("Unfriending user " + self.username)
 
         if not self.is_friend:
-            raise ObjectErrors.NotFriends("You are not friends with " + self.display_name)
+            raise ObjectErrors.NotFriends(
+                "You are not friends with " + self.display_name)
 
-        await self.client.request.call("/auth/user/friends/" + self.id, "DELETE")
+        await self.client.request.call(
+            "/auth/user/friends/" + self.id, "DELETE")
 
     async def favorite(self, group):
         '''
@@ -149,9 +155,10 @@ class LimitedUser(BaseObject):
         logging.info("Favoriting user with id " + self.id)
 
         if not self.is_friend:
-            raise ObjectErrors.NotFriends("You are not friends with " + self.display_name)
+            raise ObjectErrors.NotFriends(
+                "You are not friends with " + self.display_name)
 
-        if not group in self.client.me.friend_group_names:
+        if group not in self.client.me.friend_group_names:
             raise ObjectErrors.InvalidGroupName(
                 "Group name must be one of %s, not %s" % (
                     self.client.me.friend_group_names,
@@ -169,7 +176,8 @@ class LimitedUser(BaseObject):
             }
         )
 
-        return self.client._BaseFavorite.build_favorite(self.client, resp["data"], self.loop)
+        return self.client._BaseFavorite.build_favorite(
+            self.client, resp["data"], self.loop)
 
     async def add_moderation(self, t):
         '''
@@ -185,6 +193,7 @@ class LimitedUser(BaseObject):
         )
 
         return moderation
+
 
 class User(LimitedUser):
     def __init__(self, client, obj=None, loop=None):
@@ -225,6 +234,7 @@ class User(LimitedUser):
 
         if obj is not None:
             self._assign(obj)
+
 
 class CurrentUser(User):
     def __init__(self, client, obj, loop=None):
@@ -347,23 +357,26 @@ class CurrentUser(User):
 
         friends = []
 
-        for offset in range(0,
-            len(self.online_friends) + len(self.offline_friends),
-            100):
+        for offset in range(
+                0,
+                len(self.online_friends) + len(self.offline_friends),
+                100):
 
-            resp = await self.client.request.call("/auth/user/friends", params={
-                "offset": offset,
-                "n": 100,
-                "offline": False})
+            resp = await self.client.request.call(
+                "/auth/user/friends", params={
+                    "offset": offset,
+                    "n": 100,
+                    "offline": False})
 
             for user in resp["data"]:
                 friends.append(LimitedUser(self.client, user, self.loop))
 
         for offset in range(0, len(self.offline_friends), 100):
-            resp = await self.client.request.call("/auth/user/friends", params={
-                "offset": offset,
-                "n": 100,
-                "offline": True})
+            resp = await self.client.request.call(
+                "/auth/user/friends", params={
+                    "offset": offset,
+                    "n": 100,
+                    "offline": True})
 
             for user in resp["data"]:
                 friends.append(LimitedUser(self.client, user, self.loop))

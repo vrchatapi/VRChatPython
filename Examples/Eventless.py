@@ -6,6 +6,7 @@ import asyncio
 loop = asyncio.get_event_loop()
 client = vrcpy.Client(loop=loop)
 
+
 async def main():
     await client.login2fa(
         username="ExampleName",
@@ -16,7 +17,7 @@ async def main():
     # If you want to do your own io eventloop, you'd probably
     #   want to set it up here. We are going to use a very simple one
     #   to get friends in-game every minute
-    
+
     try:
         while True:
             me = await client.fetch_me()
@@ -29,9 +30,11 @@ async def main():
     except KeyboardInterrupt:
         await client.logout()
 
+
 @client.event
 async def on_connect():
     print("WS connected!")
+
 
 @client.event
 async def on_disconnect():

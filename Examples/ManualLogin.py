@@ -6,6 +6,7 @@ import asyncio
 loop = asyncio.get_event_loop()
 client = vrcpy.Client(loop=loop)
 
+
 async def main():
     await client.login2fa(
         username="ExampleName",
@@ -19,9 +20,11 @@ async def main():
     except KeyboardInterrupt:
         await client.logout()
 
+
 @client.event
 async def on_connect():
     print("WS connected!")
+
 
 @client.event
 async def on_disconnect():

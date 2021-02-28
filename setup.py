@@ -5,7 +5,8 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 with open("vrcpy/__init__.py") as f:
-    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(),
+                        re.MULTILINE).group(1)
 
 if not version:
     raise RuntimeError('Version is not set')
@@ -31,7 +32,7 @@ setup(
     },
     version=version,
     packages=['vrcpy'],
-    #license="MIT",
+    # license="MIT",
     description="A Python wrapper for the VRChat WebAPI supporting both sync and async",
     long_description=readme,
     long_description_content_type="text/markdown",

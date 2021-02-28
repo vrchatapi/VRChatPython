@@ -4,9 +4,11 @@ import vrcpy
 
 client = vrcpy.Client()
 
+
 @client.event
 async def on_connect():
     print("WS connected!")
+
 
 @client.event
 async def on_disconnect():

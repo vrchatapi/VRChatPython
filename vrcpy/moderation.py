@@ -1,5 +1,6 @@
 from vrcpy.baseobject import BaseObject
 
+
 class PlayerModeration(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
@@ -59,7 +60,8 @@ class PlayerModeration(BaseObject):
         '''
 
         await self.client.request.call(
-            "/user/%s/moderations/%s" % (self.source_user_id, self.target_user_id),
+            "/user/%s/moderations/%s" % (
+                self.source_user_id, self.target_user_id),
             "DELETE"
         )
 
@@ -81,35 +83,37 @@ class PlayerModeration(BaseObject):
     @staticmethod
     async def create_moderation(self, t, user_id, client, loop=None):
         if t == "block":
-            mod = await client.request.call("/auth/user/blocks", "POST",
-                params={"blocked": user_id}
-            )
+            mod = await client.request.call(
+                "/auth/user/blocks", "POST",
+                params={"blocked": user_id})
 
             return BlockPlayerModeration(client, mod["data"], loop)
 
-        mod = await client.request.call("/auth/user/playermoderations", "POST",
-            params = {
-                "type": t,
-                "moderated": user_id
-            }
-        )
+        mod = await client.request.call(
+            "/auth/user/playermoderations", "POST", params={
+                "type": t, "moderated": user_id})
 
         return PlayerModeration.build_moderation(client, mod["data"], loop)
 
+
 class BlockPlayerModeration(PlayerModeration):
     async def unblock(self):
-        await self.client.request.call("/auth/user/unblocks", "PUT",
-            params={"blocked": self.target_user_id}
-        )
+        await self.client.request.call(
+            "/auth/user/unblocks", "PUT", params={
+                "blocked": self.target_user_id})
+
 
 class ShowAvatarModeration(PlayerModeration):
     pass
 
+
 class HideAvatarModeration(PlayerModeration):
     pass
 
+
 class MutePlayerModeration(PlayerModeration):
     pass
+
 
 class UnmutePlayerModeration(PlayerModeration):
     pass
@@ -147,7 +151,8 @@ class Moderation(BaseObject):
         self._assign(obj)
 
     async def fetch_instance(self):
-        instance = await self.client.fetch_instance_via_id(self.world_id, self.instance_id)
+        instance = await self.client.fetch_instance_via_id(
+            self.world_id, self.instance_id)
         return instance
 
     @staticmethod
@@ -163,11 +168,14 @@ class Moderation(BaseObject):
 
         return Moderation(client, obj, loop)
 
+
 class WarnModeration(Moderation):
     pass
 
+
 class KickModeration(Moderation):
     pass
+
 
 class BanModeration(Moderation):
     pass

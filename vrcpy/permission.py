@@ -1,6 +1,5 @@
 from vrcpy.baseobject import BaseObject
 
-# Will probably need to update these once vrc+ launches
 
 class BasePermission(BaseObject):
     def __init__(self, client, loop=None):
@@ -36,11 +35,13 @@ class BasePermission(BaseObject):
 
         return switch[obj["name"]](client, obj, loop)
 
+
 class EarlyAdopterPermission(BasePermission):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
         self._assign(obj)
+
 
 class ExtraFavoriteGroupPermission:
     def __init__(self, client, obj=None, loop=None):
@@ -67,11 +68,13 @@ class ExtraFavoriteGroupPermission:
                     obj["data"]["maxFavoritesPerGroup"][group]
                 )
 
+
 class SupporterPermission(BasePermission):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
         self._assign(obj)
+
 
 class UserIconPermission(BasePermission):
     def __init__(self, client, obj, loop=None):

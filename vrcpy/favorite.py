@@ -2,6 +2,7 @@ from vrcpy.baseobject import BaseObject
 
 import logging
 
+
 class BaseFavorite(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
@@ -38,6 +39,7 @@ class BaseFavorite(BaseObject):
 
         await self.client.request.call("/favorites/"+self.id, "DELETE")
 
+
 class WorldFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
@@ -51,6 +53,7 @@ class WorldFavorite(BaseFavorite):
 
         self._assign(obj)
 
+
 class AvatarFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
@@ -63,6 +66,7 @@ class AvatarFavorite(BaseFavorite):
         })
 
         self._assign(obj)
+
 
 class FriendFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):

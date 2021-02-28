@@ -2,6 +2,7 @@ import asyncio
 import logging
 from vrcpy.errors import ObjectErrors
 
+
 class BaseObject:
     def __init__(self, client, loop=None):
         self.loop = loop or asyncio.get_event_loop()
@@ -14,7 +15,7 @@ class BaseObject:
     def _get_proper_obj(self, obj, t):
         if type(obj) is not t:
             if t is not dict and t is not list:
-                    return t(obj)
+                return t(obj)
 
         return obj
 

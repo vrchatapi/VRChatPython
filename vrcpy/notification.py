@@ -1,6 +1,5 @@
 from vrcpy.baseobject import BaseObject
 
-import logging
 
 class Notification:
     class Type:
@@ -13,6 +12,7 @@ class Notification:
 
         all = "all"
         friend_request = "friendRequest"
+
 
 class BaseNotification(BaseObject):
     def __init__(self, client, loop=None):
@@ -91,6 +91,7 @@ class BaseNotification(BaseObject):
             "PUT", params={"notificationId": self.id})
         return self.__class__(self.client, notif["data"], self.loop)
 
+
 class InviteNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
@@ -104,6 +105,7 @@ class InviteNotification(BaseNotification):
 
         self._assign(obj)
 
+
 class RequestInviteNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
@@ -116,6 +118,7 @@ class RequestInviteNotification(BaseNotification):
         })
 
         self._assign(obj)
+
 
 class FriendRequestNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):

@@ -1,18 +1,22 @@
 from vrcpy.request import Request
 from vrcpy.errors import ClientErrors
 
-from vrcpy.user import *
-from vrcpy.world import *
-from vrcpy.notification import *
+from vrcpy.user import LimitedUser, User, CurrentUser
+from vrcpy.world import LimitedWorld, World, Instance
+
 from vrcpy.favorite import BaseFavorite
 from vrcpy.permission import BasePermission
 from vrcpy.file import FileBase
 from vrcpy.moderation import PlayerModeration
 
+from vrcpy.notification import InviteNotification, RequestInviteNotification
+from vrcpy.notification import FriendRequestNotification
+
 import logging
 import asyncio
 import base64
 import json
+
 
 class Client:
     # Refs to avoid circular imports
@@ -56,7 +60,7 @@ class Client:
             message = message.json()
             content = json.loads(message["content"])
 
-            logging.debug("Got ws message (%s)" % message["type"] )
+            logging.debug("Got ws message (%s)" % message["type"])
 
             switch = {
                 "friend-location": self._on_friend_location,
@@ -143,10 +147,10 @@ class Client:
 
         logging.info("Getting instance %s:%s" % (world_id, instance_id))
 
-        instance = await self.request.call("/worlds/%s/%s" % (world_id, instance_id))
+        instance = await self.request.call(
+            "/worlds/%s/%s" % (world_id, instance_id))
         return Instance(self, instance["data"], self.loop)
 
-    
     async def fetch_world(self, world_id):
         '''
         Gets world object by ID
@@ -156,8 +160,7 @@ class Client:
 
         world = await self.request.call("/worlds/"+world_id)
         return World(self, world["data"], self.loop)
-    
-    
+
     async def fetch_permissions(self, condensed=False):
         '''
         Gets users permissions
@@ -165,17 +168,21 @@ class Client:
 
             condensed, bool
             Whether to return condensed perms or not
-            If this is true then return will be a dict of single key-value pairs
+            If this is true then return will be a
+                dict of single key-value pairs
         '''
 
-        logging.info("Getting permissions (%scondensed)" % ("" if condensed else "not "))
+        logging.info("Getting permissions (%scondensed)" % (
+            "" if condensed else "not "))
 
         if condensed:
-            perms = await self.request.call("/auth/permissions", params={"condensed": True})
+            perms = await self.request.call(
+                "/auth/permissions", params={"condensed": True})
             return perms["data"]
         else:
             perms = await self.request.call("/auth/permissions")
-            return [BasePermission.build_permission(self, perm, self.loop) for perm in perms["data"]]
+            return [BasePermission.build_permission(
+                self, perm, self.loop) for perm in perms["data"]]
 
     async def get_files(self, tag=None, n=100):
         '''
@@ -196,7 +203,8 @@ class Client:
             params.update({"tag": tag})
 
         files = await self.request.call("/files", params=params)
-        return [FileBase.build_file(self, file, self.loop) for file in files["data"]]
+        return [FileBase.build_file(
+            self, file, self.loop) for file in files["data"]]
 
     async def upgrade_friends(self):
         '''
@@ -215,7 +223,8 @@ class Client:
 
     # Main
 
-    async def login(self, username=None, password=None, b64=None, create_session=True):
+    async def login(self, username=None, password=None,
+                    b64=None, create_session=True):
         '''
         Used to login as a VRC user
 
@@ -236,11 +245,13 @@ class Client:
             Create a new session or not, defaults to True
         '''
 
-        logging.info("Doing logon (%screating new session)" % ("" if not create_session else "not "))
+        logging.info("Doing logon (%screating new session)" % (
+            "" if not create_session else "not "))
 
         if b64 is None:
             if username is None or password is None:
-                raise ClientErrors.MissingCredentials("Did not pass username+password or b64 for login")
+                raise ClientErrors.MissingCredentials(
+                    "Did not pass username+password or b64 for login")
 
             b64 = base64.b64encode((username+":"+password).encode()).decode()
 
@@ -312,10 +323,12 @@ class Client:
         try:
             resp = await self.request.call("/auth")
         except ClientErrors.MissingCredentials:
-            raise ClientErrors.InvalidAuthToken("Passed auth token is not valid")
+            raise ClientErrors.InvalidAuthToken(
+                "Passed auth token is not valid")
 
         if not resp["data"]["ok"]:
-            raise ClientErrors.InvalidAuthToken("Passed auth token is not valid")
+            raise ClientErrors.InvalidAuthToken(
+                "Passed auth token is not valid")
 
         await self.fetch_me()
 
@@ -330,9 +343,10 @@ class Client:
         logging.info("Verifying 2fa authtoken")
 
         if type(mfa) is not str:
-            raise ClientErrors.MfaInvalid("{} is not a valid 2fa code".format(mfa))
+            raise ClientErrors.MfaInvalid(
+                "{} is not a valid 2fa code".format(mfa))
 
-        resp = await self.request.call("/auth/twofactorauth/{}/verify".format(
+        await self.request.call("/auth/twofactorauth/{}/verify".format(
                 "totp" if len(mfa) == 6 else "otp"
             ), "POST", jdict={"code": mfa})
 
@@ -344,7 +358,8 @@ class Client:
             If should unauth the session cookie
         '''
 
-        logging.info("Doing logout (%sdeauthing authtoken)" % ("" if unauth else "not "))
+        logging.info("Doing logout (%sdeauthing authtoken)" % (
+            "" if unauth else "not "))
 
         self.me = None
         self.friends = None
@@ -407,7 +422,9 @@ class Client:
 
         self.loop.run_until_complete(self.logout(unauth))
 
-    async def _run(self, username=None, password=None, b64=None, mfa=None, token=None):
+    async def _run(self, username=None, password=None, b64=None,
+                   mfa=None, token=None):
+
         if token is None:
             await self.login2fa(username, password, b64, mfa)
         else:
@@ -430,7 +447,8 @@ class Client:
             if cookie.key == "auth":
                 authToken = cookie.value.split(";")[0]
 
-        self.ws = await self.request.session.ws_connect("wss://pipeline.vrchat.cloud/?authToken="+authToken)
+        self.ws = await self.request.session.ws_connect(
+            "wss://pipeline.vrchat.cloud/?authToken="+authToken)
         await self._ws_loop()
 
     def event(self, func):
@@ -451,7 +469,8 @@ class Client:
             setattr(self, func.__name__, func)
             return func
 
-        raise ClientErrors.InvalidEventFunction("{} is not a valid event".format(func.__name__))
+        raise ClientErrors.InvalidEventFunction(
+            "{} is not a valid event".format(func.__name__))
 
     async def on_connect(self):
         # Called at the start of ws event loop
@@ -556,8 +575,10 @@ class Client:
         # Add location data
         obj["user"].update({
             "location": obj["location"],
-            "instanceId": obj["location"].split(":")[1] if ":" in obj["location"] else obj["location"],
-            "worldId": obj["location"].split(":")[0] if ":" in obj["location"] else obj["location"]
+            "instanceId": obj["location"].split(
+                ":")[1] if ":" in obj["location"] else obj["location"],
+            "worldId": obj["location"].split(
+                ":")[0] if ":" in obj["location"] else obj["location"]
         })
 
         user = User(self, obj["user"], self.loop)

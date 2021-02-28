@@ -1,5 +1,6 @@
 from vrcpy.baseobject import BaseObject
 
+
 class FileBase(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
@@ -53,6 +54,7 @@ class FileBase(BaseObject):
 
         return FileBase(client, obj, loop)
 
+
 class File(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
@@ -86,6 +88,7 @@ class File(BaseObject):
 
         self._assign(obj)
 
+
 class FileVersion(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
@@ -113,6 +116,7 @@ class FileVersion(BaseObject):
         })
 
         self._assign(obj)
+
 
 class IconFile(BaseObject):
     pass

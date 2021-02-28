@@ -2,6 +2,7 @@ from vrcpy.baseobject import BaseObject
 
 import logging
 
+
 class Avatar(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
@@ -92,8 +93,12 @@ class Avatar(BaseObject):
             params={
                 "type": "avatar",
                 "favoriteId": self.id,
-                "tags": ["avatars1"] # Will probably need changing when vrc+ comes out
+                "tags": ["avatars1"]
             }
         )
 
-        return self.client._BaseFavorite.build_favorite(self.client, resp["data"], self.loop)
+        return self.client._BaseFavorite.build_favorite(
+            self.client,
+            resp["data"],
+            self.loop
+        )
