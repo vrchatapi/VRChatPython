@@ -13,6 +13,8 @@ from vrcpy.moderation import PlayerModeration
 from vrcpy.notification import InviteNotification, RequestInviteNotification
 from vrcpy.notification import FriendRequestNotification
 
+import vrcpy.enum
+import vrcpy.util
 import logging
 import asyncio
 import base64
@@ -44,8 +46,12 @@ class Client:
             await client.upgrade_friends()
         In "on_connect" event or after
         '''
-
         self.friends = []
+        self.favorites = {
+            vrcpy.enum.FavoriteType.World: [],
+            vrcpy.enum.FavoriteType.Friend: [],
+            vrcpy.enum.FavoriteType.Avatar: []
+        }
 
         self.ws = None
         self.loop = loop or asyncio.get_event_loop()
@@ -55,6 +61,8 @@ class Client:
 
     async def _ws_loop(self):
         self.friends = await self.me.fetch_friends()
+        await self.fetch_all_favorites()
+
         self.loop.create_task(self.on_connect())
 
         async for message in self.ws:
@@ -84,7 +92,7 @@ class Client:
             if "Authorization" in self.request.session.headers:
                 del self.request.session.headers["Authorization"]
 
-    # Utility
+    # -- Get
 
     def get_friend(self, id):
         '''
@@ -102,6 +110,17 @@ class Client:
                 return user
 
         return None
+
+    def get_favorite_friends(self, id):
+        return self.favorites["friends"]
+
+    def get_favorite_worlds(self, id):
+        return self.favorites["worlds"]
+
+    def get_favorite_avatars(self, id):
+        return self.favorites["avatars"]
+
+    # -- Fetch
 
     async def fetch_me(self, **kwargs):
         '''
@@ -220,6 +239,7 @@ class Client:
     async def fetch_all_favorites(self, favorite_type):
         '''
         Fetches all favorites by auto-paging
+            Using this also updates favorite cache
         Returns list of different Favorite types
 
             favorite_type, str
@@ -228,6 +248,25 @@ class Client:
 
         favorites = await vrcpy.util.auto_page_coro(
             self.fetch_favorites, favorite_type=favorite_type)
+
+        world = []
+        friend = []
+        avatar = []
+
+        for favorite in favorites:
+            if favorite.type == vrcpy.enum.FavoriteType.World:
+                world.append(favorite)
+            elif favorite.type == vrcpy.enum.FavoriteType.Friend:
+                friend.append(favorite)
+            elif favorite.type == vrcpy.enum.FavoriteType.Avatar:
+                avatar.append(favorite)
+
+        if world != []:
+            self.favorites[vrcpy.enum.FavoriteType.World] = world
+        if friend != []:
+            self.favorites[vrcpy.enum.FavoriteType.friend] = friend
+        if avatar != []:
+            self.favorites[vrcpy.enum.FavoriteType.avatar] = avatar
 
         return favorites
 

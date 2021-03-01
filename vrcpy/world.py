@@ -1,4 +1,5 @@
 from vrcpy.baseobject import BaseObject
+from vrcpy.enum import FavoriteType
 
 import logging
 
@@ -95,8 +96,6 @@ class LimitedWorld(BaseObject):
         Returns a WorldFavorite object
         '''
 
-        # TODO: Finish this function
-
         logging.info("Favoriting world with id " + self.id)
 
         resp = await self.client.request.call(
@@ -108,8 +107,11 @@ class LimitedWorld(BaseObject):
             }
         )
 
-        return self.client._BaseFavorite.build_favorite(
+        this = self.client._BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
+        self.client.favorites[FavoriteType.World].append(this)
+
+        return this
 
 
 class World(LimitedWorld):

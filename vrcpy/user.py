@@ -1,5 +1,6 @@
 from vrcpy.errors import ObjectErrors
 from vrcpy.baseobject import BaseObject
+from vrcpy.enum import FavoriteType
 
 import logging
 
@@ -176,8 +177,11 @@ class LimitedUser(BaseObject):
             }
         )
 
-        return self.client._BaseFavorite.build_favorite(
+        this = self.client._BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
+        self.client.favorites[FavoriteType.Friend].append(this)
+
+        return this
 
     async def add_moderation(self, t):
         '''

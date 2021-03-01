@@ -1,4 +1,5 @@
 from vrcpy.baseobject import BaseObject
+from vrcpy.enum import FavoriteType
 
 import logging
 
@@ -97,11 +98,11 @@ class Avatar(BaseObject):
             }
         )
 
-        return self.client._BaseFavorite.build_favorite(
-            self.client,
-            resp["data"],
-            self.loop
-        )
+        this = self.client._BaseFavorite.build_favorite(
+            self.client, resp["data"], self.loop)
+        self.client.favorites[FavoriteType.Avatar].append(this)
+
+        return this
 
     async def choose(self):
         '''
