@@ -25,3 +25,26 @@ async def auto_page_coro(coro, *args, **kwargs):
             break
 
     return objs
+
+
+def find_in_list_via_attribute(self, objlist, attribute, equals):
+    '''
+    Finds object in list via object.attribute
+    Returns first matching object, or None if no match found
+
+        objlist, list
+        list to search
+
+        attribute, str
+        name of attribute to match
+
+        equals, any
+        what to match attribute to
+    '''
+
+    for x in objlist:
+        if hasattr(x, attribute):
+            if getattr(x, attribute) == equals:
+                return x
+
+    return None
