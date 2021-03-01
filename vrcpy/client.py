@@ -188,6 +188,35 @@ class Client:
             return [BasePermission.build_permission(
                 self, perm, self.loop) for perm in perms["data"]]
 
+    async def fetch_favorites(self, type=None, n=100, offset=0):
+        '''
+        Fetches users favorites
+        Returns list of different Favorite types
+
+            type, str
+            Type of enum.FavoriteType
+
+            n, int
+            Number of favorites to return, max 100
+
+            offset, int
+            Offset from start of favorites to return from
+        '''
+
+        if n > 100:
+            n = 100
+
+        favorites = await self.request.call(
+            "/favorites",
+            params={
+                "type": type,
+                "n": n,
+                "offset": offset
+            })
+
+        return [self.client._BaseFavorite.build_favorite(
+            self, favorite, self.loop) for favorite in favorites["data"]]
+
     async def fetch_files(self, tag=None, n=100):
         '''
         Gets user icons
