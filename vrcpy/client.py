@@ -26,13 +26,21 @@ class Client:
     _LimitedUser = LimitedUser
     _User = User
     _CurrentUser = CurrentUser
+
     _LimitedWorld = LimitedWorld
     _World = World
+    _Instance = Instance
+
+    _Avatar = Avatar
+
     _InviteNotification = InviteNotification
     _RequestInviteNotification = RequestInviteNotification
     _FriendRequestNotification = FriendRequestNotification
+
     _BaseFavorite = BaseFavorite
     _PlayerModeration = PlayerModeration
+    _BasePermission = BasePermission
+    _FileBase = FileBase
 
     def __init__(self, loop=None, verify=True):
         self.request = Request(verify=verify)
@@ -183,114 +191,6 @@ class Client:
 
         world = await self.request.call("/worlds/"+world_id)
         return World(self, world["data"], self.loop)
-
-    async def fetch_permissions(self, condensed=False):
-        '''
-        Gets users permissions
-        Returns list of different Permission objects
-
-            condensed, bool
-            Whether to return condensed perms or not
-            If this is true then return will be a
-                dict of single key-value pairs
-        '''
-
-        logging.info("Getting permissions (%scondensed)" % (
-            "" if condensed else "not "))
-
-        if condensed:
-            perms = await self.request.call(
-                "/auth/permissions", params={"condensed": True})
-            return perms["data"]
-        else:
-            perms = await self.request.call("/auth/permissions")
-            return [BasePermission.build_permission(
-                self, perm, self.loop) for perm in perms["data"]]
-
-    async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
-        '''
-        Fetches users favorites
-        Returns list of different Favorite types
-
-            favorite_type, str
-            Type of enum.FavoriteType
-
-            n, int
-            Number of favorites to return, max 100
-
-            offset, int
-            Offset from start of favorites to return from
-        '''
-
-        if n > 100:
-            n = 100
-
-        favorites = await self.request.call(
-            "/favorites",
-            params={
-                "type": favorite_type,
-                "n": n,
-                "offset": offset
-            })
-
-        return [self.client._BaseFavorite.build_favorite(
-            self, favorite, self.loop) for favorite in favorites["data"]]
-
-    async def fetch_all_favorites(self, favorite_type):
-        '''
-        Fetches all favorites by auto-paging
-            Using this also updates favorite cache
-        Returns list of different Favorite types
-
-            favorite_type, str
-            Type of enum.FavoriteType
-        '''
-
-        favorites = await vrcpy.util.auto_page_coro(
-            self.fetch_favorites, favorite_type=favorite_type)
-
-        world = []
-        friend = []
-        avatar = []
-
-        for favorite in favorites:
-            if favorite.type == vrcpy.enum.FavoriteType.World:
-                world.append(favorite)
-            elif favorite.type == vrcpy.enum.FavoriteType.Friend:
-                friend.append(favorite)
-            elif favorite.type == vrcpy.enum.FavoriteType.Avatar:
-                avatar.append(favorite)
-
-        if world != []:
-            self.favorites[vrcpy.enum.FavoriteType.World] = world
-        if friend != []:
-            self.favorites[vrcpy.enum.FavoriteType.friend] = friend
-        if avatar != []:
-            self.favorites[vrcpy.enum.FavoriteType.avatar] = avatar
-
-        return favorites
-
-    async def fetch_files(self, tag=None, n=100):
-        '''
-        Gets user icons
-        Returns list of IconFile objects
-
-            tag, str
-            Tag to filter files
-
-            n, int
-            Number of files to return (max might be 100?)
-        '''
-
-        logging.info("Getting files (tag is %s)" % tag)
-
-        params = {"n": n}
-        if tag is not None:
-            params.update({"tag": tag})
-
-        files = await self.request.call("/files", params=params)
-        return [FileBase.build_file(
-            self, file, self.loop) for file in files["data"]]
 
     async def fetch_avatar(self, avatar_id):
         '''

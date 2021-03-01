@@ -1,6 +1,7 @@
 from vrcpy.errors import ObjectErrors
 from vrcpy.baseobject import BaseObject
 from vrcpy.enum import FavoriteType
+import vrcpy.util
 
 import logging
 
@@ -188,7 +189,7 @@ class LimitedUser(BaseObject):
         Adds a moderation against this user
         Returns a PlayerModeration
 
-            t, str (use enum.PlayerModerationType for convenience)
+            t, str (use vrcpy.enum.PlayerModerationType for convenience)
             Type of moderation
         '''
 
@@ -352,6 +353,8 @@ class CurrentUser(User):
 
         self._assign(obj)
 
+    # TODO: Fix this func
+    # self.online_friends and self.offline_friends doesn't exist
     async def fetch_friends(self):
         '''
         Returns list of LimitedUser objects
@@ -386,3 +389,169 @@ class CurrentUser(User):
                 friends.append(LimitedUser(self.client, user, self.loop))
 
         return friends
+
+    async def fetch_user(self, id):
+        '''
+        Gets a non-cached friend
+        Returns a User object
+
+            id, str
+            ID of the user to get
+        '''
+
+        logging.info("Getting user via id " + id)
+
+        user = await self.client.request.call("/users/" + id)
+        return User(self, user["data"], loop=self.loop)
+
+    async def fetch_instance(self, world_id, instance_id):
+        '''
+        Gets instance object
+
+            world_id, str
+            ID of the world of the instance
+
+            instance_id, str
+            ID of the specific instance
+        '''
+
+        logging.info("Getting instance %s:%s" % (world_id, instance_id))
+
+        instance = await self.client.request.call(
+            "/worlds/%s/%s" % (world_id, instance_id))
+        return self.client._Instance(self, instance["data"], self.loop)
+
+    async def fetch_world(self, world_id):
+        '''
+        Gets world object by ID
+
+            world_id, str
+            ID of the world to fetch
+        '''
+
+        logging.info("Getting world of id " + world_id)
+
+        world = await self.client.request.call("/worlds/"+world_id)
+        return self.client._World(self, world["data"], self.loop)
+
+    async def fetch_permissions(self, condensed=False):
+        '''
+        Gets users permissions
+        Returns list of different Permission objects
+
+            condensed, bool
+            Whether to return condensed perms or not
+            If this is true then return will be a
+                dict of single key-value pairs
+        '''
+
+        logging.info("Getting permissions (%scondensed)" % (
+            "" if condensed else "not "))
+
+        if condensed:
+            perms = await self.client.request.call(
+                "/auth/permissions", params={"condensed": True})
+            return perms["data"]
+        else:
+            perms = await self.client.request.call("/auth/permissions")
+            return [self.client._BasePermission.build_permission(
+                self, perm, self.loop) for perm in perms["data"]]
+
+    async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
+        '''
+        Fetches users favorites
+        Returns list of different Favorite types
+
+            favorite_type, str
+            Type of enum.FavoriteType
+
+            n, int
+            Number of favorites to return, max 100
+
+            offset, int
+            Offset from start of favorites to return from
+        '''
+
+        if n > 100:
+            n = 100
+
+        favorites = await self.client.request.call(
+            "/favorites",
+            params={
+                "type": favorite_type,
+                "n": n,
+                "offset": offset
+            })
+
+        return [self.client._BaseFavorite.build_favorite(
+            self, favorite, self.loop) for favorite in favorites["data"]]
+
+    async def fetch_all_favorites(self, favorite_type):
+        '''
+        Fetches all favorites by auto-paging
+            Using this also updates favorite cache
+        Returns list of different Favorite types
+
+            favorite_type, str
+            Type of enum.FavoriteType
+        '''
+
+        favorites = await vrcpy.util.auto_page_coro(
+            self.fetch_favorites, favorite_type=favorite_type)
+
+        world = []
+        friend = []
+        avatar = []
+
+        for favorite in favorites:
+            if favorite.type == FavoriteType.World:
+                world.append(favorite)
+            elif favorite.type == FavoriteType.Friend:
+                friend.append(favorite)
+            elif favorite.type == FavoriteType.Avatar:
+                avatar.append(favorite)
+
+        if world != []:
+            self.client.favorites[FavoriteType.World] = world
+        if friend != []:
+            self.client.favorites[FavoriteType.Friend] = friend
+        if avatar != []:
+            self.client.favorites[FavoriteType.Avatar] = avatar
+
+        return favorites
+
+    async def fetch_files(self, tag=None, n=100):
+        '''
+        Gets user icons
+        Returns list of IconFile objects
+
+            tag, str
+            Tag to filter files
+
+            n, int
+            Number of files to return (max might be 100?)
+        '''
+
+        logging.info("Getting files (tag is %s)" % tag)
+
+        params = {"n": n}
+        if tag is not None:
+            params.update({"tag": tag})
+
+        files = await self.client.request.call("/files", params=params)
+        return [self.client._FileBase.build_file(
+            self, file, self.loop) for file in files["data"]]
+
+    async def fetch_avatar(self, avatar_id):
+        '''
+        Fetches avatar via ID
+        returns Avatar object
+
+            avatar_id, str
+            ID of avatar to fetch
+        '''
+
+        logging.info("Fetching avatar " + avatar_id)
+
+        avatar = await self.client.request.call("/avatars/" + avatar_id)
+        return self.client._Avatar(self, avatar["data"], self.loop)
