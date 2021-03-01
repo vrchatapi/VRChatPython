@@ -3,6 +3,7 @@ from vrcpy.errors import ClientErrors
 
 from vrcpy.user import LimitedUser, User, CurrentUser
 from vrcpy.world import LimitedWorld, World, Instance
+from vrcpy.avatar import Avatar
 
 from vrcpy.favorite import BaseFavorite
 from vrcpy.permission import BasePermission
@@ -208,6 +209,20 @@ class Client:
         files = await self.request.call("/files", params=params)
         return [FileBase.build_file(
             self, file, self.loop) for file in files["data"]]
+
+    async def fetch_avatar(self, avatar_id):
+        '''
+        Fetches avatar via ID
+        returns Avatar object
+
+            avatar_id, str
+            ID of avatar to fetch
+        '''
+
+        logging.info("Fetching avatar " + avatar_id)
+
+        avatar = await self.request.call("/avatars/" + avatar_id)
+        return Avatar(self, avatar["data"], self.loop)
 
     async def upgrade_friends(self):
         '''
