@@ -102,3 +102,13 @@ class Avatar(BaseObject):
             resp["data"],
             self.loop
         )
+
+    async def choose(self):
+        '''
+        Sets this avatar to use
+        '''
+
+        logging.info("Setting current avatar to " + self.id)
+
+        await self.client.request.call(
+            "/avatars/%s/select" % self.id, "PUT")
