@@ -188,12 +188,12 @@ class Client:
             return [BasePermission.build_permission(
                 self, perm, self.loop) for perm in perms["data"]]
 
-    async def fetch_favorites(self, type=None, n=100, offset=0):
+    async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
         '''
         Fetches users favorites
         Returns list of different Favorite types
 
-            type, str
+            favorite_type, str
             Type of enum.FavoriteType
 
             n, int
@@ -209,13 +209,27 @@ class Client:
         favorites = await self.request.call(
             "/favorites",
             params={
-                "type": type,
+                "type": favorite_type,
                 "n": n,
                 "offset": offset
             })
 
         return [self.client._BaseFavorite.build_favorite(
             self, favorite, self.loop) for favorite in favorites["data"]]
+
+    async def fetch_all_favorites(self, favorite_type):
+        '''
+        Fetches all favorites by auto-paging
+        Returns list of different Favorite types
+
+            favorite_type, str
+            Type of enum.FavoriteType
+        '''
+
+        favorites = await vrcpy.util.auto_page_coro(
+            self.fetch_favorites, favorite_type=favorite_type)
+
+        return favorites
 
     async def fetch_files(self, tag=None, n=100):
         '''
