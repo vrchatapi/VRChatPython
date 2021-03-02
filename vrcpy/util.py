@@ -48,3 +48,20 @@ def find_in_list_via_attribute(self, objlist, attribute, equals):
                 return x
 
     return None
+
+
+class TaskWrapReturn:
+    def __init__(self, loop, coro, *args, task_name=None, **kwargs):
+        self.coro = coro
+        self.loop = loop
+
+        self.name = task_name
+
+        self.args = args
+        self.kwargs = kwargs
+
+        self.task = self.loop.create_task(self._do_coro())
+        self.returns = None
+
+    async def _do_coro(self):
+        self.returns = await self.coro(*self.args, **self.kwargs)
