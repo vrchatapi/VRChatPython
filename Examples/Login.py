@@ -11,6 +11,11 @@ async def on_connect():
 
 
 @client.event
+async def on_ready():
+    print("Cache ready!")
+
+
+@client.event
 async def on_disconnect():
     print("WS disconnected!")
 
