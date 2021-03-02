@@ -1,5 +1,6 @@
 from vrcpy.baseobject import BaseObject
 from vrcpy.enum import FavoriteType
+from vrcpy.errors import ObjectErrors
 
 import logging
 
@@ -112,6 +113,16 @@ class LimitedWorld(BaseObject):
         self.client.favorites[FavoriteType.World].append(this)
 
         return this
+
+    async def delete(self):
+        '''
+        Deletes this world
+        '''
+
+        if self.client.me.id != self.author_id:
+            raise ObjectErrors.NotOwned("Can't modify not-owned world")
+
+        await self.client.request("/worlds/"+self.id, "DELETE")
 
 
 class World(LimitedWorld):

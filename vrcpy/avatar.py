@@ -1,5 +1,6 @@
 from vrcpy.baseobject import BaseObject
 from vrcpy.enum import FavoriteType
+from vrcpy.errors import ObjectErrors
 
 import logging
 
@@ -103,6 +104,16 @@ class Avatar(BaseObject):
         self.client.favorites[FavoriteType.Avatar].append(this)
 
         return this
+
+    async def delete(self):
+        '''
+        Deletes this avatar
+        '''
+
+        if self.client.me.id != self.author_id:
+            raise ObjectErrors.NotOwned("Can't modify not-owned avatar")
+
+        await self.client.request("/avatars/"+self.id, "DELETE")
 
     async def choose(self):
         '''
