@@ -4,13 +4,15 @@ import aiohttp
 import logging
 
 from vrcpy.errors import RequestErrors, ClientErrors
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class Request:
     request_retries = 1
 
-    def __init__(self, loop=None, user_agent=None, verify=True):
+    def __init__(self, loop=None, user_agent=None, verify=True, proxy=None):
         self.verify = verify
+        self.proxy = "http://%s/" % proxy  # http/s proxy
         self.loop = loop or asyncio.get_event_loop()
         self.user_agent = user_agent or ""
 
@@ -72,7 +74,8 @@ class Request:
             async with aiohttp.ClientSession(headers={
                     "user-agent": self.user_agent}) as session:
 
-                async with session.get(self.base + "/config") as resp:
+                async with session.get(
+                        self.base + "/config", proxy=self.proxy) as resp:
                     assert resp.status == 200
                     j = await resp.json()
 
@@ -93,7 +96,7 @@ class Request:
                 headers={"user-agent": self.user_agent})
             resp = await session.request(
                 method, self.base + path, params=params, headers=headers,
-                json=jdict, ssl=self.verify)
+                json=jdict, ssl=self.verify, proxy=self.proxy)
         else:
             if self.session is None:
                 raise RequestErrors.NoSession("No session, not logged in")
@@ -101,7 +104,7 @@ class Request:
             session = None
             resp = await self.session.request(
                 method, self.base + path, params=params, headers=headers,
-                json=jdict, ssl=self.verify)
+                json=jdict, ssl=self.verify, proxy=self.proxy)
 
         logging.debug("%s request at %s -> %s" % (method, path, resp.status))
 
