@@ -105,7 +105,7 @@ class LimitedUser(BaseObject):
 
         logging.info("Getting User object of user " + self.username)
 
-        return await self.client.fetch_user_via_id(self.id)
+        return await self.client.fetch_user(self.id)
 
     async def fetch_friend_status(self):
         '''
@@ -411,18 +411,20 @@ class CurrentUser(User):
         if n > 100:
             n = 100
 
-        favorites = await self.client.request.call(
-            "/favorites",
-            params={
-                "type": favorite_type,
-                "n": n,
-                "offset": offset
-            })
+        params = {
+            "n": n,
+            "offset": offset
+        }
+
+        if favorite_type is not None:
+            params["type"] = favorite_type
+
+        favorites = await self.client.request.call("/favorites", params=params)
 
         return [self.client._BaseFavorite.build_favorite(
             self, favorite, self.loop) for favorite in favorites["data"]]
 
-    async def fetch_all_favorites(self, favorite_type):
+    async def fetch_all_favorites(self, favorite_type=None):
         '''
         Fetches all favorites by auto-paging
             Using this also updates favorite cache

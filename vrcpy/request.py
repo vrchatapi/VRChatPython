@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import logging
 
-from vrcpy.errors import RequestErrors, ClientErrors, GeneralErrors
+from vrcpy.errors import RequestErrors, ClientErrors
 
 
 class Request:
@@ -79,7 +79,7 @@ class Request:
             try:
                 self.apiKey = j["apiKey"]
             except Exception:
-                raise GeneralErrors.OutOfDate(
+                raise ClientErrors.OutOfDate(
                     "This API wrapper is too outdated to function (https://api.vrchat.cloud/api/1/config doesn't contain apiKey)")
 
         # Conversion to support py bools in request params

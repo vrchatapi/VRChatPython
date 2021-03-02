@@ -21,7 +21,7 @@ class BaseFavorite(BaseObject):
         self.favorite_group = obj["tags"][0]
 
     @staticmethod
-    def build_favorite(self, client, obj, loop=None):
+    def build_favorite(client, obj, loop=None):
         switch = {
             "world": WorldFavorite,
             "friend": FriendFavorite,

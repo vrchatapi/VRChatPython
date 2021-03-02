@@ -76,7 +76,7 @@ class Client:
         self.loop.create_task(self.on_connect())
         tasks = []
 
-        await self.fetch_all_favorites()
+        await self.me.fetch_all_favorites()
 
         # Fetch all friends
         tasks.append(vrcpy.util.TaskWrapReturn(
@@ -98,7 +98,7 @@ class Client:
                 self.loop, self.fetch_user, friend, task_name="active"))
 
         for task in tasks:
-            await task.task()
+            await task.task
             if type(task.returns) is not list:
                 self.friends[task.name].append(task.returns)
             else:
