@@ -48,13 +48,18 @@ class Client:
         self.me = None
 
         '''
-        This is a list of LimitedUser objects
-        It slowly gets made a list of User objects via ws events
+        Each is a list of LimitedUser objects
+        It slowly gets made each a list of User objects via ws events
         You can force all User objects from the start using
             await client.upgrade_friends()
-        In "on_connect" event or after
+        In "on_ready" event or after
         '''
-        self.friends = []
+        self.friends = {
+            "online": [],
+            "active": [],
+            "offline": []
+        }
+
         self.favorites = {
             vrcpy.enum.FavoriteType.World: [],
             vrcpy.enum.FavoriteType.Friend: [],
@@ -68,10 +73,39 @@ class Client:
             asyncio.set_event_loop(loop)
 
     async def _ws_loop(self):
-        self.friends = await self.me.fetch_friends()
+        self.loop.create_task(self.on_connect())
+        tasks = []
+
         await self.fetch_all_favorites()
 
-        self.loop.create_task(self.on_connect())
+        # Fetch all friends
+        tasks.append(vrcpy.util.TaskWrapReturn(
+            self.loop,
+            vrcpy.util.auto_page_coro,
+            self.me.fetch_friends,
+            task_name="online",
+            offline=False))
+
+        tasks.append(vrcpy.util.TaskWrapReturn(
+            self.loop,
+            vrcpy.util.auto_page_coro,
+            self.me.fetch_friends,
+            task_name="offline",
+            offline=True))
+
+        for friend in self.me.active_friends:
+            tasks.append(vrcpy.util.TaskWrapReturn(
+                self.loop, self.fetch_user, friend, task_name="active"))
+
+        for task in tasks:
+            await task.task()
+            if type(task.returns) is not list:
+                self.friends[task.name].append(task.returns)
+            else:
+                self.friends[task.name] = task.returns
+
+        del tasks
+        self.loop.create_task(self.on_ready())
 
         async for message in self.ws:
             message = message.json()
@@ -113,11 +147,28 @@ class Client:
 
         logging.info("Getting cached friend with id " + id)
 
-        for user in self.friends:
-            if user.id == id:
-                return user
+        for state in self.friends:
+            for user in self.friends[state]:
+                if user.id == id:
+                    return user
 
         return None
+
+    def _remove_friend_from_cache(self, id):
+        user_state = ""
+        for state in self.friends:
+            for user in self.friends[state]:
+                if user.id == id:
+                    user_state = state
+                    break
+
+            if user_state == state:
+                break
+
+        if user_state == "":
+            return
+
+        self.friends[user_state].remove(self.get_friend(id))
 
     def get_favorite_friends(self, id):
         return self.favorites["friends"]
@@ -212,13 +263,14 @@ class Client:
         to become User objects
         '''
 
-        friends = []
+        for state in self.friends:
+            friends = []
 
-        for friend in self.friends:
-            logging.debug("Upgrading " + friend.display_name)
-            friends.append(await friend.fetch_full())
+            for user in self.friends[state]:
+                logging.debug("Upgrading " + user.display_name)
+                friends.append(await user.fetch_full())
 
-        self.friends = friends
+            self.friends[state] = friends
         logging.info("Finished upgrading friends")
 
     # Main
@@ -362,7 +414,16 @@ class Client:
             "" if unauth else "not "))
 
         self.me = None
-        self.friends = None
+        self.friends = {
+            "online": [],
+            "active": [],
+            "offline": []
+        }
+        self.favorites = {
+            vrcpy.enum.FavoriteType.World: [],
+            vrcpy.enum.FavoriteType.Friend: [],
+            vrcpy.enum.FavoriteType.Avatar: []
+        }
 
         if unauth:
             # Sending json with this makes it not 401 for some reason
@@ -476,17 +537,19 @@ class Client:
         # Called at the start of ws event loop
         pass
 
+    async def on_ready(self):
+        # Called when cache is finished
+        pass
+
     async def on_disconnect(self):
         # Called at the end of ws event loop
         pass
 
     async def _on_friend_online(self, obj):
         user = User(self, obj["user"], self.loop)
-        friend = self.get_friend(user.id)
+        self._remove_friend_from_cache(user.id)
 
-        if friend is not None:
-            self.friends.remove(friend)
-        self.friends.append(user)
+        self.friends["online"].append(user)
 
         await self.on_friend_online(user)
 
@@ -495,12 +558,9 @@ class Client:
         pass
 
     async def _on_friend_offline(self, obj):
-        user = await self.fetch_user_via_id(obj["userId"])
-        friend = self.get_friend(user.id)
-
-        if friend is not None:
-            self.friends.remove(friend)
-        self.friends.append(user)
+        user = await self.fetch_user(obj["userId"])
+        self._remove_friend_from_cache(user.id)
+        self.friends["offline"].append(user)
 
         await self.on_friend_offline(user)
 
@@ -510,11 +570,8 @@ class Client:
 
     async def _on_friend_active(self, obj):
         user = User(self, obj["user"], self.loop)
-        friend = self.get_friend(user.id)
-
-        if friend is not None:
-            self.friends.remove(friend)
-        self.friends.append(user)
+        self._remove_friend_from_cache(user.id)
+        self.friends["active"].append(user)
 
         await self.on_friend_active(user)
 
@@ -524,11 +581,8 @@ class Client:
 
     async def _on_friend_add(self, obj):
         user = User(self, obj["user"], self.loop)
-        friend = self.get_friend(user.id)
-
-        if friend is not None:
-            self.friends.remove(friend)
-        self.friends.append(user)
+        self._remove_friend_from_cache(user.id)
+        self.friends[user.state].append(user)
 
         await self.on_friend_add(user)
 
@@ -537,11 +591,8 @@ class Client:
         pass
 
     async def _on_friend_delete(self, obj):
-        user = await self.fetch_user_via_id(obj["userId"])
-        friend = self.get_friend(user.id)
-
-        if friend is not None:
-            self.friends.remove(friend)
+        user = await self.fetch_user(obj["userId"])
+        self._remove_friend_from_cache(user.id)
 
         await self.on_friend_delete(user)
 
@@ -552,10 +603,8 @@ class Client:
     async def _on_friend_update(self, obj):
         user = User(self, obj["user"], self.loop)
         ouser = self.get_friend(user.id)
-
-        if ouser is not None:
-            self.friends.remove(ouser)
-        self.friends.append(user)
+        self._remove_friend_from_cache(user.id)
+        self.friends[user.state].append(user)
 
         await self.on_friend_update(ouser, user)
 
@@ -584,9 +633,8 @@ class Client:
         user = User(self, obj["user"], self.loop)
         ouser = self.get_friend(user.id)
 
-        if ouser is not None:
-            self.friends.remove(ouser)
-        self.friends.append(user)
+        self._remove_friend_from_cache(user.id)
+        self.friends[user.state].append(user)
 
         await self.on_friend_location(ouser, user)
 
