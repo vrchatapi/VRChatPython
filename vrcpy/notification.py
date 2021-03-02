@@ -120,6 +120,22 @@ class RequestInviteNotification(BaseNotification):
         self._assign(obj)
 
 
+class RequestInviteResponseNotification(BaseNotification):
+    def __init__(self, client, obj, loop=None):
+        super().__init__(client, loop)
+
+        self.detail_required.update({
+            "in_response_to": {
+                "dict_key": "inResponseTo",
+                "type": str
+            },
+            "response_message": {
+                "dict_key": "responseMessage",
+                "type": str
+            }
+        })
+
+
 class FriendRequestNotification(BaseNotification):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
