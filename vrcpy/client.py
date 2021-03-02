@@ -154,6 +154,15 @@ class Client:
 
         return None
 
+    def get_online_friends(self):
+        return self.friends["online"]
+
+    def get_active_friends(self):
+        return self.friends["active"]
+
+    def get_offline_friends(self):
+        return self.friends["offline"]
+
     def _remove_friend_from_cache(self, id):
         user_state = ""
         for state in self.friends:
