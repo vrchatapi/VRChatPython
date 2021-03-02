@@ -75,4 +75,9 @@ class ObjectErrors:
         # Raised when group name is invalid
         pass
 
-    errors = [IntegretyError, NotFriends, AlreadyFriends, InvalidGroupName]
+    class NotOwned(Exception):
+        # Raised when operation performed on something unowned
+        pass
+
+    errors = [IntegretyError, NotFriends, AlreadyFriends, InvalidGroupName,
+              NotOwned]
