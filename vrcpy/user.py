@@ -390,49 +390,6 @@ class CurrentUser(User):
 
         return friends
 
-    async def fetch_user(self, id):
-        '''
-        Gets a non-cached friend
-        Returns a User object
-
-            id, str
-            ID of the user to get
-        '''
-
-        logging.info("Getting user via id " + id)
-
-        user = await self.client.request.call("/users/" + id)
-        return User(self, user["data"], loop=self.loop)
-
-    async def fetch_instance(self, world_id, instance_id):
-        '''
-        Gets instance object
-
-            world_id, str
-            ID of the world of the instance
-
-            instance_id, str
-            ID of the specific instance
-        '''
-
-        logging.info("Getting instance %s:%s" % (world_id, instance_id))
-
-        instance = await self.client.request.call(
-            "/worlds/%s/%s" % (world_id, instance_id))
-        return self.client._Instance(self, instance["data"], self.loop)
-
-    async def fetch_world(self, world_id):
-        '''
-        Gets world object by ID
-
-            world_id, str
-            ID of the world to fetch
-        '''
-
-        logging.info("Getting world of id " + world_id)
-
-        world = await self.client.request.call("/worlds/"+world_id)
-        return self.client._World(self, world["data"], self.loop)
 
     async def fetch_permissions(self, condensed=False):
         '''
@@ -541,17 +498,3 @@ class CurrentUser(User):
         files = await self.client.request.call("/files", params=params)
         return [self.client._FileBase.build_file(
             self, file, self.loop) for file in files["data"]]
-
-    async def fetch_avatar(self, avatar_id):
-        '''
-        Fetches avatar via ID
-        returns Avatar object
-
-            avatar_id, str
-            ID of avatar to fetch
-        '''
-
-        logging.info("Fetching avatar " + avatar_id)
-
-        avatar = await self.client.request.call("/avatars/" + avatar_id)
-        return self.client._Avatar(self, avatar["data"], self.loop)
