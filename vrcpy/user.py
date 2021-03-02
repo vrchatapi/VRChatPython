@@ -353,43 +353,22 @@ class CurrentUser(User):
 
         self._assign(obj)
 
-    # TODO: Fix this func
-    # self.online_friends and self.offline_friends doesn't exist
-    async def fetch_friends(self):
+    async def fetch_friends(self, offline=False, n=100, offset=0):
         '''
         Returns list of LimitedUser objects
         '''
 
-        logging.info("Fetching friends")
+        logging.info(
+            "Fetching %s friends" % "offline" if offline else "online")
 
-        friends = []
+        resp = await self.client.request.call(
+            "/auth/user/friends", params={
+                "offset": offset,
+                "n": n,
+                "offline": offline})
 
-        for offset in range(
-                0,
-                len(self.online_friends) + len(self.offline_friends),
-                100):
-
-            resp = await self.client.request.call(
-                "/auth/user/friends", params={
-                    "offset": offset,
-                    "n": 100,
-                    "offline": False})
-
-            for user in resp["data"]:
-                friends.append(LimitedUser(self.client, user, self.loop))
-
-        for offset in range(0, len(self.offline_friends), 100):
-            resp = await self.client.request.call(
-                "/auth/user/friends", params={
-                    "offset": offset,
-                    "n": 100,
-                    "offline": True})
-
-            for user in resp["data"]:
-                friends.append(LimitedUser(self.client, user, self.loop))
-
-        return friends
-
+        return [LimitedUser(
+            self.client, user, self.loop) for user in resp["data"]]
 
     async def fetch_permissions(self, condensed=False):
         '''
