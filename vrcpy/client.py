@@ -518,7 +518,8 @@ class Client:
                 authToken = cookie.value.split(";")[0]
 
         self.ws = await self.request.session.ws_connect(
-            "wss://pipeline.vrchat.cloud/?authToken="+authToken)
+            "wss://pipeline.vrchat.cloud/?authToken="+authToken,
+            proxy=self.request.proxy)
         await self._ws_loop()
 
     def event(self, func):
