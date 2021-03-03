@@ -392,7 +392,7 @@ class CurrentUser(User):
         else:
             perms = await self.client.request.call("/auth/permissions")
             return [self.client._BasePermission.build_permission(
-                self, perm, self.loop) for perm in perms["data"]]
+                self.client, perm, self.loop) for perm in perms["data"]]
 
     async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
         '''
@@ -423,7 +423,7 @@ class CurrentUser(User):
         favorites = await self.client.request.call("/favorites", params=params)
 
         return [self.client._BaseFavorite.build_favorite(
-            self, favorite, self.loop) for favorite in favorites["data"]]
+            self.client, favorite, self.loop) for favorite in favorites["data"]]
 
     async def fetch_all_favorites(self, favorite_type=None):
         '''
@@ -479,7 +479,7 @@ class CurrentUser(User):
 
         files = await self.client.request.call("/files", params=params)
         return [self.client._FileBase.build_file(
-            self, file, self.loop) for file in files["data"]]
+            self.client, file, self.loop) for file in files["data"]]
 
     async def _update(self, **kwargs):
         for kwarg in kwargs:
