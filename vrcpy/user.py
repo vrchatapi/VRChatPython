@@ -4,6 +4,7 @@ from vrcpy.enum import FavoriteType
 import vrcpy.util
 
 import logging
+import copy
 
 
 class FriendStatus(BaseObject):
@@ -479,3 +480,32 @@ class CurrentUser(User):
         files = await self.client.request.call("/files", params=params)
         return [self.client._FileBase.build_file(
             self, file, self.loop) for file in files["data"]]
+
+    async def _update(self, **kwargs):
+        for kwarg in kwargs:
+            if kwargs[kwarg] is None:
+                kwargs[kwarg] = getattr(self, kwarg)
+
+        self.raw.update({
+            "email": kwargs["email"],
+            "birthday": kwargs["birthday"],
+            "tags": kwargs["tags"],
+            "status": kwargs["status"],
+            "acceptedTOSVersion": kwargs["accepted_tos_version"],
+            "allowAvatarCopying": kwargs["allow_avatar_copying"],
+            "bio": kwargs["bio"],
+            "bioLinks": kwargs["bio_links"]
+        })
+
+        me = await self.client.request.call("/users/"+self.id, "PUT")
+        self.client.me = CurrentUser(self.client, me["data"], self.loop)
+        return self.client.me
+
+    async def update(self, email=None, birthday=None, tags=None, status=None,
+                     accepted_tos_version=None, allow_avatar_copying=None,
+                     bio=None, bio_links=None):
+
+        await self._update(email=email, birthday=birthday, tags=tags,
+                           status=status, bio=bio, bio_Links=bio_links,
+                           accepted_tos_version=accepted_tos_version,
+                           allow_avatar_copying=allow_avatar_copying)
