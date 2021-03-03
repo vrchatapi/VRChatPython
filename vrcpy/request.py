@@ -12,7 +12,8 @@ class Request:
 
     def __init__(self, loop=None, user_agent=None, verify=True, proxy=None):
         self.verify = verify
-        self.proxy = "http://%s/" % proxy  # http/s proxy
+        # http/s proxy
+        self.proxy = ("http://%s/" % proxy) if proxy is not None else None
         self.loop = loop or asyncio.get_event_loop()
         self.user_agent = user_agent or ""
 
