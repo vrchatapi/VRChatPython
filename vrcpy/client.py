@@ -272,6 +272,22 @@ class Client:
         to become User objects
         '''
 
+        tasks = []
+        for state in self.friends:
+            for user in self.friends[state]:
+                tasks.append(vrcpy.util.TaskWrapReturn(
+                    self.loop,
+                    user.fetch_full,
+                    task_name=state
+                ))
+
+        self.friends = {"online": [], "active": [], "offline": []}
+
+        for task in tasks:
+            await task.task
+            self.friends[task.returns.state].append(task.returns)
+
+        '''
         for state in self.friends:
             friends = []
 
@@ -280,6 +296,8 @@ class Client:
                 friends.append(await user.fetch_full())
 
             self.friends[state] = friends
+        '''
+
         logging.info("Finished upgrading friends")
 
     # Main
