@@ -25,7 +25,7 @@ class BasePermission(BaseObject):
         })
 
     @staticmethod
-    def build_permission(self, client, obj, loop=None):
+    def build_permission(client, obj, loop=None):
         switch = {
             "permission-early-adopter-tags": EarlyAdopterPermission,
             "permission-extra-favorites-avatar-groups": ExtraFavoriteGroupPermission,
