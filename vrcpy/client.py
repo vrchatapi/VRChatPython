@@ -11,7 +11,7 @@ from vrcpy.file import FileBase
 from vrcpy.moderation import PlayerModeration
 
 from vrcpy.notification import InviteNotification, RequestInviteNotification
-from vrcpy.notification import FriendRequestNotification
+from vrcpy.notification import FriendRequestNotification, BaseNotification
 
 import vrcpy.enum
 import vrcpy.util
@@ -684,7 +684,10 @@ class Client:
         pass
 
     async def _on_notification(self, obj):
-        await self.on_notification(obj)
+        notif = BaseNotification.build_notification(
+            self, obj["data"], self.loop)
+
+        await self.on_notification(notif)
 
     async def on_notification(self, notification):
         # Called when recieved a notification
