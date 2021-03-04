@@ -1,4 +1,5 @@
 from vrcpy.baseobject import BaseObject
+import logging
 
 
 class Notification:
@@ -68,6 +69,18 @@ class BaseNotification(BaseObject):
             super()._assign(obj["details"])
 
         del self.detail_required
+
+    @staticmethod
+    def build_notification(client, obj, loop=None):
+        switch = {
+            "invite": InviteNotification,
+            "requestInvite": RequestInviteNotification,
+            "requestInviteResponse": RequestInviteResponseNotification,
+            "friendRequest": FriendRequestNotification
+        }
+
+        logging.debug("Building notification of type " + obj["type"])
+        return switch[obj["type"]](client, obj, loop)
 
     async def mark_seen(self):
         '''
