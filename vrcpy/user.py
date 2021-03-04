@@ -104,7 +104,7 @@ class LimitedUser(BaseObject):
         Returns this user as a User object
         '''
 
-        logging.info("Getting User object of user " + self.username)
+        logging.debug("Getting User object of user " + self.username)
 
         return await self.client.fetch_user(self.id)
 
@@ -113,6 +113,8 @@ class LimitedUser(BaseObject):
         Gets friend request and is_friend status'
         Returns FriendStatus object
         '''
+
+        logging.debug("Getting user status for " + self.id)
 
         friend_status = await self.client.request.call(
             "/user/%s/friendStatus" % self.id)
@@ -123,7 +125,7 @@ class LimitedUser(BaseObject):
         Sends a friend request notification to this user
         '''
 
-        logging.info("Sending friend request to " + self.username)
+        logging.debug("Sending friend request to " + self.username)
 
         if self.is_friend:
             raise ObjectErrors.AlreadyFriends(
@@ -137,7 +139,7 @@ class LimitedUser(BaseObject):
         Unfriends this user
         '''
 
-        logging.info("Unfriending user " + self.username)
+        logging.debug("Unfriending user " + self.username)
 
         if not self.is_friend:
             raise ObjectErrors.NotFriends(
@@ -155,7 +157,7 @@ class LimitedUser(BaseObject):
             Name of group to add friend to
         '''
 
-        logging.info("Favoriting user with id " + self.id)
+        logging.debug("Favoriting user with id " + self.id)
 
         if not self.is_friend:
             raise ObjectErrors.NotFriends(
@@ -194,9 +196,11 @@ class LimitedUser(BaseObject):
             Type of moderation
         '''
 
+        logging.debug("Adding moderations %s to user %s" % (
+            t, self.id))
+
         moderation = await self.client._PlayerModeration.create_moderation(
-            t, self.id, self.client, self.loop
-        )
+            t, self.id, self.client, self.loop)
 
         return moderation
 
@@ -359,7 +363,7 @@ class CurrentUser(User):
         Returns list of LimitedUser objects
         '''
 
-        logging.info(
+        logging.debug(
             "Fetching %s friends" % "offline" if offline else "online")
 
         resp = await self.client.request.call(
@@ -382,7 +386,7 @@ class CurrentUser(User):
                 dict of single key-value pairs
         '''
 
-        logging.info("Getting permissions (%scondensed)" % (
+        logging.debug("Getting permissions (%scondensed)" % (
             "" if condensed else "not "))
 
         if condensed:
@@ -421,6 +425,7 @@ class CurrentUser(User):
             params["type"] = favorite_type
 
         favorites = await self.client.request.call("/favorites", params=params)
+        logging.debug("Fetching favorites")
 
         return [self.client._BaseFavorite.build_favorite(
             self.client, favorite, self.loop) for favorite in favorites["data"]]
@@ -471,7 +476,7 @@ class CurrentUser(User):
             Number of files to return (max might be 100?)
         '''
 
-        logging.info("Getting files (tag is %s)" % tag)
+        logging.debug("Fetching files (tag is %s)" % tag)
 
         params = {"n": n}
         if tag is not None:
@@ -496,6 +501,8 @@ class CurrentUser(User):
             "bio": kwargs["bio"],
             "bioLinks": kwargs["bio_links"]
         })
+
+        logging.debug("Updating CurrentUser")
 
         me = await self.client.request.call("/users/"+self.id, "PUT")
         self.client.me = CurrentUser(self.client, me["data"], self.loop)

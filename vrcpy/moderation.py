@@ -1,4 +1,5 @@
 from vrcpy.baseobject import BaseObject
+import logging
 
 
 class PlayerModeration(BaseObject):
@@ -43,7 +44,7 @@ class PlayerModeration(BaseObject):
         returns source User object
         '''
 
-        user = await self.client.fetch_user_via_id(self.source_user_id)
+        user = await self.client.fetch_user(self.source_user_id)
         return user
 
     async def fetch_target_user(self):
@@ -51,7 +52,7 @@ class PlayerModeration(BaseObject):
         returns target User object
         '''
 
-        user = await self.client.fetch_user_via_id(self.target_user_id)
+        user = await self.client.fetch_user(self.target_user_id)
         return user
 
     async def clear_moderation(self):
@@ -64,6 +65,7 @@ class PlayerModeration(BaseObject):
                 self.source_user_id, self.target_user_id),
             "DELETE"
         )
+        logging.debug("Cleared moderations for " + self.source_user_id)
 
     @staticmethod
     def build_moderation(self, client, obj, loop=None):
@@ -101,6 +103,8 @@ class BlockPlayerModeration(PlayerModeration):
         await self.client.request.call(
             "/auth/user/unblocks", "PUT", params={
                 "blocked": self.target_user_id})
+
+        logging.debug("Unblocked user %s" % self.target_user_id)
 
 
 class ShowAvatarModeration(PlayerModeration):
@@ -151,7 +155,7 @@ class Moderation(BaseObject):
         self._assign(obj)
 
     async def fetch_instance(self):
-        instance = await self.client.fetch_instance_via_id(
+        instance = await self.client.fetch_instance(
             self.world_id, self.instance_id)
         return instance
 

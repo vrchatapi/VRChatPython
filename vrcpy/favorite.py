@@ -28,7 +28,7 @@ class BaseFavorite(BaseObject):
             "avatar": AvatarFavorite
         }
 
-        logging.info("Building favorite of type " + obj["type"])
+        logging.debug("Building favorite of type " + obj["type"])
 
         return switch[obj["type"]](client, obj, loop)
 
@@ -38,7 +38,7 @@ class BaseFavorite(BaseObject):
         '''
 
         await self.client.request.call("/favorites/"+self.id, "DELETE")
-
+        logging.debug("Unfavorited %s %s" % (self.type, self.id))
 
 class WorldFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):

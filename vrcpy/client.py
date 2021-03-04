@@ -157,7 +157,7 @@ class Client:
             ID of the user to get
         '''
 
-        logging.info("Getting cached friend with id " + id)
+        logging.debug("Getting cached friend with id " + id)
 
         for state in self.friends:
             for user in self.friends[state]:
@@ -167,12 +167,15 @@ class Client:
         return None
 
     def get_online_friends(self):
+        logging.debug("Getting cached online friends")
         return self.friends["online"]
 
     def get_active_friends(self):
+        logging.debug("Getting cached active friends")
         return self.friends["active"]
 
     def get_offline_friends(self):
+        logging.debug("Getting cached offline friends")
         return self.friends["offline"]
 
     def _remove_friend_from_cache(self, id):
@@ -190,14 +193,18 @@ class Client:
             return
 
         self.friends[user_state].remove(self.get_friend(id))
+        logging.debug("Removed friend %s from cache" % id)
 
     def get_favorite_friends(self, id):
+        logging.debug("Getting cached favorite friends")
         return self.favorites["friends"]
 
     def get_favorite_worlds(self, id):
+        logging.debug("Getting cached favorite worlds")
         return self.favorites["worlds"]
 
     def get_favorite_avatars(self, id):
+        logging.debug("Getting cached favorite avatars")
         return self.favorites["avatars"]
 
     # -- Fetch
@@ -208,7 +215,7 @@ class Client:
         kwargs are extra options to pass to request.call
         '''
 
-        logging.info("Fetching me")
+        logging.debug("Fetching me")
 
         me = await self.request.call("/auth/user", **kwargs)
         me = CurrentUser(
@@ -229,7 +236,7 @@ class Client:
             ID of the user to get
         '''
 
-        logging.info("Getting user via id " + id)
+        logging.debug("Getting user via id " + id)
 
         user = await self.request.call("/users/" + id)
         return User(self, user["data"], loop=self.loop)
@@ -245,7 +252,7 @@ class Client:
             ID of the specific instance
         '''
 
-        logging.info("Getting instance %s:%s" % (world_id, instance_id))
+        logging.debug("Getting instance %s:%s" % (world_id, instance_id))
 
         instance = await self.request.call(
             "/worlds/%s/%s" % (world_id, instance_id))
@@ -259,7 +266,7 @@ class Client:
             ID of the world to fetch
         '''
 
-        logging.info("Getting world of id " + world_id)
+        logging.debug("Getting world of id " + world_id)
 
         world = await self.request.call("/worlds/"+world_id)
         return World(self, world["data"], self.loop)
@@ -273,7 +280,7 @@ class Client:
             ID of avatar to fetch
         '''
 
-        logging.info("Fetching avatar " + avatar_id)
+        logging.debug("Fetching avatar " + avatar_id)
 
         avatar = await self.request.call("/avatars/" + avatar_id)
         return Avatar(self, avatar["data"], self.loop)
@@ -299,18 +306,7 @@ class Client:
             await task.task
             self.friends[task.returns.state].append(task.returns)
 
-        '''
-        for state in self.friends:
-            friends = []
-
-            for user in self.friends[state]:
-                logging.debug("Upgrading " + user.display_name)
-                friends.append(await user.fetch_full())
-
-            self.friends[state] = friends
-        '''
-
-        logging.info("Finished upgrading friends")
+        logging.debug("Finished upgrading friends")
 
     # Main
 
@@ -336,7 +332,7 @@ class Client:
             Create a new session or not, defaults to True
         '''
 
-        logging.info("Doing logon (%screating new session)" % (
+        logging.debug("Doing logon (%screating new session)" % (
             "" if not create_session else "not "))
 
         if b64 is None:
@@ -390,7 +386,7 @@ class Client:
             TOTP or OTP code to verify authtoken
         '''
 
-        logging.info("Doing 2falogon")
+        logging.debug("Doing 2falogon")
 
         try:
             await self.login(username, password, b64)
@@ -406,7 +402,7 @@ class Client:
             Authtoken to login with
         '''
 
-        logging.info("Doing logon with pre-existing auth token")
+        logging.debug("Doing logon with pre-existing auth token")
 
         self.request.new_session()
         self.request.session.cookie_jar.update_cookies([["auth", token]])
@@ -431,7 +427,7 @@ class Client:
             2FactorAuth code (totp or otp)
         '''
 
-        logging.info("Verifying 2fa authtoken")
+        logging.debug("Verifying 2fa authtoken")
 
         if type(mfa) is not str:
             raise ClientErrors.MfaInvalid(
@@ -449,7 +445,7 @@ class Client:
             If should unauth the session cookie
         '''
 
-        logging.info("Doing logout (%sdeauthing authtoken)" % (
+        logging.debug("Doing logout (%sdeauthing authtoken)" % (
             "" if unauth else "not "))
 
         self.me = None
@@ -518,7 +514,7 @@ class Client:
                 token
             ))
         except KeyboardInterrupt:
-            pass
+            self.logout_intent = True
 
         self.loop.run_until_complete(self.logout(unauth))
 
@@ -540,7 +536,7 @@ class Client:
         This function is blocking
         '''
 
-        logging.info("Starting ws loop")
+        logging.debug("Starting ws loop")
 
         await self._pre_loop()
         await self._ws_loop()

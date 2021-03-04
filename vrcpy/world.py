@@ -97,7 +97,7 @@ class LimitedWorld(BaseObject):
         Returns a WorldFavorite object
         '''
 
-        logging.info("Favoriting world with id " + self.id)
+        logging.debug("Favoriting world with id " + self.id)
 
         resp = await self.client.request.call(
             "/favorites",
@@ -118,6 +118,8 @@ class LimitedWorld(BaseObject):
         '''
         Deletes this world
         '''
+
+        logging.debug("Deleting world " + self.id)
 
         if self.client.me.id != self.author_id:
             raise ObjectErrors.NotOwned("Can't modify not-owned world")
@@ -260,7 +262,7 @@ class Instance(BaseObject):
         Returns World object
         '''
 
-        logging.info("Getting instance world of id " + self.world_id)
+        logging.debug("Getting instance world of id " + self.world_id)
 
         world = await self.client.request.call("/worlds/"+self.world_id)
         return World(self.client, world["data"], self.loop)

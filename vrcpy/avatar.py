@@ -87,7 +87,7 @@ class Avatar(BaseObject):
         Returns an AvatarFavorite object
         '''
 
-        logging.info("Favoriting avatar with id " + self.id)
+        logging.debug("Favoriting avatar with id " + self.id)
 
         resp = await self.client.request.call(
             "/favorites",
@@ -113,14 +113,17 @@ class Avatar(BaseObject):
         if self.client.me.id != self.author_id:
             raise ObjectErrors.NotOwned("Can't modify not-owned avatar")
 
+        logging.debug("Deleted avatar " + self.id)
         await self.client.request("/avatars/"+self.id, "DELETE")
+
+        del self
 
     async def choose(self):
         '''
         Sets this avatar to use
         '''
 
-        logging.info("Setting current avatar to " + self.id)
+        logging.debug("Setting current avatar to " + self.id)
 
         await self.client.request.call(
             "/avatars/%s/select" % self.id, "PUT")
