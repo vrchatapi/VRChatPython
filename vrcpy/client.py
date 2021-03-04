@@ -68,11 +68,12 @@ class Client:
 
         self.ws = None
         self.loop = loop or asyncio.get_event_loop()
+        self.logout_intent = False
 
         if loop is not None:
             asyncio.set_event_loop(loop)
 
-    async def _ws_loop(self):
+    async def _pre_loop(self):
         self.loop.create_task(self.on_connect())
         tasks = []
 
@@ -107,25 +108,36 @@ class Client:
         del tasks
         self.loop.create_task(self.on_ready())
 
-        async for message in self.ws:
-            message = message.json()
-            content = json.loads(message["content"])
+    async def _ws_loop(self):
+        while not self.logout_intent:
+            authToken = ""
+            for cookie in self.request.session.cookie_jar:
+                if cookie.key == "auth":
+                    authToken = cookie.value.split(";")[0]
 
-            logging.debug("Got ws message (%s)" % message["type"])
+            self.ws = await self.request.session.ws_connect(
+                "wss://pipeline.vrchat.cloud/?authToken="+authToken,
+                proxy=self.request.proxy)
 
-            switch = {
-                "friend-location": self._on_friend_location,
-                "friend-online": self._on_friend_online,
-                "friend-offline": self._on_friend_offline,
-                "friend-active": self._on_friend_active,
-                "friend-add": self._on_friend_add,
-                "friend-delete": self._on_friend_delete,
-                "friend-update": self._on_friend_update,
-                "notification": self._on_notification
-            }
+            async for message in self.ws:
+                message = message.json()
+                content = json.loads(message["content"])
 
-            if message["type"] in switch:
-                self.loop.create_task(switch[message["type"]](content))
+                logging.debug("Got ws message (%s)" % message["type"])
+
+                switch = {
+                    "friend-location": self._on_friend_location,
+                    "friend-online": self._on_friend_online,
+                    "friend-offline": self._on_friend_offline,
+                    "friend-active": self._on_friend_active,
+                    "friend-add": self._on_friend_add,
+                    "friend-delete": self._on_friend_delete,
+                    "friend-update": self._on_friend_update,
+                    "notification": self._on_notification
+                }
+
+                if message["type"] in switch:
+                    self.loop.create_task(switch[message["type"]](content))
 
         self.loop.create_task(self.on_disconnect())
 
@@ -530,14 +542,7 @@ class Client:
 
         logging.info("Starting ws loop")
 
-        authToken = ""
-        for cookie in self.request.session.cookie_jar:
-            if cookie.key == "auth":
-                authToken = cookie.value.split(";")[0]
-
-        self.ws = await self.request.session.ws_connect(
-            "wss://pipeline.vrchat.cloud/?authToken="+authToken,
-            proxy=self.request.proxy)
+        await self._pre_loop()
         await self._ws_loop()
 
     def event(self, func):
