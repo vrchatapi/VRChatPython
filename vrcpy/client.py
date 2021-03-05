@@ -316,6 +316,12 @@ class Client:
         data = await self.request.call("/auth")
         return data["data"]
 
+    async def fetch_system_time(self):
+        logging.debug("Fetching system time")
+
+        data = await self.request.call("/time")
+        return data["data"]
+
     # Main
 
     async def login(self, username=None, password=None,
