@@ -464,6 +464,21 @@ class CurrentUser(User):
 
         return favorites
 
+    async def fetch_notifications(self, type="all", sent=False, after=None):
+        logging.debug("Fetching user notifications")
+
+        params = {
+            "type": type,
+            "sent": sent
+        }
+
+        if after is not None:
+            params["after"] = after
+
+        notifs = await self.client.request.call("/auth/user/notifications")
+        return [self.client.BaseNotification.build_notification(
+            self.client, notif, self.loop) for notif in notifs["data"]]
+
     async def fetch_files(self, tag=None, n=100):
         '''
         Gets user icons
