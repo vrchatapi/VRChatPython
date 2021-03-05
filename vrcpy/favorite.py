@@ -40,6 +40,7 @@ class BaseFavorite(BaseObject):
         await self.client.request.call("/favorites/"+self.id, "DELETE")
         logging.debug("Unfavorited %s %s" % (self.type, self.id))
 
+
 class WorldFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
