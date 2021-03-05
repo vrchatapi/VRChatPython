@@ -322,6 +322,12 @@ class Client:
         data = await self.request.call("/time")
         return data["data"]
 
+    async def fetch_online_user_count(self):
+        logging.debug("Fetching online user count")
+
+        data = await self.request.call("/visits")
+        return data["data"]
+
     # Main
 
     async def login(self, username=None, password=None,
