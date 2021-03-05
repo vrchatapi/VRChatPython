@@ -123,8 +123,12 @@ class Request:
 
             raise Exception("Something horrible has gone wrong!")
 
-        response = {
-            "status": resp.status, "response": resp, "data": await resp.json()}
+        try:
+            response = {
+                "status": resp.status, "response": resp, "data": await resp.json()}
+        except Exception:
+            response = {
+                "status": resp.status, "response": resp, "data": await resp.text()}
 
         # We have to do this since we didn't async with
         await resp.release()
