@@ -4,7 +4,6 @@ from vrcpy.enum import FavoriteType
 import vrcpy.util
 
 import logging
-import copy
 
 
 class FriendStatus(BaseObject):

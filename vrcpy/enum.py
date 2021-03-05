@@ -11,6 +11,7 @@ class FavoriteType:
     Friend = "friend"
     Avatar = "avatar"
 
+
 class NotificationType:
     All = "all"
     FriendRequest = "friendRequest"
