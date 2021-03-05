@@ -308,6 +308,14 @@ class Client:
 
         logging.debug("Finished upgrading friends")
 
+    # -- Misc
+
+    async def fetch_auth_cookie(self):
+        logging.debug("Fetching auth cookie")
+
+        data = await self.request.call("/auth")
+        return data["data"]
+
     # Main
 
     async def login(self, username=None, password=None,
