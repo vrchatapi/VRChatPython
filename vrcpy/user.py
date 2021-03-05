@@ -485,6 +485,13 @@ class CurrentUser(User):
         return [self.client._PlayerModeration.build_moderation(
             self.client, mod, self.loop) for mod in data["data"]]
 
+    async def fetch_moderated(self):
+        logging.debug("Fetching moderated")
+
+        data = await self.client.request.call("/auth/user/playermoderated")
+        return [self.client._PlayerModeration.build_moderation(
+            self.client, mod, self.loop) for mod in data["data"]]
+
     async def fetch_files(self, tag=None, n=100):
         '''
         Gets user icons
