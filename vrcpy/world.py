@@ -91,7 +91,7 @@ class LimitedWorld(BaseObject):
         if obj is not None:
             self._assign(obj)
 
-    async def favorite(self):
+    async def favorite(self, group):
         '''
         Favorite this world
         Returns a WorldFavorite object
@@ -104,7 +104,8 @@ class LimitedWorld(BaseObject):
             "POST",
             params={
                 "type": "world",
-                "favoriteId": self.id
+                "favoriteId": self.id,
+                "tags": group
             }
         )
 

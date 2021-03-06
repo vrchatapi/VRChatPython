@@ -110,13 +110,11 @@ class Client:
 
     async def _ws_loop(self):
         while not self.logout_intent:
-            authToken = ""
-            for cookie in self.request.session.cookie_jar:
-                if cookie.key == "auth":
-                    authToken = cookie.value.split(";")[0]
+            auth = await self.fetch_auth_cookie()
+            auth = auth["data"]["token"]
 
             self.ws = await self.request.session.ws_connect(
-                "wss://pipeline.vrchat.cloud/?authToken="+authToken,
+                "wss://pipeline.vrchat.cloud/?authToken="+auth,
                 proxy=self.request.proxy)
 
             async for message in self.ws:
@@ -307,6 +305,26 @@ class Client:
             self.friends[task.returns.state].append(task.returns)
 
         logging.debug("Finished upgrading friends")
+
+    # -- Misc
+
+    async def fetch_auth_cookie(self):
+        logging.debug("Fetching auth cookie")
+
+        data = await self.request.call("/auth")
+        return data["data"]
+
+    async def fetch_system_time(self):
+        logging.debug("Fetching system time")
+
+        data = await self.request.call("/time")
+        return data["data"]
+
+    async def fetch_online_user_count(self):
+        logging.debug("Fetching online user count")
+
+        data = await self.request.call("/visits")
+        return data["data"]
 
     # Main
 

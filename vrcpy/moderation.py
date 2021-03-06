@@ -68,7 +68,7 @@ class PlayerModeration(BaseObject):
         logging.debug("Cleared moderations for " + self.source_user_id)
 
     @staticmethod
-    def build_moderation(self, client, obj, loop=None):
+    def build_moderation(client, obj, loop=None):
         switch = {
             "block": BlockPlayerModeration,
             "showAvatar": ShowAvatarModeration,

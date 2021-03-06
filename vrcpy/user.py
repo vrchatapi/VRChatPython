@@ -4,7 +4,6 @@ from vrcpy.enum import FavoriteType
 import vrcpy.util
 
 import logging
-import copy
 
 
 class FriendStatus(BaseObject):
@@ -463,6 +462,35 @@ class CurrentUser(User):
             self.client.favorites[FavoriteType.Avatar] = avatar
 
         return favorites
+
+    async def fetch_notifications(self, type="all", sent=False, after=None):
+        logging.debug("Fetching user notifications")
+
+        params = {
+            "type": type,
+            "sent": sent
+        }
+
+        if after is not None:
+            params["after"] = after
+
+        notifs = await self.client.request.call("/auth/user/notifications")
+        return [self.client.BaseNotification.build_notification(
+            self.client, notif, self.loop) for notif in notifs["data"]]
+
+    async def fetch_moderations(self):
+        logging.debug("Fetching moderations")
+
+        data = await self.client.request.call("/auth/user/playermoderations")
+        return [self.client._PlayerModeration.build_moderation(
+            self.client, mod, self.loop) for mod in data["data"]]
+
+    async def fetch_moderated(self):
+        logging.debug("Fetching moderated")
+
+        data = await self.client.request.call("/auth/user/playermoderated")
+        return [self.client._PlayerModeration.build_moderation(
+            self.client, mod, self.loop) for mod in data["data"]]
 
     async def fetch_files(self, tag=None, n=100):
         '''

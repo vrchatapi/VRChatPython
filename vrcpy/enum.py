@@ -10,3 +10,12 @@ class FavoriteType:
     World = "world"
     Friend = "friend"
     Avatar = "avatar"
+
+
+class NotificationType:
+    All = "all"
+    FriendRequest = "friendRequest"
+    Invite = "invite"
+    RequestInvite = "requestInvite"
+    RequestInviteResponse = "requestInviteResponse"
+    Hidden = "hidden"
