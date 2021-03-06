@@ -111,7 +111,7 @@ class Client:
     async def _ws_loop(self):
         while not self.logout_intent:
             auth = await self.fetch_auth_cookie()
-            auth = auth["data"]["token"]
+            auth = auth["token"]
 
             self.ws = await self.request.session.ws_connect(
                 "wss://pipeline.vrchat.cloud/?authToken="+auth,
