@@ -24,6 +24,14 @@ class RequestErrors:
     errors = [NoSession, SessionExists, RequestError, RateLimit, Unauthorized]
 
 
+class VRChatErrors:
+    # 500 responses
+
+    class ServiceUnavailable(Exception):
+        # For 503
+        pass
+
+
 class ClientErrors:
     # Errors for vrcpy/client.py
 

@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import logging
 
-from vrcpy.errors import RequestErrors, ClientErrors
+from vrcpy.errors import RequestErrors, ClientErrors, VRChatErrors
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
@@ -157,11 +157,15 @@ class Request:
         def handle_429():
             raise RequestErrors.RateLimit(resp["data"]["error"]["message"])
 
+        def handle_503():
+            raise VRChatErrors.ServiceUnavailable(resp["data"]["success"]["message"])
+
         switch = {
             400: lambda: handle_400(),
             401: lambda: handle_401(),
             404: lambda: handle_404(),
-            429: lambda: handle_429()
+            429: lambda: handle_429(),
+            503: lambda: handle_503()
         }
 
         if resp["response"].status in switch:
