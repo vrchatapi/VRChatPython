@@ -478,13 +478,6 @@ class CurrentUser(User):
         return [self.client.BaseNotification.build_notification(
             self.client, notif, self.loop) for notif in notifs["data"]]
 
-    async def fetch_moderations(self):
-        logging.debug("Fetching moderations")
-
-        data = await self.client.request.call("/auth/user/playermoderations")
-        return [self.client._PlayerModeration.build_moderation(
-            self.client, mod, self.loop) for mod in data["data"]]
-
     async def fetch_moderated(self):
         logging.debug("Fetching moderated")
 
