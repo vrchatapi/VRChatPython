@@ -2,9 +2,12 @@ import json
 import asyncio
 import aiohttp
 import logging
+import sys
 
 from vrcpy.errors import RequestErrors, ClientErrors, VRChatErrors
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class Request:
