@@ -25,6 +25,8 @@ class BaseObject:
         self._object_integrety(obj)
         self.raw = obj
 
+        applied_keys = []
+
         for key in self.required:
             myobj = self._get_proper_obj(
                 obj[self.required[key]["dict_key"]],
@@ -36,6 +38,8 @@ class BaseObject:
                 key,
                 myobj
             )
+
+            applied_keys.append(self.required[key]["dict_key"])
 
         for key in self.optional:
             if self.optional[key]["dict_key"] in obj:
@@ -50,6 +54,26 @@ class BaseObject:
             else:
                 setattr(self, key, None)
 
+            applied_keys.append(self.optional[key]["dict_key"])
+
+        for key in obj:
+            if key not in applied_keys:
+                attr_name = ""
+
+                # Try auto-fix keys
+                for char in key:
+                    if char == char.upper() and not char.upper() == char.lower():
+                        attr_name += "_" + char.lower()
+                        continue
+
+                    attr_name += char
+
+                setattr(
+                    self,
+                    attr_name,
+                    obj[key]
+                )
+
         if hasattr(self, "__cinit__"):
             self.caching_finished = False
             self.cache_task = self.loop.create_task(self.__cinit__())
@@ -57,6 +81,7 @@ class BaseObject:
         # Save yo memory fool
         del self.required
         del self.optional
+        del applied_keys
 
     def _object_integrety(self, obj):
         for key in self.required:
