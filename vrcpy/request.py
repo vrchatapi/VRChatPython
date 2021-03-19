@@ -165,7 +165,7 @@ class Request:
             raise RequestErrors.RateLimit(resp["data"]["error"]["message"])
 
         def handle_503():
-            raise VRChatErrors.ServiceUnavailable(resp["data"]["success"]["message"])
+            raise VRChatErrors.ServiceUnavailable(resp["data"]["error"]["message"])
 
         switch = {
             400: lambda: handle_400(),
