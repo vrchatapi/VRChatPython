@@ -74,6 +74,9 @@ class Client:
             asyncio.set_event_loop(loop)
 
     async def _pre_loop(self):
+        # Remove auth from headers to avoid cloudflare detection
+        del self.request.session._default_headers["Authorization"]
+
         self.loop.create_task(self.on_connect())
         tasks = []
 
