@@ -54,20 +54,12 @@ class Avatar(BaseObject):
                 "dict_key": "releaseStatus",
                 "type": str
             },
-            "platform": {
-                "dict_key": "platform",
-                "type": str
-            },
             "image_url": {
                 "dict_key": "imageUrl",
                 "type": str
             },
             "thumbnail_image_url": {
                 "dict_key": "thumbnailImageUrl",
-                "type": str
-            },
-            "unity_version": {
-                "dict_key": "unityVersion",
                 "type": str
             }
         })
