@@ -385,6 +385,7 @@ class Client:
 
         self._remove_authorization_header()
         self.me = CurrentUser(self, resp["data"], self.loop)
+        await self._pre_loop()
 
     async def login2fa(self, username=None, password=None, b64=None, mfa=None):
         '''
@@ -439,6 +440,7 @@ class Client:
                 "Passed auth token is not valid")
 
         await self.fetch_me()
+        await self._pre_loop()
 
     async def verify2fa(self, mfa):
         '''
@@ -559,7 +561,6 @@ class Client:
 
         logging.debug("Starting ws loop")
 
-        await self._pre_loop()
         await self._ws_loop()
 
     def event(self, func):
