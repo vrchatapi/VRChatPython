@@ -22,7 +22,7 @@ async def main():
         while True:
             me = await client.fetch_me()
             for friend in me.online_friends:
-                friend = await client.fetch_user_via_id(friend)
+                friend = await client.fetch_user(friend)
                 print(friend.display_name + " is now in-game!")
 
             await asyncio.sleep(60)
