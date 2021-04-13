@@ -532,6 +532,10 @@ class CurrentUser(User):
         return [self.client._Avatar(
             self.client, avatar, self.loop) for avatar in avatars["data"]]
 
+    async def fetch_current_avatar(self):
+        avatar = await self.client.request.call("/users/%s/avatar" % self.id)
+        return self.client._Avatar(self.client, avatar["data"], self.loop)
+
     async def _update(self, **kwargs):
         for kwarg in kwargs:
             if kwargs[kwarg] is None:
