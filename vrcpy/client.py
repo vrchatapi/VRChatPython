@@ -61,9 +61,9 @@ class Client:
         }
 
         self.favorites = {
-            vrcpy.enum.FavoriteType.World: [],
-            vrcpy.enum.FavoriteType.Friend: [],
-            vrcpy.enum.FavoriteType.Avatar: []
+            vrcpy.enum.FavoriteType.WORLD: [],
+            vrcpy.enum.FavoriteType.FRIEND: [],
+            vrcpy.enum.FavoriteType.AVATAR: []
         }
 
         self.ws = None
@@ -478,9 +478,9 @@ class Client:
             "offline": []
         }
         self.favorites = {
-            vrcpy.enum.FavoriteType.World: [],
-            vrcpy.enum.FavoriteType.Friend: [],
-            vrcpy.enum.FavoriteType.Avatar: []
+            vrcpy.enum.FavoriteType.WORLD: [],
+            vrcpy.enum.FavoriteType.FRIEND: [],
+            vrcpy.enum.FavoriteType.AVATAR: []
         }
 
         if unauth:

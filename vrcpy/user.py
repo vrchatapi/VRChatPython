@@ -182,7 +182,7 @@ class LimitedUser(BaseObject):
 
         this = self.client._BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
-        self.client.favorites[FavoriteType.Friend].append(this)
+        self.client.favorites[FavoriteType.FRIEND].append(this)
 
         return this
 
@@ -447,19 +447,19 @@ class CurrentUser(User):
         avatar = []
 
         for favorite in favorites:
-            if favorite.type == FavoriteType.World:
+            if favorite.type == FavoriteType.WORLD:
                 world.append(favorite)
-            elif favorite.type == FavoriteType.Friend:
+            elif favorite.type == FavoriteType.FRIEND:
                 friend.append(favorite)
-            elif favorite.type == FavoriteType.Avatar:
+            elif favorite.type == FavoriteType.AVATAR:
                 avatar.append(favorite)
 
         if world != []:
-            self.client.favorites[FavoriteType.World] = world
+            self.client.favorites[FavoriteType.WORLD] = world
         if friend != []:
-            self.client.favorites[FavoriteType.Friend] = friend
+            self.client.favorites[FavoriteType.FRIEND] = friend
         if avatar != []:
-            self.client.favorites[FavoriteType.Avatar] = avatar
+            self.client.favorites[FavoriteType.AVATAR] = avatar
 
         return favorites
 

@@ -111,7 +111,7 @@ class LimitedWorld(BaseObject):
 
         this = self.client._BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
-        self.client.favorites[FavoriteType.World].append(this)
+        self.client.favorites[FavoriteType.WORLD].append(this)
 
         return this
 

@@ -93,7 +93,7 @@ class Avatar(BaseObject):
 
         this = self.client._BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
-        self.client.favorites[FavoriteType.Avatar].append(this)
+        self.client.favorites[FavoriteType.AVATAR].append(this)
 
         return this
 
