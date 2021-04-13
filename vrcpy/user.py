@@ -4,6 +4,7 @@ from vrcpy.enum import FavoriteType, SortOrder, SortType, ReleaseStatus
 import vrcpy.util
 
 import logging
+import json
 
 
 class FriendStatus(BaseObject):
@@ -534,7 +535,9 @@ class CurrentUser(User):
 
     async def fetch_current_avatar(self):
         avatar = await self.client.request.call("/users/%s/avatar" % self.id)
-        return self.client._Avatar(self.client, avatar["data"], self.loop)
+        return self.client._Avatar(
+            self.client, json.loads(avatar["data"]["success"]["message"]),
+            self.loop)
 
     async def _update(self, **kwargs):
         for kwarg in kwargs:
