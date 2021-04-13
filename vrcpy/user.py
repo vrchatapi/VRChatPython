@@ -1,6 +1,6 @@
 from vrcpy.errors import ObjectErrors
 from vrcpy.baseobject import BaseObject
-from vrcpy.enum import FavoriteType
+from vrcpy.enum import FavoriteType, SortOrder, SortType, ReleaseStatus
 import vrcpy.util
 
 import logging
@@ -506,6 +506,31 @@ class CurrentUser(User):
         files = await self.client.request.call("/files", params=params)
         return [self.client._FileBase.build_file(
             self.client, file, self.loop) for file in files["data"]]
+
+    async def fetch_avatars(self, sort: SortType = SortType.UPDATED,
+                            order: SortOrder = SortOrder.DESCENDING,
+                            release_status: ReleaseStatus = ReleaseStatus.ALL):
+        '''
+        Gets user avatars
+        Returns list of Avatar objects
+
+            sort, SortType
+            What to sort avatars by
+
+            order, SortOrder
+            Order to sort in
+
+            release_status, ReleaseStatus
+            Release Status to filter avatars by
+        '''
+
+        avatars = await self.client.request.call("/avatars", params={
+            "sort": sort.value,
+            "order": order.value,
+            "releaseStatus": release_status.value
+        })
+        return [self.client._Avatar(
+            self.client, avatar, self.loop) for avatar in avatars["data"]]
 
     async def _update(self, **kwargs):
         for kwarg in kwargs:
