@@ -380,10 +380,11 @@ class Client:
                 [["auth", cookie[5:]]]
             )
 
+            self._remove_authorization_header()
+
         if "requiresTwoFactorAuth" in resp["data"]:
             raise ClientErrors.MfaRequired("Account login requires 2fa")
 
-        self._remove_authorization_header()
         self.me = CurrentUser(self, resp["data"], self.loop)
         await self._pre_loop()
 
