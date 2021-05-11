@@ -75,7 +75,11 @@ class Client:
 
     async def _pre_loop(self):
         # Remove auth from headers to avoid cloudflare detection
-        del self.request.session._default_headers["Authorization"]
+        try:
+            del self.request.session._default_headers["Authorization"]
+        except KeyError:
+            # Auth header already removed!
+            pass
 
         self.loop.create_task(self.on_connect())
         tasks = []
