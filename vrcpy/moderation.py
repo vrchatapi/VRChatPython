@@ -60,11 +60,9 @@ class PlayerModeration(BaseObject):
         Clears this moderation from target player
         '''
 
-        await self.client.request.call(
+        await self.client.request.delete(
             "/user/%s/moderations/%s" % (
-                self.source_user_id, self.target_user_id),
-            "DELETE"
-        )
+                self.source_user_id, self.target_user_id))
         logging.debug("Cleared moderations for " + self.source_user_id)
 
     @staticmethod
@@ -85,14 +83,14 @@ class PlayerModeration(BaseObject):
     @staticmethod
     async def create_moderation(self, t, user_id, client, loop=None):
         if t == "block":
-            mod = await client.request.call(
-                "/auth/user/blocks", "POST",
+            mod = await client.request.post(
+                "/auth/user/blocks",
                 params={"blocked": user_id})
 
             return BlockPlayerModeration(client, mod["data"], loop)
 
-        mod = await client.request.call(
-            "/auth/user/playermoderations", "POST", params={
+        mod = await client.request.post(
+            "/auth/user/playermoderations", params={
                 "type": t, "moderated": user_id})
 
         return PlayerModeration.build_moderation(client, mod["data"], loop)
@@ -100,8 +98,8 @@ class PlayerModeration(BaseObject):
 
 class BlockPlayerModeration(PlayerModeration):
     async def unblock(self):
-        await self.client.request.call(
-            "/auth/user/unblocks", "PUT", params={
+        await self.client.request.put(
+            "/auth/user/unblocks", params={
                 "blocked": self.target_user_id})
 
         logging.debug("Unblocked user %s" % self.target_user_id)

@@ -81,9 +81,8 @@ class Avatar(BaseObject):
 
         logging.debug("Favoriting avatar with id " + self.id)
 
-        resp = await self.client.request.call(
+        resp = await self.client.request.post(
             "/favorites",
-            "POST",
             params={
                 "type": "avatar",
                 "favoriteId": self.id,
@@ -117,5 +116,5 @@ class Avatar(BaseObject):
 
         logging.debug("Setting current avatar to " + self.id)
 
-        await self.client.request.call(
-            "/avatars/%s/select" % self.id, "PUT")
+        await self.client.request.put(
+            "/avatars/%s/select" % self.id)

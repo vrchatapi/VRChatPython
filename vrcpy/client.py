@@ -73,13 +73,6 @@ class Client:
             asyncio.set_event_loop(loop)
 
     async def _pre_loop(self):
-        # Remove auth from headers to avoid cloudflare detection
-        try:
-            del self.request.session._default_headers["Authorization"]
-        except KeyError:
-            # Auth header already removed!
-            pass
-
         tasks = []
         await self.me.fetch_all_favorites()
 
@@ -156,7 +149,6 @@ class Client:
         '''
         Gets a cached friend
         May be LimitedUser or User
-
             id, str
             ID of the user to get
         '''
@@ -213,15 +205,14 @@ class Client:
 
     # -- Fetch
 
-    async def fetch_me(self, **kwargs):
+    async def fetch_me(self):
         '''
         Gets new CurrentUser object
-        kwargs are extra options to pass to request.call
         '''
 
         logging.debug("Fetching me")
 
-        me = await self.request.call("/auth/user", **kwargs)
+        me = await self.request.get("/auth/user")
         me = CurrentUser(
             self,
             me["data"],
@@ -235,58 +226,53 @@ class Client:
         '''
         Gets a non-cached friend
         Returns a User object
-
             id, str
             ID of the user to get
         '''
 
         logging.debug("Getting user via id " + id)
 
-        user = await self.request.call("/users/" + id)
+        user = await self.request.get("/users/" + id)
         return User(self, user["data"], loop=self.loop)
 
     async def fetch_instance(self, world_id, instance_id):
         '''
         Gets instance object
-
             world_id, str
             ID of the world of the instance
-
             instance_id, str
             ID of the specific instance
         '''
 
         logging.debug("Getting instance %s:%s" % (world_id, instance_id))
 
-        instance = await self.request.call(
+        instance = await self.request.get(
             "/worlds/%s/%s" % (world_id, instance_id))
         return Instance(self, instance["data"], self.loop)
 
     async def fetch_world(self, world_id):
         '''
         Gets world object by ID
-
             world_id, str
             ID of the world to fetch
         '''
 
         logging.debug("Getting world of id " + world_id)
 
-        world = await self.request.call("/worlds/"+world_id)
+        world = await self.request.get("/worlds/"+world_id)
         return World(self, world["data"], self.loop)
 
     async def fetch_avatar(self, avatar_id):
         '''
         Fetches avatar via ID
         returns Avatar object
-
             avatar_id, str
             ID of avatar to fetch
         '''
 
         logging.debug("Fetching avatar " + avatar_id)
 
-        avatar = await self.request.call("/avatars/" + avatar_id)
+        avatar = await self.request.get("/avatars/" + avatar_id)
         return Avatar(self, avatar["data"], self.loop)
 
     async def upgrade_friends(self):
@@ -317,19 +303,19 @@ class Client:
     async def fetch_auth_cookie(self):
         logging.debug("Fetching auth cookie")
 
-        data = await self.request.call("/auth")
+        data = await self.request.get("/auth")
         return data["data"]
 
     async def fetch_system_time(self):
         logging.debug("Fetching system time")
 
-        data = await self.request.call("/time")
+        data = await self.request.get("/time")
         return data["data"]
 
     async def fetch_online_user_count(self):
         logging.debug("Fetching online user count")
 
-        data = await self.request.call("/visits")
+        data = await self.request.get("/visits")
         return data["data"]
 
     # Main
@@ -570,14 +556,11 @@ class Client:
     def event(self, func):
         '''
         Decorator that overwrites class ws event hooks
-
         Example
         --------
-
         @client.event
         def on_connect():
             print("Connected to wss pipeline.")
-
         '''
 
         if func.__name__.startswith("on_") and hasattr(self, func.__name__):
@@ -666,10 +649,8 @@ class Client:
     async def on_friend_update(self, before, after):
         '''
         Called when a friend makes an update to their profile
-
             before, User
             User before they updated their profile
-
             after, User
             User after they updated their profile
         '''
@@ -696,10 +677,8 @@ class Client:
     async def on_friend_location(self, before, after):
         '''
         Called when a friend changes location
-
             before, User
             User before they changed location
-
             after, User
             User after they changed location
         '''

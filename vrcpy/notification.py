@@ -88,9 +88,9 @@ class BaseNotification(BaseObject):
         Returns updated class of this notification
         '''
 
-        notif = await self.client.request.call(
+        notif = await self.client.request.put(
             "/auth/user/notifications/%s/see" % self.id,
-            "PUT", params={"notificationId": self.id})
+            params={"notificationId": self.id})
         return self.__class__(self.client, notif["data"], self.loop)
 
     async def hide(self):
@@ -99,9 +99,9 @@ class BaseNotification(BaseObject):
         Returns updated class of this notification
         '''
 
-        notif = await self.client.request.call(
+        notif = await self.client.request.put(
             "/auth/user/notifications/%s/hide" % self.id,
-            "PUT", params={"notificationId": self.id})
+            params={"notificationId": self.id})
         return self.__class__(self.client, notif["data"], self.loop)
 
 

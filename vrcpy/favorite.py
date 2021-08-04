@@ -37,7 +37,7 @@ class BaseFavorite(BaseObject):
         Unfavorites this favorite object
         '''
 
-        await self.client.request.call("/favorites/"+self.id, "DELETE")
+        await self.client.request.delete("/favorites/"+self.id)
         logging.debug("Unfavorited %s %s" % (self.type, self.id))
 
 

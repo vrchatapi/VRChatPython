@@ -99,9 +99,8 @@ class LimitedWorld(BaseObject):
 
         logging.debug("Favoriting world with id " + self.id)
 
-        resp = await self.client.request.call(
+        resp = await self.client.request.post(
             "/favorites",
-            "POST",
             params={
                 "type": "world",
                 "favoriteId": self.id,
@@ -265,5 +264,5 @@ class Instance(BaseObject):
 
         logging.debug("Getting instance world of id " + self.world_id)
 
-        world = await self.client.request.call("/worlds/"+self.world_id)
+        world = await self.client.request.get("/worlds/"+self.world_id)
         return World(self.client, world["data"], self.loop)

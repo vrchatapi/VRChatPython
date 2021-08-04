@@ -116,7 +116,7 @@ class LimitedUser(BaseObject):
 
         logging.debug("Getting user status for " + self.id)
 
-        friend_status = await self.client.request.call(
+        friend_status = await self.client.request.get(
             "/user/%s/friendStatus" % self.id)
         return FriendStatus(friend_status["data"], self.id)
 
@@ -131,8 +131,8 @@ class LimitedUser(BaseObject):
             raise ObjectErrors.AlreadyFriends(
                 "You are already friends with " + self.display_name)
 
-        await self.client.request.call(
-            "/user/%s/friendRequest" % self.id, "POST")
+        await self.client.request.post(
+            "/user/%s/friendRequest" % self.id)
 
     async def unfriend(self):
         '''
@@ -145,8 +145,8 @@ class LimitedUser(BaseObject):
             raise ObjectErrors.NotFriends(
                 "You are not friends with " + self.display_name)
 
-        await self.client.request.call(
-            "/auth/user/friends/" + self.id, "DELETE")
+        await self.client.request.delete(
+            "/auth/user/friends/" + self.id)
 
     async def favorite(self, group):
         '''
@@ -171,9 +171,8 @@ class LimitedUser(BaseObject):
                 )
             )
 
-        resp = await self.client.request.call(
+        resp = await self.client.request.post(
             "/favorites",
-            "POST",
             params={
                 "type": "friend",
                 "favoriteId": self.id,
@@ -362,7 +361,7 @@ class CurrentUser(User):
         logging.debug(
             "Fetching %s friends" % "offline" if offline else "online")
 
-        resp = await self.client.request.call(
+        resp = await self.client.request.get(
             "/auth/user/friends", params={
                 "offset": offset,
                 "n": n,
@@ -386,11 +385,11 @@ class CurrentUser(User):
             "" if condensed else "not "))
 
         if condensed:
-            perms = await self.client.request.call(
+            perms = await self.client.request.get(
                 "/auth/permissions", params={"condensed": True})
             return perms["data"]
         else:
-            perms = await self.client.request.call("/auth/permissions")
+            perms = await self.client.request.get("/auth/permissions")
             return [self.client._BasePermission.build_permission(
                 self.client, perm, self.loop) for perm in perms["data"]]
 
@@ -420,7 +419,7 @@ class CurrentUser(User):
         if favorite_type is not None:
             params["type"] = favorite_type
 
-        favorites = await self.client.request.call("/favorites", params=params)
+        favorites = await self.client.request.get("/favorites", params=params)
         logging.debug("Fetching favorites")
 
         return [self.client._BaseFavorite.build_favorite(
@@ -471,14 +470,14 @@ class CurrentUser(User):
         if after is not None:
             params["after"] = after
 
-        notifs = await self.client.request.call("/auth/user/notifications")
+        notifs = await self.client.request.get("/auth/user/notifications")
         return [self.client.BaseNotification.build_notification(
             self.client, notif, self.loop) for notif in notifs["data"]]
 
     async def fetch_moderated(self):
         logging.debug("Fetching moderated")
 
-        data = await self.client.request.call("/auth/user/playermoderated")
+        data = await self.client.request.get("/auth/user/playermoderated")
         return [self.client._PlayerModeration.build_moderation(
             self.client, mod, self.loop) for mod in data["data"]]
 
@@ -500,7 +499,7 @@ class CurrentUser(User):
         if tag is not None:
             params.update({"tag": tag})
 
-        files = await self.client.request.call("/files", params=params)
+        files = await self.client.request.get("/files", params=params)
         return [self.client._FileBase.build_file(
             self.client, file, self.loop) for file in files["data"]]
 
@@ -521,7 +520,7 @@ class CurrentUser(User):
             Release Status to filter avatars by
         '''
 
-        avatars = await self.client.request.call("/avatars", params={
+        avatars = await self.client.request.get("/avatars", params={
             "sort": sort.value,
             "order": order.value,
             "releaseStatus": release_status.value
@@ -530,7 +529,7 @@ class CurrentUser(User):
             self.client, avatar, self.loop) for avatar in avatars["data"]]
 
     async def fetch_current_avatar(self):
-        avatar = await self.client.request.call("/users/%s/avatar" % self.id)
+        avatar = await self.client.request.get("/users/%s/avatar" % self.id)
         return self.client._Avatar(
             self.client, json.loads(avatar["data"]["success"]["message"]),
             self.loop)
@@ -553,7 +552,7 @@ class CurrentUser(User):
 
         logging.debug("Updating CurrentUser")
 
-        me = await self.client.request.call("/users/"+self.id, "PUT")
+        me = await self.client.request.put("/users/"+self.id)
         self.client.me = CurrentUser(self.client, me["data"], self.loop)
         return self.client.me
 
