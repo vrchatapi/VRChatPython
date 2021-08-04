@@ -80,9 +80,7 @@ class Client:
             # Auth header already removed!
             pass
 
-        self.loop.create_task(self.on_connect())
         tasks = []
-
         await self.me.fetch_all_favorites()
 
         # Fetch all friends
@@ -122,6 +120,8 @@ class Client:
             self.ws = await self.request.session.ws_connect(
                 "wss://pipeline.vrchat.cloud/?authToken="+auth,
                 proxy=self.request.proxy)
+
+            self.loop.create_task(self.on_connect())
 
             async for message in self.ws:
                 message = message.json()
