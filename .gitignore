@@ -126,3 +126,5 @@ dmypy.json
 
 # Custom added
 publish.cmd
+.vs/
+vrcpy_env/
