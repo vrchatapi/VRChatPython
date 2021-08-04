@@ -354,16 +354,14 @@ class Client:
     async def verify_mfa(self, mfa: str):
         '''
         Used to verify authtoken on 2fa enabled accounts
-
             mfa, string
             2FactorAuth code (totp or otp)
         '''
 
-        logging.debug("Verifying 2fa authtoken")
+        logging.debug("Verifying MFA authtoken")
 
-        if type(mfa) is not str:
-            raise ClientErrors.MfaInvalid(
-                "{} is not a valid 2fa code".format(mfa))
+        if type(mfa) is not str or not (len(mfa) == 6 or len(mfa) == 8):
+            raise ClientErrors.MfaInvalid("{} is not a valid MFA code".format(mfa))
 
         await self.request.post("/auth/twofactorauth/{}/verify".format(
             "totp" if len(mfa) == 6 else "otp"
@@ -372,7 +370,6 @@ class Client:
     async def logout(self, unauth=True):
         '''
         Closes client session and logs out VRC user
-
             unauth, bool
             If should unauth the session cookie
         '''
