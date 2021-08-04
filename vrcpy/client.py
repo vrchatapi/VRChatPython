@@ -320,119 +320,38 @@ class Client:
 
     # Main
 
-    async def login(self, username=None, password=None,
-                    b64=None, create_session=True):
+    async def login(self, username, password, mfa=None):
         '''
-        Used to login as a VRC user
+        Login to VRChat
 
-        Must include one of the combinations:
-            Username/Password login
-                username, string
-                Username/email of VRC account
-
-                password, string
-                Password of VRC account
-
-            b64 login
-                b64, string
-                Base64 encoded username:password
-
-        Optional:
-            create_session, bool
-            Create a new session or not, defaults to True
-        '''
-
-        logging.debug("Doing logon (%screating new session)" % (
-            "" if not create_session else "not "))
-
-        if b64 is None:
-            if username is None or password is None:
-                raise ClientErrors.MissingCredentials(
-                    "Did not pass username+password or b64 for login")
-
-            b64 = base64.b64encode((username+":"+password).encode()).decode()
-
-        resp = await self.request.call(
-            "/auth/user",
-            headers={"Authorization": "Basic " + b64},
-            no_auth=create_session
-        )
-
-        cookie = None
-        for cookie in resp["response"].headers.getall("Set-Cookie"):
-            if "auth=authcookie" in cookie:
-                break
-
-        if create_session:
-            self.request.new_session(b64)
-            self.request.session.cookie_jar.update_cookies(
-                [["auth", cookie[5:]]]
-            )
-
-            self._remove_authorization_header()
-
-        if "requiresTwoFactorAuth" in resp["data"]:
-            raise ClientErrors.MfaRequired("Account login requires 2fa")
-
-        self.me = CurrentUser(self, resp["data"], self.loop)
-        await self._pre_loop()
-
-    async def login2fa(self, username=None, password=None, b64=None, mfa=None):
-        '''
-        Used to login as a VRC user
-
-        Must include one of the combinations:
-            Username/Password login
-                username, string
-                Username/email of VRC account
-
-                password, string
-                Password of VRC account
-
-            b64 login
-                b64, string
-                Base64 encoded username:password
-
+        username, string
+            Username/email of VRC account
+        password, string
+            Password of VRC account
+        
         Optional:
             mfa, string
             TOTP or OTP code to verify authtoken
         '''
 
-        logging.debug("Doing 2falogon")
+        b64 = base64.b64encode((username+":"+password).encode()).decode()
 
-        try:
-            await self.login(username, password, b64)
-        except ClientErrors.MfaRequired:
-            await self.verify2fa(mfa)
-            await self.login(username, password, b64, False)
+        resp = await self.request.get("/auth/user", headers={"Authorization": "Basic "+b64})
+        if "requiresTwoFactorAuth" in resp["data"]:
+            if mfa is None:
+                raise ClientErrors.MfaRequired("Account login requires mfa")
+            else:
+                await self.verify_mfa(mfa)
+                await self.fetch_me()
+        else:
+            self.me = CurrentUser(self, resp["data"], self.loop)
 
-    async def login_auth_token(self, token):
-        '''
-        Used to login as a VRC user using an existing auth token
-
-            token, str
-            Authtoken to login with
-        '''
-
-        logging.debug("Doing logon with pre-existing auth token")
-
-        self.request.new_session()
-        self.request.session.cookie_jar.update_cookies([["auth", token]])
-
-        try:
-            resp = await self.request.call("/auth")
-        except ClientErrors.MissingCredentials:
-            raise ClientErrors.InvalidAuthToken(
-                "Passed auth token is not valid")
-
-        if not resp["data"]["ok"]:
-            raise ClientErrors.InvalidAuthToken(
-                "Passed auth token is not valid")
-
-        await self.fetch_me()
         await self._pre_loop()
 
-    async def verify2fa(self, mfa):
+    async def login_auth_token(self):
+        pass
+
+    async def verify_mfa(self, mfa: str):
         '''
         Used to verify authtoken on 2fa enabled accounts
 
@@ -446,9 +365,9 @@ class Client:
             raise ClientErrors.MfaInvalid(
                 "{} is not a valid 2fa code".format(mfa))
 
-        await self.request.call("/auth/twofactorauth/{}/verify".format(
-                "totp" if len(mfa) == 6 else "otp"
-            ), "POST", jdict={"code": mfa})
+        await self.request.post("/auth/twofactorauth/{}/verify".format(
+            "totp" if len(mfa) == 6 else "otp"
+        ), json={"code": mfa})
 
     async def logout(self, unauth=True):
         '''
@@ -476,7 +395,7 @@ class Client:
         if unauth:
             # Sending json with this makes it not 401 for some reason
             # Hey, works for me
-            await self.request.call("/logout", "PUT", jdict={})
+            await self.request.put("/logout", json={})
 
         await self.request.close_session()
 
@@ -485,61 +404,27 @@ class Client:
 
         await asyncio.sleep(0)
 
-    def run(self, username=None, password=None, b64=None, mfa=None, token=None,
-            unauth=True):
+    def run(self, username, password, mfa=None):
         '''
         Automates login+start
         This function is blocking
 
-        Must pass one of these combinations of kwargs:
-            Username/Password login
-                username, string
-                Username/email of VRC account
-
-                password, string
-                Password of VRC account
-
-                mfa, string, optional
-                2FactorAuth code (totp or otp)
-
-            b64 login
-                b64, string
-                Base64 encoded username:password
-
-                mfa, string, optional
-                2FactorAuth code (totp or otp)
-
-            token login
-                token, str
-                Authtoken to login with
-
-        Can also include:
-            unauth, bool
-            If should unauth the session cookie
+        username, string
+            Username/email of VRC account
+        password, string
+            Password of VRC account
+        
+        Optional:
+            mfa, string
+            TOTP or OTP code to verify authtoken
         '''
 
-        try:
-            self.loop.run_until_complete(self._run(
-                username,
-                password,
-                b64,
-                mfa,
-                token
-            ))
-        except KeyboardInterrupt:
-            self.logout_intent = True
+        async def run():
+            await self.login(username, password, mfa)
+            await self.start()
 
-        self.loop.run_until_complete(self.logout(unauth))
-
-    async def _run(self, username=None, password=None, b64=None,
-                   mfa=None, token=None):
-
-        if token is None:
-            await self.login2fa(username, password, b64, mfa)
-        else:
-            await self.login_auth_token(token)
-
-        await self.start()
+        self.loop.run_until_complete(run())
+        self.loop.run_until_complete(self.logout())
 
     # Websocket Stuff
 
