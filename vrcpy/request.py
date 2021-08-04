@@ -2,18 +2,14 @@ import json
 import asyncio
 import aiohttp
 import logging
-import sys
 
 from vrcpy.errors import RequestErrors, ClientErrors, VRChatErrors
-
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class Request:
     request_retries = 1
 
-    def __init__(self, loop=None, user_agent=None, verify=True, proxy=None):
+    def __init__(self, loop=None, user_agent=None, verify=True):
         self.verify = verify
         # http/s proxy
         self.proxy = ("http://%s/" % proxy) if proxy is not None else None

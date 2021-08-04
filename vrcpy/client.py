@@ -42,9 +42,8 @@ class Client:
     _BasePermission = BasePermission
     _FileBase = FileBase
 
-    def __init__(self, loop=None, verify=True, proxy=None):
-        self.request = Request(verify=verify, proxy=proxy)
-
+    def __init__(self, loop=None, verify=True):
+        self.request = Request(loop, verify=verify)
         self.me = None
 
         '''
