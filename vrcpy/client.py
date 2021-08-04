@@ -348,8 +348,31 @@ class Client:
 
         await self._pre_loop()
 
-    async def login_auth_token(self):
-        pass
+    async def login_auth_token(self, token: str):
+        '''
+        Used to login as a VRC user using an existing auth token
+            token, str
+            Authtoken to login with
+        '''
+
+        logging.debug("Doing logon with pre-existing auth token")
+
+        # Create a session and get api_key
+        await self.fetch_system_time()
+        self.request.session.cookie_jar.update_cookies([["auth", token]])
+
+        try:
+            resp = await self.request.get("/auth")
+        except ClientErrors.MissingCredentials:
+            raise ClientErrors.InvalidAuthToken(
+                "Passed auth token is not valid")
+
+        if not resp["data"]["ok"]:
+            raise ClientErrors.InvalidAuthToken(
+                "Passed auth token is not valid")
+
+        await self.fetch_me()
+        await self._pre_loop()
 
     async def verify_mfa(self, mfa: str):
         '''
