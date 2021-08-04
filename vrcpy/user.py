@@ -318,10 +318,6 @@ class CurrentUser(User):
             "unsubscribe": {
                 "dict_key": "unsubscribe",
                 "type": bool
-            },
-            "feature": {
-                "dict_key": "feature",
-                "type": dict
             }
         })
 
