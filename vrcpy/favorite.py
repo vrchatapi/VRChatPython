@@ -73,6 +73,18 @@ class FavoriteGroup(BaseFavorite):
         del self.unfavorite
         self._assign(obj)
 
+    @staticmethod
+    def build_favorite_group(client, obj, loop=None):
+        switch = {
+            "world": WorldFavoriteGroup,
+            "friend": FriendFavoriteGroup,
+            "avatar": AvatarFavoriteGroup
+        }
+
+        logging.debug("Building favorite group of type " + obj["type"])
+
+        return switch[obj["type"]](client, obj, loop)
+
 class WorldFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
