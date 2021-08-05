@@ -2,47 +2,6 @@ from vrcpy.baseobject import BaseObject
 
 import logging
 
-class FavoriteGroup(BaseObject):
-    def __init__(self, client, obj, loop=None):
-        super().__init__(client, loop)
-
-        self.required.update({
-            "display_name": {
-                "dict_key": "displayName",
-                "type": str
-            },
-            "id": {
-                "dict_key": "id",
-                "type": str
-            },
-            "name": {
-                "dict_key": "name",
-                "type": str
-            },
-            "owner_display_name": {
-                "dict_key": "ownerDisplayName",
-                "type": str
-            },
-            "owner_id": {
-                "dict_key": "ownerId",
-                "type": str
-            },
-            "tags": {
-                "dict_key": "tags",
-                "type": list
-            },
-            "type": {
-                "dict_key": "type",
-                "type": str
-            },
-            "visibility": {
-                "dict_key": "visibility",
-                "type": str
-            }
-        })
-
-        self._assign(obj)
-
 class BaseFavorite(BaseObject):
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
@@ -80,6 +39,39 @@ class BaseFavorite(BaseObject):
         await self.client.request.delete("/favorites/"+self.id)
         logging.debug("Unfavorited %s %s" % (self.type, self.id))
 
+class FavoriteGroup(BaseFavorite):
+    def __init__(self, client, obj, loop=None):
+        super().__init__(client, loop)
+
+        self.required.update({
+            "display_name": {
+                "dict_key": "displayName",
+                "type": str
+            },
+            "name": {
+                "dict_key": "name",
+                "type": str
+            },
+            "owner_display_name": {
+                "dict_key": "ownerDisplayName",
+                "type": str
+            },
+            "owner_id": {
+                "dict_key": "ownerId",
+                "type": str
+            },
+            "tags": {
+                "dict_key": "tags",
+                "type": list
+            },
+            "visibility": {
+                "dict_key": "visibility",
+                "type": str
+            }
+        })
+
+        del self.unfavorite
+        self._assign(obj)
 
 class WorldFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
