@@ -1,5 +1,6 @@
 from vrcpy.errors import ObjectErrors
 from vrcpy.baseobject import BaseObject
+from vrcpy.favorite import FavoriteGroup
 from vrcpy.enum import FavoriteType, SortOrder, SortType, ReleaseStatus
 import vrcpy.util
 
@@ -564,3 +565,20 @@ class CurrentUser(User):
                            status=status, bio=bio, bio_Links=bio_links,
                            accepted_tos_version=accepted_tos_version,
                            allow_avatar_copying=allow_avatar_copying)
+
+    async def fetch_favorite_groups(self, n: int = 50):
+        '''
+        Fetches favorite groups for worlds, avatars and users
+
+            n, int
+            Max number of favorites groups to fetch
+        '''
+
+        resp = await self.client.request.get("/favorite/groups", params={"n": str(n)})
+        groups = {}
+
+        for group in resp["data"]:
+            groups.append(FavoriteGroup.build_favorite_group(
+                self.client, group, self.loop))
+
+        return groups
