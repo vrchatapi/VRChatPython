@@ -111,8 +111,7 @@ class Client:
             auth = auth["token"]
 
             self.ws = await self.request.session.ws_connect(
-                "wss://pipeline.vrchat.cloud/?authToken="+auth,
-                proxy=self.request.proxy)
+                "wss://pipeline.vrchat.cloud/?authToken="+auth)
 
             self.loop.create_task(self.on_connect())
 
@@ -443,8 +442,13 @@ class Client:
             await self.login(username, password, mfa)
             await self.start()
 
-        self.loop.run_until_complete(run())
-        self.loop.run_until_complete(self.logout())
+        try:
+            self.loop.run_until_complete(run())
+        except KeyboardInterrupt as e:
+            self.loop.run_until_complete(self.logout())
+        except Exception as e:
+            self.loop.run_until_complete(self.logout())
+            raise e.__class__(str(e))
 
     # Websocket Stuff
 

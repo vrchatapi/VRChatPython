@@ -27,8 +27,9 @@ class Request:
                 self.api_key = j["apiKey"]
 
         if "params" in kwargs:
-            if type(kwargs["params"][param]) == bool:
-                kwargs["params"][param] = str(kwargs["params"][param]).lower()
+            for param in kwargs["params"]:
+                if type(kwargs["params"][param]) == bool:
+                    kwargs["params"][param] = str(kwargs["params"][param]).lower()
 
             kwargs["params"]["apiKey"] = self.api_key
         else:
@@ -40,7 +41,7 @@ class Request:
 
     async def _call(self, method, path, *args, **kwargs):
         if self.session is None:
-            self.session = aiohttp.ClientSession()
+            self.session = aiohttp.ClientSession(headers={"user-agent": self.user_agent})
 
         resp = None
         for attempt in range(self.request_retries + 1):
@@ -51,14 +52,14 @@ class Request:
                 if type(e) in RequestErrors.errors + ClientErrors.errors:
                     raise e.__class__(str(e))
 
-                if attempt == retries:
+                if attempt == self.request_retries:
                     raise RequestErrors.RequestError(
-                        "{} ({} retries)".format(e, retries)
+                        "{} ({} retries)".format(e, self.request_retries)
                     )
 
         return resp
 
-    async def close(self):
+    async def close_session(self):
         await self.session.close()
 
     async def get(self, path, *args, **kwargs):
