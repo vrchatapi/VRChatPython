@@ -86,6 +86,8 @@ class WorldFavorite(BaseFavorite):
 
         self._assign(obj)
 
+class WorldFavoriteGroup(FavoriteGroup):
+    pass
 
 class AvatarFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
@@ -100,6 +102,8 @@ class AvatarFavorite(BaseFavorite):
 
         self._assign(obj)
 
+class AvatarFavoriteGroup(FavoriteGroup):
+    pass
 
 class FriendFavorite(BaseFavorite):
     def __init__(self, client, obj, loop=None):
@@ -113,3 +117,6 @@ class FriendFavorite(BaseFavorite):
         })
 
         self._assign(obj)
+
+class FriendFavoriteGroup(FavoriteGroup):
+    pass
