@@ -1,17 +1,11 @@
 from vrcpy.request import Request
 from vrcpy.errors import ClientErrors
 
-from vrcpy.user import LimitedUser, User, CurrentUser
-from vrcpy.world import LimitedWorld, World, Instance
+from vrcpy.user import User, CurrentUser
+from vrcpy.world import World, Instance
 from vrcpy.avatar import Avatar
 
-from vrcpy.favorite import BaseFavorite
-from vrcpy.permission import BasePermission
-from vrcpy.file import FileBase
-from vrcpy.moderation import PlayerModeration
-
-from vrcpy.notification import InviteNotification, RequestInviteNotification
-from vrcpy.notification import FriendRequestNotification, BaseNotification
+from vrcpy.notification import BaseNotification
 
 import vrcpy.enum
 import vrcpy.util
