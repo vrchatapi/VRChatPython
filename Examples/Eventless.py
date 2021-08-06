@@ -8,7 +8,7 @@ client = vrcpy.Client(loop=loop)
 
 
 async def main():
-    await client.login2fa(
+    await client.login(
         username="ExampleName",
         password="ExamplePass",
         mfa="123456"
