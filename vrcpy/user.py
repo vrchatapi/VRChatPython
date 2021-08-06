@@ -1,6 +1,11 @@
+from vrcpy.file import FileBase
+from vrcpy.avatar import Avatar
 from vrcpy.errors import ObjectErrors
 from vrcpy.baseobject import BaseObject
+from vrcpy.favorite import BaseFavorite
 from vrcpy.favorite import FavoriteGroup
+from vrcpy.permission import BasePermission
+from vrcpy.moderation import PlayerModeration
 from vrcpy.enum import FavoriteType, SortOrder, SortType, ReleaseStatus
 import vrcpy.util
 
@@ -181,7 +186,7 @@ class LimitedUser(BaseObject):
             }
         )
 
-        this = self.client._BaseFavorite.build_favorite(
+        this = BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
         self.client.favorites[FavoriteType.FRIEND].append(this)
 
@@ -199,7 +204,7 @@ class LimitedUser(BaseObject):
         logging.debug("Adding moderations %s to user %s" % (
             t, self.id))
 
-        moderation = await self.client._PlayerModeration.create_moderation(
+        moderation = await PlayerModeration.create_moderation(
             t, self.id, self.client, self.loop)
 
         return moderation
@@ -391,7 +396,7 @@ class CurrentUser(User):
             return perms["data"]
         else:
             perms = await self.client.request.get("/auth/permissions")
-            return [self.client._BasePermission.build_permission(
+            return [BasePermission.build_permission(
                 self.client, perm, self.loop) for perm in perms["data"]]
 
     async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
@@ -423,7 +428,7 @@ class CurrentUser(User):
         favorites = await self.client.request.get("/favorites", params=params)
         logging.debug("Fetching favorites")
 
-        return [self.client._BaseFavorite.build_favorite(
+        return [BaseFavorite.build_favorite(
             self.client, favorite, self.loop) for favorite in favorites["data"]]
 
     async def fetch_all_favorites(self, favorite_type=None):
@@ -479,7 +484,7 @@ class CurrentUser(User):
         logging.debug("Fetching moderated")
 
         data = await self.client.request.get("/auth/user/playermoderated")
-        return [self.client._PlayerModeration.build_moderation(
+        return [PlayerModeration.build_moderation(
             self.client, mod, self.loop) for mod in data["data"]]
 
     async def fetch_files(self, tag=None, n=100):
@@ -501,7 +506,7 @@ class CurrentUser(User):
             params.update({"tag": tag})
 
         files = await self.client.request.get("/files", params=params)
-        return [self.client._FileBase.build_file(
+        return [FileBase.build_file(
             self.client, file, self.loop) for file in files["data"]]
 
     async def fetch_avatars(self, sort: SortType = SortType.UPDATED,
@@ -526,12 +531,12 @@ class CurrentUser(User):
             "order": order.value,
             "releaseStatus": release_status.value
         })
-        return [self.client._Avatar(
+        return [Avatar(
             self.client, avatar, self.loop) for avatar in avatars["data"]]
 
     async def fetch_current_avatar(self):
         avatar = await self.client.request.get("/users/%s/avatar" % self.id)
-        return self.client._Avatar(
+        return Avatar(
             self.client, json.loads(avatar["data"]["success"]["message"]),
             self.loop)
 

@@ -22,26 +22,6 @@ import json
 
 
 class Client:
-    # Refs to avoid circular imports
-    _LimitedUser = LimitedUser
-    _User = User
-    _CurrentUser = CurrentUser
-
-    _LimitedWorld = LimitedWorld
-    _World = World
-    _Instance = Instance
-
-    _Avatar = Avatar
-
-    _InviteNotification = InviteNotification
-    _RequestInviteNotification = RequestInviteNotification
-    _FriendRequestNotification = FriendRequestNotification
-
-    _BaseFavorite = BaseFavorite
-    _PlayerModeration = PlayerModeration
-    _BasePermission = BasePermission
-    _FileBase = FileBase
-
     def __init__(self, loop=None, verify=True):
         self.request = Request(loop, verify=verify)
         self.me = None

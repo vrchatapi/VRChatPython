@@ -1,6 +1,7 @@
-from vrcpy.baseobject import BaseObject
 from vrcpy.enum import FavoriteType
 from vrcpy.errors import ObjectErrors
+from vrcpy.baseobject import BaseObject
+from vrcpy.favorite import BaseFavorite
 
 import logging
 
@@ -90,7 +91,7 @@ class Avatar(BaseObject):
             }
         )
 
-        this = self.client._BaseFavorite.build_favorite(
+        this = BaseFavorite.build_favorite(
             self.client, resp["data"], self.loop)
         self.client.favorites[FavoriteType.AVATAR].append(this)
 
