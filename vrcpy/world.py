@@ -248,7 +248,10 @@ class Instance(BaseObject):
             "permanent": {
                 "dict_key": "permanent",
                 "type": bool
-            },
+            }
+        })
+
+        self.option.update({
             "hidden": {
                 "dict_key": "hidden",
                 "type": str
