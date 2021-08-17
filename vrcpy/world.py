@@ -251,7 +251,7 @@ class Instance(BaseObject):
             }
         })
 
-        self.option.update({
+        self.optional.update({
             "hidden": {
                 "dict_key": "hidden",
                 "type": str
