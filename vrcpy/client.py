@@ -309,15 +309,15 @@ class Client:
 
         b64 = base64.b64encode((username+":"+password).encode()).decode()
 
-        resp = await self.request.get("/auth/user", headers={"Authorization": "Basic "+b64})
-        if "requiresTwoFactorAuth" in resp["data"]:
+        try:
+            resp = await self.request.get("/auth/user", headers={"Authorization": "Basic "+b64})
+            self.me = CurrentUser(self, resp["data"], self.loop)
+        except ClientErrors.MfaRequired:
             if mfa is None:
                 raise ClientErrors.MfaRequired("Account login requires mfa")
             else:
                 await self.verify_mfa(mfa)
                 await self.fetch_me()
-        else:
-            self.me = CurrentUser(self, resp["data"], self.loop)
 
         await self._pre_loop()
 
@@ -359,9 +359,12 @@ class Client:
         if type(mfa) is not str or not (len(mfa) == 6 or len(mfa) == 8):
             raise ClientErrors.MfaInvalid("{} is not a valid MFA code".format(mfa))
 
-        await self.request.post("/auth/twofactorauth/{}/verify".format(
+        resp = await self.request.post("/auth/twofactorauth/{}/verify".format(
             "totp" if len(mfa) == 6 else "otp"
         ), json={"code": mfa})
+
+        if not resp["data"]["verified"]:
+            raise ClientErrors.MfaInvalid(f"{mfa} is not a valid MFA code")
 
     async def logout(self, unauth=True):
         '''

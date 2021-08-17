@@ -57,6 +57,7 @@ class Request:
                         "{} ({} retries)".format(e, self.request_retries)
                     )
 
+        self.raise_for_errors(resp)
         return resp
 
     async def close_session(self):
@@ -81,3 +82,15 @@ class Request:
     async def patch(self, path, *args, **kwargs):
         resp = await self._call("PATCH", path, *args, **kwargs)
         return resp
+
+    def raise_for_errors(self, resp):
+        def on_200():
+            if "requiresTwoFactorAuth" in resp["data"]:
+                raise ClientErrors.MfaRequired("Account login requires mfa")
+
+        switch = {
+            200: on_200
+        }
+
+        if resp["status"] in switch:
+            switch[resp["status"]]()
