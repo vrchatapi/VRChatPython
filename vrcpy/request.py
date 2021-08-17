@@ -88,8 +88,12 @@ class Request:
             if "requiresTwoFactorAuth" in resp["data"]:
                 raise ClientErrors.MfaRequired("Account login requires mfa")
 
+        def on_429():
+            raise RequestErrors.RateLimit("You are being rate limited")
+
         switch = {
-            200: on_200
+            200: on_200,
+            429: on_429
         }
 
         if resp["status"] in switch:
