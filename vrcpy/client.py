@@ -214,19 +214,19 @@ class Client:
         """Gets cached favorite friends as a :class:`list`"""
 
         logging.debug("Getting cached favorite friends")
-        return self.favorites["friends"]
+        return self.favorites[vrcpy.enum.FavoriteType.FRIEND]
 
     def get_favorite_worlds(self, id):
         """Gets cached favorite worlds as a :class:`list`"""
 
         logging.debug("Getting cached favorite worlds")
-        return self.favorites["worlds"]
+        return self.favorites[vrcpy.enum.FavoriteType.WORLD]
 
     def get_favorite_avatars(self, id):
         """Gets cached favorite avatars as a :class:`list`"""
 
         logging.debug("Getting cached favorite avatars")
-        return self.favorites["avatars"]
+        return self.favorites[vrcpy.enum.FavoriteType.AVATAR]
 
     # -- Fetch
 

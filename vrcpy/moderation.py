@@ -100,13 +100,13 @@ class PlayerModeration(BaseObject):
                 "/auth/user/blocks",
                 params={"blocked": user_id})
 
-            return BlockPlayerModeration(client, mod["data"], loop)
+            return BlockPlayerModeration(client, mod["data"], client.loop)
 
         mod = await client.request.post(
             "/auth/user/playermoderations", params={
                 "type": t, "moderated": user_id})
 
-        return PlayerModeration.build_moderation(client, mod["data"], loop)
+        return PlayerModeration.build_moderation(client, mod["data"], client.loop)
 
 
 class BlockPlayerModeration(PlayerModeration):

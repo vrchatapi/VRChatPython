@@ -261,7 +261,7 @@ class Instance(BaseObject):
 
         self._assign(obj)
 
-    async def get_world(self):
+    async def fetch_world(self):
         """Fetches instance world, returns :class:`World` object"""
 
         logging.debug("Getting instance world of id " + self.world_id)

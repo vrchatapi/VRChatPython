@@ -79,9 +79,9 @@ class FavoriteGroup(BaseFavorite):
     @staticmethod
     def build_favorite_group(client, obj, loop=None):
         switch = {
-            "world": WorldFavoriteGroup,
-            "friend": FriendFavoriteGroup,
-            "avatar": AvatarFavoriteGroup
+            FavoriteType.WORLD: WorldFavoriteGroup,
+            FavoriteType.FRIEND: FriendFavoriteGroup,
+            FavoriteType.AVATAR: AvatarFavoriteGroup
         }
 
         logging.debug("Building favorite group of type " + obj["type"])
