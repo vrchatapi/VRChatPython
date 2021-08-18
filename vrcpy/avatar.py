@@ -10,6 +10,33 @@ class Avatar(BaseObject):
     """
     Represents a VRChat avatar.\n
     You should not instantiate this class manually
+
+    Attributes
+    ----------
+    name: :class:`str`
+        Name of the avatar
+    description: :class:`str`
+        Description of the avatar
+    id: :class:`str`
+        Unique avatar ID
+    author_name: :class:`str`
+        Username of user who uploaded avatar
+    author_id: :class:`str`
+        Unique user ID of the user who uploaded avatar
+    version: :class:`int`
+        Version of the avatar
+    created_at: :class:`str`
+        Timedate when avatar was created
+    updated_at: :class:`str`
+        Timedate when avatar was last updated
+    featured: :class:`bool`
+        If avatar is featured
+    image_url: :class:`str`
+        URL for image of avatar
+    thumbnail_image_url: :class:`str`
+        URL for thumbnail image of avatar
+    release_status: :class:`str`
+        Release status of avatar
     """
 
     def __init__(self, client, obj, loop=None):
