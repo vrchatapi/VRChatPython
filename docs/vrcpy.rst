@@ -8,6 +8,25 @@ Client
 
 .. autoclass:: vrcpy.Client
     :members:
+    :exclude-members: on_connect, on_ready, on_disconnect, on_friend_online, on_friend_offline, on_friend_active, on_friend_add, on_friend_delete, on_friend_update, on_friend_location, on_notification, event
+
+.. autodecorator:: vrcpy.Client.event
+
+Events
+~~~~~~~
+
+.. automethod:: vrcpy.Client.on_connect
+.. automethod:: vrcpy.Client.on_ready
+.. automethod:: vrcpy.Client.on_disconnect
+.. automethod:: vrcpy.Client.on_friend_online
+.. automethod:: vrcpy.Client.on_friend_active
+.. automethod:: vrcpy.Client.on_friend_offline
+.. automethod:: vrcpy.Client.on_friend_add
+.. automethod:: vrcpy.Client.on_friend_delete
+.. automethod:: vrcpy.Client.on_friend_update
+.. automethod:: vrcpy.Client.on_friend_location
+.. automethod:: vrcpy.Client.on_notification
+
 
 User
 ~~~~~
