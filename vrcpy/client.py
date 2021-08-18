@@ -541,15 +541,15 @@ class Client:
             "{} is not a valid event".format(func.__name__))
 
     async def on_connect(self):
-        # Called at the start of ws event loop
+        """Called at the start of ws event loop"""
         pass
 
     async def on_ready(self):
-        # Called when cache is finished
+        """Called when cache is finished"""
         pass
 
     async def on_disconnect(self):
-        # Called at the end of ws event loop
+        """Called at the end of ws event loop"""
         pass
 
     async def _on_friend_online(self, obj):
@@ -561,7 +561,13 @@ class Client:
         await self.on_friend_online(user)
 
     async def on_friend_online(self, friend):
-        # Called when a friend comes online
+        """
+        Called when a friend comes online
+        
+        Arguments
+        ----------
+        friend: :class:`vrcpy.User`
+        """
         pass
 
     async def _on_friend_offline(self, obj):
@@ -572,7 +578,11 @@ class Client:
         await self.on_friend_offline(user)
 
     async def on_friend_offline(self, friend):
-        # Called when a friend goes offline
+        """Called when a friend goes offline
+        
+        Arguments
+        ----------
+        friend: :class:`vrcpy.User`"""
         pass
 
     async def _on_friend_active(self, obj):
@@ -583,7 +593,11 @@ class Client:
         await self.on_friend_active(user)
 
     async def on_friend_active(self, friend):
-        # Called when a friend becomes active
+        """Called when a friend becomes active
+        
+        Arguments
+        ----------
+        friend: :class:`vrcpy.User`"""
         pass
 
     async def _on_friend_add(self, obj):
@@ -594,7 +608,11 @@ class Client:
         await self.on_friend_add(user)
 
     async def on_friend_add(self, friend):
-        # Called when a new friend is added to your account
+        """Called when a new friend is added to your account
+        
+        Arguments
+        ----------
+        friend: :class:`vrcpy.User`"""
         pass
 
     async def _on_friend_delete(self, obj):
@@ -604,7 +622,11 @@ class Client:
         await self.on_friend_delete(user)
 
     async def on_friend_delete(self, friend):
-        # Called when a friend is unfriended
+        """Called when a friend is unfriended
+        
+        Arguments
+        ----------
+        friend: :class:`vrcpy.User`"""
         pass
 
     async def _on_friend_update(self, obj):
@@ -616,13 +638,16 @@ class Client:
         await self.on_friend_update(ouser, user)
 
     async def on_friend_update(self, before, after):
-        '''
+        """
         Called when a friend makes an update to their profile
-            before, User
+        
+        Arguments
+        ----------
+        before: :class:`vrcpy.User`
             User before they updated their profile
-            after, User
+        after: :class:`vrcpy.User`
             User after they updated their profile
-        '''
+        """
         pass
 
     async def _on_friend_location(self, obj):
@@ -644,13 +669,14 @@ class Client:
         await self.on_friend_location(ouser, user)
 
     async def on_friend_location(self, before, after):
-        '''
-        Called when a friend changes location
-            before, User
+        """
+        Arguments
+        ----------
+        before: :class:`vrcpy.User`
             User before they changed location
-            after, User
+        after: :class:`vrcpy.User`
             User after they changed location
-        '''
+        """
         pass
 
     async def _on_notification(self, obj):
@@ -660,5 +686,5 @@ class Client:
         await self.on_notification(notif)
 
     async def on_notification(self, notification):
-        # Called when recieved a notification
+        """Called when recieved a notification"""
         pass
