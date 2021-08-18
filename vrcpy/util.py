@@ -1,16 +1,17 @@
 async def auto_page_coro(coro, *args, **kwargs):
-    '''
+    """
     Auto-pages coroutines that return a list
 
+    Arguments
+    ----------
+    coro: ``Callable``
         coro, coroutine method
         Coroutine to page, must return a list
-
-        *args, any
+    *args: :class:`Any`
         Args to pass to coro
-
-        **kwargs, any
+    **kwargs: :class:`Any`
         Kwargs to pass to coro
-    '''
+    """
 
     objs = []
     kwargs["offset"] = 0
@@ -28,19 +29,19 @@ async def auto_page_coro(coro, *args, **kwargs):
 
 
 def find_in_list_via_attribute(self, objlist, attribute, equals):
-    '''
+    """
     Finds object in list via object.attribute
     Returns first matching object, or None if no match found
 
-        objlist, list
-        list to search
-
-        attribute, str
-        name of attribute to match
-
-        equals, any
-        what to match attribute to
-    '''
+    Arguments
+    ----------
+    objlist: :class:`list`
+        List to search
+    attribute: :class:`str`
+        Name of attribute to match
+    equals: :class:`Any`
+        What to match attribute to (uses == op)
+    """
 
     for x in objlist:
         if hasattr(x, attribute):

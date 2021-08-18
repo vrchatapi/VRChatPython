@@ -1,8 +1,11 @@
 from vrcpy.baseobject import BaseObject
+from vrcpy.enum import FavoriteType
 
 import logging
 
 class BaseFavorite(BaseObject):
+    """Base favorite class that all favorites objects are built on top of"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -32,14 +35,14 @@ class BaseFavorite(BaseObject):
         return switch[obj["type"]](client, obj, loop)
 
     async def unfavorite(self):
-        '''
-        Unfavorites this favorite object
-        '''
+        """Unfavorites the favorite object"""
 
         await self.client.request.delete("/favorites/"+self.id)
         logging.debug("Unfavorited %s %s" % (self.type, self.id))
 
 class FavoriteGroup(BaseFavorite):
+    """Base favorite class that all favorite group objects are built on top of"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -86,6 +89,8 @@ class FavoriteGroup(BaseFavorite):
         return switch[obj["type"]](client, obj, loop)
 
 class WorldFavorite(BaseFavorite):
+    """Represents a favorite world"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
 
@@ -99,9 +104,12 @@ class WorldFavorite(BaseFavorite):
         self._assign(obj)
 
 class WorldFavoriteGroup(FavoriteGroup):
+    """Represents a favorite world group"""
     pass
 
 class AvatarFavorite(BaseFavorite):
+    """Represents a favorite avatar"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
 
@@ -115,9 +123,12 @@ class AvatarFavorite(BaseFavorite):
         self._assign(obj)
 
 class AvatarFavoriteGroup(FavoriteGroup):
+    """Represents a favorite avatar group"""
     pass
 
 class FriendFavorite(BaseFavorite):
+    """Represents a favorite (or grouped) friend"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, obj, loop)
 
@@ -131,4 +142,5 @@ class FriendFavorite(BaseFavorite):
         self._assign(obj)
 
 class FriendFavoriteGroup(FavoriteGroup):
+    """Represents a favorite friend group"""
     pass

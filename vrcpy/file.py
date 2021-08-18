@@ -2,6 +2,8 @@ from vrcpy.baseobject import BaseObject
 
 
 class FileBase(BaseObject):
+    """Base file class that all file objects inherit from"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -56,6 +58,8 @@ class FileBase(BaseObject):
 
 
 class File(BaseObject):
+    """Represents a VRChat file"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -90,6 +94,8 @@ class File(BaseObject):
 
 
 class FileVersion(BaseObject):
+    """Represents a version of a file"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -119,4 +125,5 @@ class FileVersion(BaseObject):
 
 
 class IconFile(BaseObject):
+    """Represents an icon"""
     pass

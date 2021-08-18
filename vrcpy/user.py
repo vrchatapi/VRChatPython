@@ -14,6 +14,8 @@ import json
 
 
 class FriendStatus(BaseObject):
+    """Represents a VRChat friend status"""
+
     def __init__(self, obj, user_id):
         super(None, None)
 
@@ -37,6 +39,8 @@ class FriendStatus(BaseObject):
 
 
 class LimitedUser(BaseObject):
+    """Represents a VRChat Limited-User object"""
+
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
 
@@ -106,19 +110,14 @@ class LimitedUser(BaseObject):
             self._assign(obj)
 
     async def fetch_full(self):
-        '''
-        Returns this user as a User object
-        '''
+        """Fetches this user as a :class:`vrcpy.User` object"""
 
         logging.debug("Getting User object of user " + self.username)
 
         return await self.client.fetch_user(self.id)
 
     async def fetch_friend_status(self):
-        '''
-        Gets friend request and is_friend status'
-        Returns FriendStatus object
-        '''
+        """Fetches this friends :class:`vrcpy.FriendStatus`"""
 
         logging.debug("Getting user status for " + self.id)
 
@@ -127,9 +126,7 @@ class LimitedUser(BaseObject):
         return FriendStatus(friend_status["data"], self.id)
 
     async def send_friend_request(self):
-        '''
-        Sends a friend request notification to this user
-        '''
+        """Sends a friend request to the user"""
 
         logging.debug("Sending friend request to " + self.username)
 
@@ -141,9 +138,7 @@ class LimitedUser(BaseObject):
             "/user/%s/friendRequest" % self.id)
 
     async def unfriend(self):
-        '''
-        Unfriends this user
-        '''
+        """Unfriends this user"""
 
         logging.debug("Unfriending user " + self.username)
 
@@ -155,13 +150,14 @@ class LimitedUser(BaseObject):
             "/auth/user/friends/" + self.id)
 
     async def favorite(self, group):
-        '''
-        Favorite this user
-        Returns a FriendFavorite object
+        """
+        Favorites the user, and returns a :class:`vrcpy.FriendFavorite` object
 
-            group, str
+        Arguments
+        ----------
+        group: :class:`str`
             Name of group to add friend to
-        '''
+        """
 
         logging.debug("Favoriting user with id " + self.id)
 
@@ -193,13 +189,14 @@ class LimitedUser(BaseObject):
         return this
 
     async def add_moderation(self, t):
-        '''
-        Adds a moderation against this user
-        Returns a PlayerModeration
+        """
+        Adds a moderation against this user, returns a :class:`vrcpy.PlayerModeration`
 
-            t, str (use vrcpy.enum.PlayerModerationType for convenience)
+        Arguments
+        ----------
+        t: :class:`str`
             Type of moderation
-        '''
+        """
 
         logging.debug("Adding moderations %s to user %s" % (
             t, self.id))
@@ -211,6 +208,8 @@ class LimitedUser(BaseObject):
 
 
 class User(LimitedUser):
+    """Represents a User object"""
+
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
 
@@ -252,6 +251,8 @@ class User(LimitedUser):
 
 
 class CurrentUser(User):
+    """Represents a Current User object"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -360,9 +361,7 @@ class CurrentUser(User):
         self._assign(obj)
 
     async def fetch_friends(self, offline=False, n=100, offset=0):
-        '''
-        Returns list of LimitedUser objects
-        '''
+        """Fetches logged in users friends, returns list of :class:`vrcpy.LimitedUser` objects"""
 
         logging.debug(
             "Fetching %s friends" % "offline" if offline else "online")
@@ -377,15 +376,14 @@ class CurrentUser(User):
             self.client, user, self.loop) for user in resp["data"]]
 
     async def fetch_permissions(self, condensed=False):
-        '''
-        Gets users permissions
-        Returns list of different Permission objects
+        """Fetches users permissions, returns list of permission objects
 
-            condensed, bool
-            Whether to return condensed perms or not
-            If this is true then return will be a
-                dict of single key-value pairs
-        '''
+        Keyword Arguments
+        ------------------
+        condensed: :class:`bool`
+            Return condensed perms, which will be a dict of single key-value pairs
+            Defaults to ``False``
+        """
 
         logging.debug("Getting permissions (%scondensed)" % (
             "" if condensed else "not "))
@@ -400,19 +398,17 @@ class CurrentUser(User):
                 self.client, perm, self.loop) for perm in perms["data"]]
 
     async def fetch_favorites(self, favorite_type=None, n=100, offset=0):
-        '''
-        Fetches users favorites
-        Returns list of different Favorite types
+        """Fetches user favorites, returning ``favorite_type`` or a mix of all the favorite types
 
-            favorite_type, str
+        Keyword Arguments
+        ------------------
+        favorite_type: :class:`str`
             Type of enum.FavoriteType
-
-            n, int
+        n: :class:`int`
             Number of favorites to return, max 100
-
-            offset, int
+        offset: :class:`int`
             Offset from start of favorites to return from
-        '''
+        """
 
         if n > 100:
             n = 100
@@ -432,14 +428,15 @@ class CurrentUser(User):
             self.client, favorite, self.loop) for favorite in favorites["data"]]
 
     async def fetch_all_favorites(self, favorite_type=None):
-        '''
-        Fetches all favorites by auto-paging
-            Using this also updates favorite cache
-        Returns list of different Favorite types
+        """
+        Fetches all favorites by auto-paging, returning ``favorite_type`` or a mix of all the favorite types.
+        Using this also updates favorite cache
 
-            favorite_type, str
+        Keyword Arguments
+        ------------------
+        favorite_type: :class:`str`
             Type of enum.FavoriteType
-        '''
+        """
 
         favorites = await vrcpy.util.auto_page_coro(
             self.fetch_favorites, favorite_type=favorite_type)
@@ -466,6 +463,18 @@ class CurrentUser(User):
         return favorites
 
     async def fetch_notifications(self, type="all", sent=False, after=None):
+        """Fetches user notifications, returning as a list
+
+        Keyword Arguments
+        -----------------
+        type: :class:`str`
+            Type of notification to get, defaults to ``"all"``
+        sent: :class:`bool`
+            Only return notifications the user has sent
+        after: :class:`str`
+            Only return notifications after this datetime
+        """
+
         logging.debug("Fetching user notifications")
 
         params = {
@@ -481,6 +490,8 @@ class CurrentUser(User):
             self.client, notif, self.loop) for notif in notifs["data"]]
 
     async def fetch_moderated(self):
+        """Fetches moderations against the user"""
+
         logging.debug("Fetching moderated")
 
         data = await self.client.request.get("/auth/user/playermoderated")
@@ -488,16 +499,16 @@ class CurrentUser(User):
             self.client, mod, self.loop) for mod in data["data"]]
 
     async def fetch_files(self, tag=None, n=100):
-        '''
-        Gets user icons
-        Returns list of IconFile objects
+        """
+        Fetch owned files
 
-            tag, str
-            Tag to filter files
-
-            n, int
+        Keyword Arguments
+        ------------------
+        tag: :class:`str`
+            Tag to filter files with (None or "icon"), defaults to ``None``
+        n: :class:`int`
             Number of files to return (max might be 100?)
-        '''
+        """
 
         logging.debug("Fetching files (tag is %s)" % tag)
 
@@ -512,19 +523,18 @@ class CurrentUser(User):
     async def fetch_avatars(self, sort: SortType = SortType.UPDATED,
                             order: SortOrder = SortOrder.DESCENDING,
                             release_status: ReleaseStatus = ReleaseStatus.ALL):
-        '''
-        Gets user avatars
-        Returns list of Avatar objects
+        """
+        Fetches user owned avatars, returns list of :class:`vrcpy.Avatar`
 
-            sort, SortType
-            What to sort avatars by
-
-            order, SortOrder
-            Order to sort in
-
-            release_status, ReleaseStatus
-            Release Status to filter avatars by
-        '''
+        Keyword Arguments
+        ------------------
+        sort: :class:`vrcpy.SortType`
+            How to sort avatars, defaults to ``SortType.UPDATED``
+        order: :class:`vrcpy.SortOrder`
+            How to order sorted avatars, defaults to ``SortOrder.DESCENDING``
+        release_status: :class:`vrcpy.ReleaseStatus`
+            Return avatars only with this release status, defaults to ``ReleaseStatus.ALL``
+        """
 
         avatars = await self.client.request.get("/avatars", params={
             "sort": sort.value,
@@ -535,6 +545,8 @@ class CurrentUser(User):
             self.client, avatar, self.loop) for avatar in avatars["data"]]
 
     async def fetch_current_avatar(self):
+        """Fetches current avatar as :class:`vrcpy.Avatar`"""
+
         avatar = await self.client.request.get("/users/%s/avatar" % self.id)
         return Avatar(
             self.client, json.loads(avatar["data"]["success"]["message"]),
@@ -572,12 +584,14 @@ class CurrentUser(User):
                            allow_avatar_copying=allow_avatar_copying)
 
     async def fetch_favorite_groups(self, n: int = 50):
-        '''
+        """
         Fetches favorite groups for worlds, avatars and users
 
-            n, int
+        Keyword Arguments
+        ------------------
+        n: :class:`int`
             Max number of favorites groups to fetch
-        '''
+        """
 
         resp = await self.client.request.get("/favorite/groups", params={"n": str(n)})
         groups = {}

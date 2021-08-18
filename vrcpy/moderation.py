@@ -3,6 +3,8 @@ import logging
 
 
 class PlayerModeration(BaseObject):
+    """Base moderation class that all moderations inherit from"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -40,25 +42,19 @@ class PlayerModeration(BaseObject):
         self._assign(obj)
 
     async def fetch_source_user(self):
-        '''
-        returns source User object
-        '''
+        """Fetches the user that created the moderation"""
 
         user = await self.client.fetch_user(self.source_user_id)
         return user
 
     async def fetch_target_user(self):
-        '''
-        returns target User object
-        '''
+        "Fetches the user that the moderation was applied on"""
 
         user = await self.client.fetch_user(self.target_user_id)
         return user
 
     async def clear_moderation(self):
-        '''
-        Clears this moderation from target player
-        '''
+        """Unapplies this moderation from the targeted user"""
 
         await self.client.request.delete(
             "/user/%s/moderations/%s" % (
@@ -67,6 +63,7 @@ class PlayerModeration(BaseObject):
 
     @staticmethod
     def build_moderation(client, obj, loop=None):
+        ## TODO: camelCase
         switch = {
             "block": BlockPlayerModeration,
             "showAvatar": ShowAvatarModeration,
@@ -81,7 +78,23 @@ class PlayerModeration(BaseObject):
         return PlayerModeration(client, obj, loop)
 
     @staticmethod
-    async def create_moderation(self, t, user_id, client, loop=None):
+    async def create_moderation(self, t, user_id, client):
+        """
+        Applies a moderation against a user
+
+        Arguments
+        ----------
+        t: :class:`str`
+            Type of moderation to create::
+                moderations = [
+                    "block", "showAvatar", "hideAvatar", "mute", "unmute"
+                ]
+        user_id: :class:`str`
+            ID of VRChat user to apply moderation to
+        client: :class:`vrcpy.Client`
+            Current logged in client
+        """
+
         if t == "block":
             mod = await client.request.post(
                 "/auth/user/blocks",
@@ -97,7 +110,11 @@ class PlayerModeration(BaseObject):
 
 
 class BlockPlayerModeration(PlayerModeration):
+    """Represents a user-block moderation"""
+
     async def unblock(self):
+        """Unblocks the target user/Clears block moderation from target user"""
+
         await self.client.request.put(
             "/auth/user/unblocks", params={
                 "blocked": self.target_user_id})
@@ -106,18 +123,22 @@ class BlockPlayerModeration(PlayerModeration):
 
 
 class ShowAvatarModeration(PlayerModeration):
+    """Represents a show-user-avatar moderation"""
     pass
 
 
 class HideAvatarModeration(PlayerModeration):
+    """Represents a hide-user-avatar moderation"""
     pass
 
 
 class MutePlayerModeration(PlayerModeration):
+    """Represents a mute-user moderation"""
     pass
 
 
 class UnmutePlayerModeration(PlayerModeration):
+    """Represents an unmute-user moderation"""
     pass
 
 

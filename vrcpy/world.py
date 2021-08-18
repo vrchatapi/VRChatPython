@@ -7,6 +7,8 @@ import logging
 
 
 class LimitedWorld(BaseObject):
+    """Represents a VRChat Limited World object"""
+
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop)
 
@@ -93,10 +95,7 @@ class LimitedWorld(BaseObject):
             self._assign(obj)
 
     async def favorite(self, group):
-        '''
-        Favorite this world
-        Returns a WorldFavorite object
-        '''
+        """Favorite this world, returns a :class:`WorldFavorite` object"""
 
         logging.debug("Favoriting world with id " + self.id)
 
@@ -116,9 +115,7 @@ class LimitedWorld(BaseObject):
         return this
 
     async def delete(self):
-        '''
-        Deletes this world
-        '''
+        """Deletes this world"""
 
         logging.debug("Deleting world " + self.id)
 
@@ -129,6 +126,8 @@ class LimitedWorld(BaseObject):
 
 
 class World(LimitedWorld):
+    """Represents a VRChat World object"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -181,6 +180,8 @@ class World(LimitedWorld):
 
 # TODO: Finish Instance class
 class Instance(BaseObject):
+    """Represents a VRChat Instance object"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -261,10 +262,7 @@ class Instance(BaseObject):
         self._assign(obj)
 
     async def get_world(self):
-        '''
-        Gets the world this instance is in
-        Returns World object
-        '''
+        """Fetches instance world, returns :class:`World` object"""
 
         logging.debug("Getting instance world of id " + self.world_id)
 

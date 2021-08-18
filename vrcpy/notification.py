@@ -83,10 +83,7 @@ class BaseNotification(BaseObject):
         return switch[obj["type"]](client, obj, loop)
 
     async def mark_seen(self):
-        '''
-        Tells VRC that this notification has been seen
-        Returns updated class of this notification
-        '''
+        """Marks notification has seen on VRChat, returns updated notification"""
 
         notif = await self.client.request.put(
             "/auth/user/notifications/%s/see" % self.id,
@@ -94,10 +91,7 @@ class BaseNotification(BaseObject):
         return self.__class__(self.client, notif["data"], self.loop)
 
     async def hide(self):
-        '''
-        Tells VRC not to show this notification as new
-        Returns updated class of this notification
-        '''
+        """Tells VRChat to hide this notification, returns updated notification"""
 
         notif = await self.client.request.put(
             "/auth/user/notifications/%s/hide" % self.id,
@@ -106,6 +100,8 @@ class BaseNotification(BaseObject):
 
 
 class InviteNotification(BaseNotification):
+    """Represents a VRChat world invite"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -120,6 +116,8 @@ class InviteNotification(BaseNotification):
 
 
 class RequestInviteNotification(BaseNotification):
+    """Represents a VRChat world invite request"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -134,6 +132,8 @@ class RequestInviteNotification(BaseNotification):
 
 
 class RequestInviteResponseNotification(BaseNotification):
+    """Represents a VRChat world-invite-request response"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 
@@ -150,6 +150,8 @@ class RequestInviteResponseNotification(BaseNotification):
 
 
 class FriendRequestNotification(BaseNotification):
+    """Represents a VRChat friend request"""
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop)
 

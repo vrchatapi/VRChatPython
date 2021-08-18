@@ -16,17 +16,54 @@ import json
 
 
 class Client:
+    """
+    VRChat Client object used to interact with the VRChat API
+
+    Keyword Arguments
+    ------------------
+    loop: :class:`asyncio.AbstractEventLoop`
+        Event loop client will create new asyncio tasks in.
+        Defaults to ``None``
+    verify: :class:`bool`
+        If aiohttp should verify ssl certificates when making requests.
+        Defaults to ``True``
+
+    Attributes
+    -----------
+    favorites: :class:`dict`
+        Dictionary containing cached favorites.
+        It is structured like so::
+
+            Client.favorites = {
+                vrcpy.enum.FavoriteType.WORLD: [],
+                vrcpy.enum.FavoriteType.FRIEND: [],
+                vrcpy.enum.FavoriteType.AVATAR: []
+            }
+    friends: :class:`dict`
+        Dictionary containing cached friends.
+        It is structured like so::
+
+            Client.friends = {
+                "online": [],
+                "active": [],
+                "offline": []
+            }
+    logout_intent: :class:`bool`
+        Describes if websocket had intent to disconnect
+        Is used for websocket reconnect logic
+    loop: :class:`asyncio.AbstractEventLoop`
+        Event loop used to run asyncio tasks
+    me: :class:`vrcpy.CurrentUser`
+        Logged in user
+    ws: :class:`aiohttp.WebSocketResponse`
+        Websocket connection to VRChat
+    """
+
+
     def __init__(self, loop=None, verify=True):
         self.request = Request(loop, verify=verify)
         self.me = None
 
-        '''
-        Each is a list of LimitedUser objects
-        It slowly gets made each a list of User objects via ws events
-        You can force all User objects from the start using
-            await client.upgrade_friends()
-        In "on_ready" event or after
-        '''
         self.friends = {
             "online": [],
             "active": [],
@@ -119,12 +156,15 @@ class Client:
     # -- Get
 
     def get_friend(self, id):
-        '''
-        Gets a cached friend
-        May be LimitedUser or User
-            id, str
-            ID of the user to get
-        '''
+        """
+        Gets a cached friend, which may return as a :class:`LimitedUser` or :class:`User`
+        Returns ``None`` if no user with given id is found
+        
+        Arguments
+        -----------
+        id: :class:`str`
+            User ID of the friend to fetch
+        """
 
         logging.debug("Getting cached friend with id " + id)
 
@@ -136,14 +176,20 @@ class Client:
         return None
 
     def get_online_friends(self):
+        """Gets cached online friends as a :class:`list`"""
+
         logging.debug("Getting cached online friends")
         return self.friends["online"]
 
     def get_active_friends(self):
+        """Gets cached active friends as a :class:`list`"""
+
         logging.debug("Getting cached active friends")
         return self.friends["active"]
 
     def get_offline_friends(self):
+        """Gets cached offline friends as a :class:`list`"""
+
         logging.debug("Getting cached offline friends")
         return self.friends["offline"]
 
@@ -165,23 +211,27 @@ class Client:
         logging.debug("Removed friend %s from cache" % id)
 
     def get_favorite_friends(self, id):
+        """Gets cached favorite friends as a :class:`list`"""
+
         logging.debug("Getting cached favorite friends")
         return self.favorites["friends"]
 
     def get_favorite_worlds(self, id):
+        """Gets cached favorite worlds as a :class:`list`"""
+
         logging.debug("Getting cached favorite worlds")
         return self.favorites["worlds"]
 
     def get_favorite_avatars(self, id):
+        """Gets cached favorite avatars as a :class:`list`"""
+
         logging.debug("Getting cached favorite avatars")
         return self.favorites["avatars"]
 
     # -- Fetch
 
     async def fetch_me(self):
-        '''
-        Gets new CurrentUser object
-        '''
+        """Fetches new CurrentUser object. This also updates `Client.me`"""
 
         logging.debug("Fetching me")
 
@@ -196,12 +246,14 @@ class Client:
         return me
 
     async def fetch_user(self, id):
-        '''
-        Gets a non-cached friend
-        Returns a User object
-            id, str
-            ID of the user to get
-        '''
+        """
+        Fetches a non-cached user, and returns as a :class:`vrcpy.User` object
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the use to fetch
+        """
 
         logging.debug("Getting user via id " + id)
 
@@ -209,13 +261,16 @@ class Client:
         return User(self, user["data"], loop=self.loop)
 
     async def fetch_instance(self, world_id, instance_id):
-        '''
-        Gets instance object
-            world_id, str
-            ID of the world of the instance
-            instance_id, str
-            ID of the specific instance
-        '''
+        """
+        Fetches a world instance, returns :class:`vrcpy.Instance`
+
+        Arguments
+        ----------
+        world_id: :class:`str`
+            ID of the instance world
+        instance_id: :class:`str`
+            ID of instance
+        """
 
         logging.debug("Getting instance %s:%s" % (world_id, instance_id))
 
@@ -224,11 +279,14 @@ class Client:
         return Instance(self, instance["data"], self.loop)
 
     async def fetch_world(self, world_id):
-        '''
-        Gets world object by ID
-            world_id, str
+        """
+        Fetches a world, returns :class:`vrcpy.World`
+        
+        Arguments
+        ----------
+        world_id: :class:`str`
             ID of the world to fetch
-        '''
+        """
 
         logging.debug("Getting world of id " + world_id)
 
@@ -236,12 +294,14 @@ class Client:
         return World(self, world["data"], self.loop)
 
     async def fetch_avatar(self, avatar_id):
-        '''
-        Fetches avatar via ID
-        returns Avatar object
-            avatar_id, str
+        """
+        Fetches an avatar, returns as :class:`vrcpy.Avatar`
+
+        Arguments
+        ----------
+        avatar_id: :class:`str`
             ID of avatar to fetch
-        '''
+        """
 
         logging.debug("Fetching avatar " + avatar_id)
 
@@ -249,10 +309,13 @@ class Client:
         return Avatar(self, avatar["data"], self.loop)
 
     async def upgrade_friends(self):
-        '''
-        Forces all client.friends LimitedUser objects
-        to become User objects
-        '''
+        """
+        Forces all Client.friends :class:`LimitedUser` objects to become :class:`User` objects
+
+        .. warning::
+            This calls `LimitedUser.fetch_full()` on every cached friend!
+            If user has large number of friends this could flood VRChat servers and you could get rate limited!
+        """
 
         tasks = []
         for state in self.friends:
@@ -274,18 +337,21 @@ class Client:
     # -- Misc
 
     async def fetch_auth_cookie(self):
+        """Fetches current session authentication cookie"""
         logging.debug("Fetching auth cookie")
 
         data = await self.request.get("/auth")
         return data["data"]
 
     async def fetch_system_time(self):
+        """Fetches current VRChat system time"""
         logging.debug("Fetching system time")
 
         data = await self.request.get("/time")
         return data["data"]
 
     async def fetch_online_user_count(self):
+        """Fetches current users online in VRChat"""
         logging.debug("Fetching online user count")
 
         data = await self.request.get("/visits")
@@ -294,18 +360,21 @@ class Client:
     # Main
 
     async def login(self, username, password, mfa=None):
-        '''
-        Login to VRChat
+        """
+        Logs in to vrchat
 
-        username, string
-            Username/email of VRC account
-        password, string
-            Password of VRC account
-        
-        Optional:
-            mfa, string
-            TOTP or OTP code to verify authtoken
-        '''
+        Arguments
+        ----------
+        username: :class:`str`
+            Username/email of VRChat account
+        password: :class:`str`
+            Password of VRChat account
+
+        Keyword Arguments
+        ------------------
+        mfa: :class:`str`
+            One Time Password (OTP, recovery code) or Temporary One Time Password (TOTP, MFA code) to verify auth cookie
+        """
 
         b64 = base64.b64encode((username+":"+password).encode()).decode()
 
@@ -322,11 +391,14 @@ class Client:
         await self._pre_loop()
 
     async def login_auth_token(self, token: str):
-        '''
-        Used to login as a VRC user using an existing auth token
-            token, str
-            Authtoken to login with
-        '''
+        """
+        Logs in to vrchat with a pre-existing auth cooke/token
+        
+        Arguments
+        ----------
+        token: :class:`str`
+            Pre-existing auth token to login with
+        """
 
         logging.debug("Doing logon with pre-existing auth token")
 
@@ -348,11 +420,15 @@ class Client:
         await self._pre_loop()
 
     async def verify_mfa(self, mfa: str):
-        '''
-        Used to verify authtoken on 2fa enabled accounts
-            mfa, string
-            2FactorAuth code (totp or otp)
-        '''
+        """
+        Used to verify auth token on 2fa enabled accounts
+        This is called automatically by `Client.login` when mfa kwarg is passed
+
+        Arguments
+        ----------
+        mfa: :class:`str`
+            One Time Password (OTP, recovery code) or Temporary One Time Password (TOTP, MFA code) to verify auth cookie
+        """
 
         logging.debug("Verifying MFA authtoken")
 
@@ -367,11 +443,15 @@ class Client:
             raise ClientErrors.MfaInvalid(f"{mfa} is not a valid MFA code")
 
     async def logout(self, unauth=True):
-        '''
-        Closes client session and logs out VRC user
-            unauth, bool
-            If should unauth the session cookie
-        '''
+        """
+        Closes client session and logs out of VRChat
+
+        Keyword Arguments
+        ------------------
+        unauth: :class:`bool`
+            If the auth cookie should be un-authenticated/destroyed.
+            Defaults to ``True``
+        """
 
         logging.debug("Doing logout (%sdeauthing authtoken)" % (
             "" if unauth else "not "))
@@ -401,19 +481,22 @@ class Client:
         await asyncio.sleep(0)
 
     def run(self, username, password, mfa=None):
-        '''
+        """
         Automates login+start
         This function is blocking
 
-        username, string
-            Username/email of VRC account
-        password, string
-            Password of VRC account
-        
-        Optional:
-            mfa, string
-            TOTP or OTP code to verify authtoken
-        '''
+        Arguments
+        ----------
+        username: :class:`str`
+            Username/email of VRChat account
+        password: :class:`str`
+            Password of VRChat account
+
+        Keyword Arguments
+        ------------------
+        mfa: :class:`str`
+            One Time Password (OTP, recovery code) or Temporary One Time Password (TOTP, MFA code) to verify auth cookie
+        """
 
         async def run():
             await self.login(username, password, mfa)
@@ -430,24 +513,24 @@ class Client:
     # Websocket Stuff
 
     async def start(self):
-        '''
-        Starts the ws event _ws_loop
-        This function is blocking
-        '''
+        """
+        Starts the websocket event loop
+        This funtion is blocking
+        """
 
         logging.debug("Starting ws loop")
 
         await self._ws_loop()
 
     def event(self, func):
-        '''
-        Decorator that overwrites class ws event hooks
-        Example
-        --------
-        @client.event
-        def on_connect():
-            print("Connected to wss pipeline.")
-        '''
+        """
+        Decorator that overwrites class ws event hooks.
+        Example::
+
+            @client.event
+            def on_connect():
+                print("Connected to wss pipeline.")
+        """
 
         if func.__name__.startswith("on_") and hasattr(self, func.__name__):
             logging.debug("Replacing %s via decorator" % func.__name__)

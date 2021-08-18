@@ -7,6 +7,11 @@ import logging
 
 
 class Avatar(BaseObject):
+    """
+    Represents a VRChat avatar.\n
+    You should not instantiate this class manually
+    """
+
     def __init__(self, client, obj, loop=None):
         super().__init__(client, loop=loop)
 
@@ -75,10 +80,9 @@ class Avatar(BaseObject):
         self._assign(obj)
 
     async def favorite(self):
-        '''
-        Favorite this avatar
-        Returns an AvatarFavorite object
-        '''
+        """
+        Favorites this avatar, returns a :class:`vrcpy.AvatarFavorite` object
+        """
 
         logging.debug("Favoriting avatar with id " + self.id)
 
@@ -98,9 +102,7 @@ class Avatar(BaseObject):
         return this
 
     async def delete(self):
-        '''
-        Deletes this avatar
-        '''
+        """Deletes this avatar"""
 
         if self.client.me.id != self.author_id:
             raise ObjectErrors.NotOwned("Can't modify not-owned avatar")
@@ -111,9 +113,7 @@ class Avatar(BaseObject):
         del self
 
     async def choose(self):
-        '''
-        Sets this avatar to use
-        '''
+        """Sets this avatar to use"""
 
         logging.debug("Setting current avatar to " + self.id)
 

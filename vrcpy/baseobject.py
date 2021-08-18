@@ -4,6 +4,8 @@ from vrcpy.errors import ObjectErrors
 
 
 class BaseObject:
+    """Base class that VRChat objects inherit from"""
+
     def __init__(self, client, loop=None):
         self.loop = loop or asyncio.get_event_loop()
         self.client = client
@@ -93,9 +95,7 @@ class BaseObject:
                 )
 
     async def wait_for_cache(self):
-        '''
-        Waits for any caching an object has to do
-        '''
+        """Waits for any caching an object has to do"""
 
         if hasattr(self, "cache_task"):
             while not self.caching_finished:
