@@ -85,10 +85,8 @@ class PlayerModeration(BaseObject):
         Arguments
         ----------
         t: :class:`str`
-            Type of moderation to create::
-                moderations = [
-                    "block", "showAvatar", "hideAvatar", "mute", "unmute"
-                ]
+            Type of moderation to create:
+                moderations = ["block", "showAvatar", "hideAvatar", "mute", "unmute"]
         user_id: :class:`str`
             ID of VRChat user to apply moderation to
         client: :class:`vrcpy.Client`
