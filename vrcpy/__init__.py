@@ -2,6 +2,7 @@ from vrcpy.user import *
 from vrcpy.file import *
 from vrcpy.world import *
 from vrcpy.client import *
+from vrcpy.avatar import *
 from vrcpy.favorite import *
 from vrcpy.moderation import *
 from vrcpy.notification import *

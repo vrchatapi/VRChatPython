@@ -84,6 +84,22 @@ class LimitedUser(BaseObject):
             "last_login": {
                 "dict_key": "last_login",
                 "type": str
+            },
+            "fallback_avatar": {
+                "dict_key": "fallbackAvatar",
+                "type": str
+            },
+            "user_icon": {
+                "dict_key": "userIcon",
+                "type": str
+            },
+            "profile_picture_override": {
+                "dict_key": "profilePicOverride",
+                "type": str
+            },
+            "friend_key": {
+                "dict_key": "friendKey",
+                "type": str
             }
         })
 
@@ -213,11 +229,12 @@ class User(LimitedUser):
     def __init__(self, client, obj=None, loop=None):
         super().__init__(client, loop=loop)
 
-        '''
         self.required.update({
-
+            "date_joined": {
+                "dict_key": "date_joined",
+                "type": str
+            }
         })
-        '''
 
         self.optional.update({
             "bio_links": {
@@ -226,10 +243,6 @@ class User(LimitedUser):
             },
             "state": {
                 "dict_key": "state",
-                "type": str
-            },
-            "friend_key": {
-                "dict_key": "friendKey",
                 "type": str
             },
             "world_id": {
@@ -323,6 +336,14 @@ class CurrentUser(User):
             },
             "unsubscribe": {
                 "dict_key": "unsubscribe",
+                "type": bool
+            },
+            "status_history": {
+                "dict_key": "statusHistory",
+                "type": list
+            },
+            "status_first_time": {
+                "dict_key": "statusFirstTime",
                 "type": bool
             }
         })

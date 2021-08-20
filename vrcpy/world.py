@@ -88,6 +88,10 @@ class LimitedWorld(BaseObject):
             "occupants": {
                 "dict_key": "occupants",
                 "type": int
+            },
+            "organization": {
+                "dict_key": "organization",
+                "type": str
             }
         })
 
@@ -159,6 +163,14 @@ class World(LimitedWorld):
             "instances": {
                 "dict_key": "instances",
                 "type": list
+            },
+            "namespace": {
+                "dict_key": "namespace",
+                "type": str
+            },
+            "preview_youtube_id": {
+                "dict_key": "previewYoutubeId",
+                "type": str
             }
         })
 
@@ -170,7 +182,7 @@ class World(LimitedWorld):
             logging.debug(
                 "Caching instance %s for world %s" % (instance[0], self.name))
 
-            instance = await self.client.fetch_instance_via_id(
+            instance = await self.client.fetch_instance(
                 self.id, instance[0])
             instances.append(instance)
 

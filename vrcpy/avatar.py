@@ -25,8 +25,14 @@ class Avatar(BaseObject):
         Unique user ID of the user who uploaded avatar
     version: :class:`int`
         Version of the avatar
+    favorite_group_name: :class:`str`
+        Favorite group name, ``None`` if not favorited
+    favorite_id: :class:`str`
+        Favorite ID, ``None`` if not favorited
     created_at: :class:`str`
         Timedate when avatar was created
+    tags: :class:`list`
+        List of :class:`str` tags
     updated_at: :class:`str`
         Timedate when avatar was last updated
     featured: :class:`bool`
@@ -65,7 +71,7 @@ class Avatar(BaseObject):
             },
             "tags": {
                 "dict_key": "tags",
-                "type": str
+                "type": list
             },
             "version": {
                 "dict_key": "version",
@@ -98,8 +104,12 @@ class Avatar(BaseObject):
         })
 
         self.optional.update({
-            "asset_url": {
-                "dict_key": "assetUrl",
+            "favorite_group_name": {
+                "dict_key": "favoriteGroup",
+                "type": str
+            },
+            "favorite_id": {
+                "dict_key": "favoriteId",
                 "type": str
             }
         })
