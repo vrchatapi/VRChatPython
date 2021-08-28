@@ -86,7 +86,7 @@ class FavoriteGroup(BaseFavorite):
 
         logging.debug("Building favorite group of type " + obj["type"])
 
-        return switch[obj["type"]](client, obj, loop)
+        return switch[FavoriteType(obj["type"])](client, obj, loop)
 
 class WorldFavorite(BaseFavorite):
     """Represents a favorite world"""
