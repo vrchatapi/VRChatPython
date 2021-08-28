@@ -69,7 +69,7 @@ async def tests():
 
     await client.fetch_me()
 
-    a_obj = await client.request.get("/avatar/avtr_0af9d6c9-22be-47b2-a70d-ba83bd5ef547")
+    a_obj = await client.request.get("/favorites", params={"tag": "avatars1"})
 
     w_obj = await client.request.get("/worlds/wrld_e8c35476-f5f0-45ab-8f4d-c269ff1eda15")
     try:
@@ -87,7 +87,7 @@ async def tests():
     u_obj = await client.request.get("/users/usr_54306e0b-5855-44e2-ac7f-8913a8882a90")
     cu_obj = await client.request.get("/auth/user")
 
-    #test(a, a_obj["data"])
+    test(a, a_obj["data"][0)
     test(w, w_obj["data"])
     test(lu, lu_obj["data"][0])
     test(u, u_obj["data"])
