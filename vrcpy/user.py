@@ -459,7 +459,7 @@ class CurrentUser(User):
             Type of enum.FavoriteType
         """
 
-        favorites = await vrcpy.util.auto_page_coro(
+        favorites = await vrcpy.util.full_paginate(
             self.fetch_favorites, favorite_type=favorite_type)
 
         world = []

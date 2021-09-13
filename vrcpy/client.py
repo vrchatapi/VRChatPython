@@ -90,7 +90,7 @@ class Client:
         # Fetch all friends
         tasks.append(vrcpy.util.TaskWrapReturn(
             self.loop,
-            vrcpy.util.auto_page_coro,
+            vrcpy.util.full_paginate,
             self.me.fetch_friends,
             task_name="online",
             offline=True
@@ -98,7 +98,7 @@ class Client:
 
         tasks.append(vrcpy.util.TaskWrapReturn(
             self.loop,
-            vrcpy.util.auto_page_coro,
+            vrcpy.util.full_paginate,
             self.me.fetch_friends,
             task_name="offline",
             offline=False

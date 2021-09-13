@@ -1,4 +1,4 @@
-async def auto_page_coro(coro, *args, **kwargs):
+async def full_paginate(coro, *args, **kwargs):
     """
     Auto-pages coroutines that return a list
 
