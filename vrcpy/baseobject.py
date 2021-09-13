@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from vrcpy.errors import ObjectErrors
+from enum import EnumMeta
 
 
 class BaseObject:
@@ -16,8 +17,13 @@ class BaseObject:
 
     def _get_proper_obj(self, obj, t):
         if type(obj) is not t:
-            if t is not dict and t is not list:
+            if t is not dict and t is not list and t is not EnumMeta:
                 return t(obj)
+            elif t is EnumMeta:
+                if type(obj) is str:
+                    return t(obj.upper())
+                else:
+                    return t(obj)
 
         return obj
 
