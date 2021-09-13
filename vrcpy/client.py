@@ -31,7 +31,7 @@ class Client:
     Attributes
     -----------
     favorites: :class:`dict`
-        Dictionary containing cached favorites.
+        Dictionary containing cached :class:`vrcpy.FavoriteGroup` objects
         It is structured like so::
 
             Client.favorites = {
@@ -93,14 +93,16 @@ class Client:
             vrcpy.util.auto_page_coro,
             self.me.fetch_friends,
             task_name="online",
-            offline=False))
+            offline=True
+        ))
 
         tasks.append(vrcpy.util.TaskWrapReturn(
             self.loop,
             vrcpy.util.auto_page_coro,
             self.me.fetch_friends,
             task_name="offline",
-            offline=True))
+            offline=False
+        ))
 
         for friend in self.me.active_friends:
             tasks.append(vrcpy.util.TaskWrapReturn(
