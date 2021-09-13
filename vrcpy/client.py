@@ -150,11 +150,6 @@ class Client:
 
         self.loop.create_task(self.on_disconnect())
 
-    def _remove_authorization_header(self):
-        if hasattr(self.request.session, "headers"):
-            if "Authorization" in self.request.session.headers:
-                del self.request.session.headers["Authorization"]
-
     # -- Get
 
     def get_friend(self, id):
