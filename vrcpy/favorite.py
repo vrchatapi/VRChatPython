@@ -16,7 +16,7 @@ class BaseFavorite(BaseObject):
             },
             "type": {
                 "dict_key": "type",
-                "type": str
+                "type": FavoriteType
             }
         })
 
@@ -25,14 +25,14 @@ class BaseFavorite(BaseObject):
     @staticmethod
     def build_favorite(client, obj, loop=None):
         switch = {
-            "world": WorldFavorite,
-            "friend": FriendFavorite,
-            "avatar": AvatarFavorite
+            FavoriteType.WORLD: WorldFavorite,
+            FavoriteType.FRIEND: FriendFavorite,
+            FavoriteType.AVATAR: AvatarFavorite
         }
 
         logging.debug("Building favorite of type " + obj["type"])
 
-        return switch[obj["type"]](client, obj, loop)
+        return switch[FavoriteType(obj["type"].upper())](client, obj, loop)
 
     async def unfavorite(self):
         """Unfavorites the favorite object"""
@@ -75,6 +75,7 @@ class FavoriteGroup(BaseFavorite):
 
         del self.unfavorite
         self._assign(obj)
+        self.favorites = []
 
     @staticmethod
     def build_favorite_group(client, obj, loop=None):
