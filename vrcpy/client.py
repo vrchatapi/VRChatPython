@@ -313,18 +313,19 @@ class Client:
         Forces all Client.friends :class:`LimitedUser` objects to become :class:`User` objects
 
         .. warning::
-            This calls `LimitedUser.fetch_full()` on every cached friend!
+            This calls `LimitedUser.fetch_full()` on every cached :class:`LimitedUser` friend!
             If user has large number of friends this could flood VRChat servers and you could get rate limited!
         """
 
         tasks = []
         for state in self.friends:
             for user in self.friends[state]:
-                tasks.append(vrcpy.util.TaskWrapReturn(
-                    self.loop,
-                    user.fetch_full,
-                    task_name=state
-                ))
+                if type(user) is not User:
+                    tasks.append(vrcpy.util.TaskWrapReturn(
+                        self.loop,
+                        user.fetch_full,
+                        task_name=state
+                    ))
 
         self.friends = {"online": [], "active": [], "offline": []}
 
