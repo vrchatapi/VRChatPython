@@ -357,6 +357,27 @@ class Client:
         data = await self.request.get("/visits")
         return data["data"]
 
+    async def fetch_system_health(self):
+        """Fetches vrchat system heatlh
+        
+        {
+            "ok": bool,
+            "server_name": str,
+            "build_version_tag": str
+        }
+        """
+        logging.debug("Fetching system health")
+
+        data = await self.request.get("/health")
+
+        # Change to a more python nameing scheme :)
+        data["server_name"] = data["serverName"]
+        data["build_version_tag"] = data["buildVersionTag"]
+        del data["serverName"]
+        del data["buildVersionTag"]
+
+        return data
+
     # Main
 
     async def login(self, username, password, mfa=None):
