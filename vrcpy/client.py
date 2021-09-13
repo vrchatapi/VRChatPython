@@ -350,7 +350,7 @@ class Client:
         data = await self.request.get("/time")
         return data["data"]
 
-    async def fetch_online_user_count(self):
+    async def fetch_online_user_count(self) -> int:
         """Fetches current users online in VRChat"""
         logging.debug("Fetching online user count")
 
