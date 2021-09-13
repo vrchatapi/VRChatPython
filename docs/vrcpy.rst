@@ -238,8 +238,8 @@ errors.ObjectErrors
 Utility Helpers
 ~~~~~~~~~~~~~~~~
 
-.. _vrcpy.util.auto_page_coro:
-.. automethod:: vrcpy.util.auto_page_coro
+.. _vrcpy.util.full_paginate:
+.. automethod:: vrcpy.util.full_paginate
 
 .. _vrcpy.util.TaskWrapReturn:
 .. autoclass:: vrcpy.util.TaskWrapReturn
