@@ -259,6 +259,8 @@ class User(LimitedUser):
             }
         })
 
+        del self.required["fallback_avatar"]
+
         if obj is not None:
             self._assign(obj)
 
@@ -297,6 +299,10 @@ class CurrentUser(User):
             "friends": {
                 "dict_key": "friends",
                 "type": list
+            },
+            "fallback_avatar": {
+                "dict_key": "fallbackAvatar",
+                "type": str
             },
             "online_friends": {
                 "dict_key": "onlineFriends",
