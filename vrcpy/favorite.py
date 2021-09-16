@@ -32,7 +32,7 @@ class BaseFavorite(BaseObject):
 
         logging.debug("Building favorite of type " + obj["type"])
 
-        return switch[FavoriteType(obj["type"].upper())](client, obj, loop)
+        return switch[FavoriteType[obj["type"].upper()]](client, obj, loop)
 
     async def unfavorite(self):
         """Unfavorites the favorite object"""
