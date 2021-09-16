@@ -12,4 +12,4 @@ import vrcpy.errors
 
 __title__ = "vrcpy"
 __author__ = "Katistic"
-__version__ = "0.8.4"
+__version__ = "0.8.5"
