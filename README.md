@@ -2,6 +2,8 @@
 
 ## VRCpy
 
+Install using `pip install -U vrcpy`
+
 API wrapper for the [VRChat API](https://vrchatapi.github.io)  
 For docs, please see out [Read The Docs](https://vrcpy.readthedocs.io/en/latest/?)!
 
