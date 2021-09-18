@@ -456,7 +456,7 @@ class CurrentUser(User):
 
     async def fetch_all_favorites(self, favorite_type=None):
         """
-        Fetches all favorites by auto-paging, returning ``favorite_type`` or a mix of all the favorite types.
+        Fetches all favorites by auto-paging, returning dict with keys of :class:`vrcpy.enum.FavoriteType`.
         Using this also updates favorite cache
 
         Keyword Arguments
@@ -468,26 +468,16 @@ class CurrentUser(User):
         favorites = await vrcpy.util.full_paginate(
             self.fetch_favorites, favorite_type=favorite_type)
 
-        world = []
-        friend = []
-        avatar = []
+        favorites_dict = {
+            FavoriteType.WORLD: [],
+            FavoriteType.FRIEND: [],
+            FavoriteType.AVATAR: []
+        }
 
         for favorite in favorites:
-            if favorite.type == FavoriteType.WORLD:
-                world.append(favorite)
-            elif favorite.type == FavoriteType.FRIEND:
-                friend.append(favorite)
-            elif favorite.type == FavoriteType.AVATAR:
-                avatar.append(favorite)
+            favorites_dict[favorite.type].append(favorite)
 
-        if world != []:
-            self.client.favorites[FavoriteType.WORLD] = world
-        if friend != []:
-            self.client.favorites[FavoriteType.FRIEND] = friend
-        if avatar != []:
-            self.client.favorites[FavoriteType.AVATAR] = avatar
-
-        return favorites
+        return favorites_dict
 
     async def fetch_notifications(self, type="all", sent=False, after=None):
         """Fetches user notifications, returning as a list
