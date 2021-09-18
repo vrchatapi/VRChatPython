@@ -115,7 +115,6 @@ class Client:
             else:
                 self.friends[task.name] = task.returns
 
-        del tasks
         self.loop.create_task(self.on_ready())
 
     async def _ws_loop(self):
