@@ -602,7 +602,7 @@ class CurrentUser(User):
 
     async def fetch_favorite_groups(self, n: int = 50):
         """
-        Fetches favorite groups for worlds, avatars and users
+        Fetches favorite groups for worlds, avatars and users, returning list
 
         Keyword Arguments
         ------------------
@@ -611,7 +611,7 @@ class CurrentUser(User):
         """
 
         resp = await self.client.request.get("/favorite/groups", params={"n": str(n)})
-        groups = {}
+        groups = []
 
         for group in resp["data"]:
             groups.append(FavoriteGroup.build_favorite_group(
