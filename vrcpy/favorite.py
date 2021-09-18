@@ -20,7 +20,8 @@ class BaseFavorite(BaseObject):
             }
         })
 
-        self.favorite_group = obj["tags"][0]
+        if obj is not None:
+            self.favorite_group = obj["tags"][0]
 
     @staticmethod
     def build_favorite(client, obj, loop=None):
@@ -44,7 +45,7 @@ class FavoriteGroup(BaseFavorite):
     """Base favorite class that all favorite group objects are built on top of"""
 
     def __init__(self, client, obj, loop=None):
-        super().__init__(client, loop)
+        super().__init__(client, None, loop)
 
         self.required.update({
             "display_name": {
@@ -73,7 +74,7 @@ class FavoriteGroup(BaseFavorite):
             }
         })
 
-        del self.unfavorite
+        #del self.unfavorite
         self._assign(obj)
         self.favorites = []
 
