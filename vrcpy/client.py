@@ -85,7 +85,6 @@ class Client:
 
     async def _pre_loop(self):
         tasks = []
-        await self.me.fetch_all_favorites()
 
         # Fetch all friends
         tasks.append(vrcpy.util.TaskWrapReturn(
@@ -114,6 +113,17 @@ class Client:
                 self.friends[task.name].append(task.returns)
             else:
                 self.friends[task.name] = task.returns
+
+        # Cache favorite groups and favorites
+        groups = await self.me.fetch_favorite_groups()
+        favorites = await self.me.fetch_all_favorites()
+        for group in groups:
+            self.favorites[group.type].append(group)
+
+            for favorite in favorites:
+                for favorite in favorites[favorite]:
+                    if favorite.tags[0] == group.name:
+                        group.favorites.append(favorite)
 
         self.loop.create_task(self.on_ready())
 
