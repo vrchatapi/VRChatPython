@@ -11,9 +11,6 @@ class FavoriteGroup(Model):
 
         return groups[data["type"]](loop, data)
 
-    def __init__(self, loop, data):
-        super().__init__(loop, data)
-
 class FavoriteWorldGroup(FavoriteGroup):
     pass
 
