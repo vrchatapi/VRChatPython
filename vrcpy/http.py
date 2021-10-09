@@ -16,12 +16,8 @@ class Request:
         self.base = "https://api.vrchat.cloud/api/1"
 
     async def _caller(self, method, path, *args, **kwargs):
-        if self.api_key is None:
-            async with self.session.get(self.base + "/config") as resp:
-                assert resp.status == 200
-
-                j = await resp.json()
-                self.api_key = j["apiKey"]
+        if self.client.config is None:
+            await self.client.fetch_config()
 
         if "params" in kwargs:
             for param in kwargs["params"]:
@@ -29,9 +25,9 @@ class Request:
                     kwargs["params"][param] = str(kwargs["params"][param]).lower()
 
             if self.client.config is not None:
-                kwargs["params"]["apiKey"] = self.client.config["api_key"]
+                kwargs["params"]["apiKey"] = self.client.config.api_key
         elif self.client.config is not None:
-            kwargs["params"] = {"apiKey": self.client.config["api_key"]}
+            kwargs["params"] = {"apiKey": self.client.config.api_key}
 
         async with self.session.request(method, self.base + path, *args, ssl=self.verify, **kwargs) as resp:
             resp = {"status": resp.status, "response": resp, "data": await resp.json()}
