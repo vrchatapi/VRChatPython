@@ -2,6 +2,7 @@
 from .http import Request
 
 from .util.threadwrap import ThreadWrap
+from .decorators import auth_required
 from .currentuser import CurrentUser
 from .limiteduser import LimitedUser
 from .config import Config
@@ -16,18 +17,6 @@ import time
 import json
 
 from typing import Union, List, Callable
-
-def auth_required(method):
-    async def _method(self, *args, **kwargs):
-        if not self._logged_in:
-            raise ClientErrors.NotLoggedIn(
-                "Client is not logged in!",
-                method
-            )
-
-        resp = await method(self, *args, **kwargs)
-        return resp
-    return _method
 
 class Client:
     def __init__(self, loop=None):
