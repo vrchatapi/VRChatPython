@@ -1,8 +1,9 @@
 ﻿class Model:
-    __slots__ = ("loop")
+    __slots__ = ("client", "loop")
 
-    def __init__(self, loop, data):
+    def __init__(self, client, loop, data):
         self.loop = loop
+        self.client = client
 
         for attr in data:
             setattr(self, self._fix_attr_name(attr), data[attr])
