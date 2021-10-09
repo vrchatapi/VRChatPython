@@ -10,7 +10,8 @@ class Request:
         self.verify = verify
         self.loop = client.loop
         self.client = client
-        self.user_agent = user_agent or "AIOHTTP/%s (VRCPy/%s)" % (aiohttp.__version__, __version__)
+        self.user_agent = user_agent or "AIOHTTP/%s (VRCPy/%s)" % (
+            aiohttp.__version__, __version__)
 
         self.session = None
         self.base = "https://api.vrchat.cloud/api/1"
@@ -22,20 +23,24 @@ class Request:
         if "params" in kwargs:
             for param in kwargs["params"]:
                 if type(kwargs["params"][param]) == bool:
-                    kwargs["params"][param] = str(kwargs["params"][param]).lower()
+                    kwargs["params"][param] = str(
+                        kwargs["params"][param]).lower()
 
             if self.client.config is not None:
                 kwargs["params"]["apiKey"] = self.client.config.api_key
         elif self.client.config is not None:
             kwargs["params"] = {"apiKey": self.client.config.api_key}
 
-        async with self.session.request(method, self.base + path, *args, ssl=self.verify, **kwargs) as resp:
-            resp = {"status": resp.status, "response": resp, "data": await resp.json()}
+        async with self.session.request(method, self.base + path, *args,
+                                        ssl=self.verify, **kwargs) as resp:
+            resp = {"status": resp.status, "response": resp,
+                    "data": await resp.json()}
             return resp
 
     async def _call(self, method, path, *args, retries=None, **kwargs):
         if self.session is None:
-            self.session = aiohttp.ClientSession(headers={"user-agent": self.user_agent})
+            self.session = aiohttp.ClientSession(headers={
+                "user-agent": self.user_agent})
 
         retries = self.request_retries if retries is None else retries
         retries += 1
@@ -82,8 +87,10 @@ class Request:
 
     def raise_for_errors(self, resp):
         def on_200():
-            if "requiresTwoFactorAuth" in resp["data"]:
-                raise ClientErrors.MfaRequired("Account login requires mfa")
+            if isinstance(resp["data"], dict):
+                if "requiresTwoFactorAuth" in resp["data"]:
+                    raise ClientErrors.MfaRequired(
+                        "Account login requires mfa")
 
         def on_429():
             raise RequestErrors.RateLimit("You are being rate limited")
