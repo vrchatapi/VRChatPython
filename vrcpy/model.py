@@ -1,7 +1,9 @@
 ﻿import time
 
+from .types.enum import PlayerModerationType
+
 __basetypes__ = (
-    str, int, list, dict
+    str, int, list, dict, PlayerModerationType
 )
 
 class TypeCasts:
@@ -11,14 +13,16 @@ class TypeCasts:
 
     @staticmethod
     def struct_time(self, attr: str) -> time.struct_time:
+        if attr == "created":
+            return time.strptime(attr, "%Y-%m-%dT%H:%M:%S.%fZ")
         return time.strptime(attr, "%Y-%m-%dT%H:%M:%S%z")
 
 class Model:
     __slots__ = ("client", "loop")
 
-    def __init__(self, client, loop, data):
-        self.loop = loop
+    def __init__(self, client, data):
         self.client = client
+        self.loop = self.client.loop
 
         for attr in data:
             fixed_attr = self._fix_attr_name(attr)

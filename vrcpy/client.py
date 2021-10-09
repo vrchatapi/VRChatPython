@@ -33,6 +33,9 @@ class Client:
         ## Cache
         self.users = []
 
+    async def _pre_loop(self):
+        pass
+
     # Cache grabbers
 
     def get_user(self, id: str) -> Union[User, LimitedUser, None]:
@@ -66,11 +69,7 @@ class Client:
         logging.debug("Fetching CurrentUser")
 
         me = await self.request.get("/auth/user")
-        me = CurrentUser(
-            self,
-            self.loop,
-            me["data"]
-        )
+        me = CurrentUser(self, me["data"])
 
         self.me = me
         return me
@@ -86,7 +85,7 @@ class Client:
 
             assert resp.status == 200
             json = await resp.json()
-            self.config = Config(self.loop, json)
+            self.config = Config(self, json)
 
         return self.config
 
@@ -123,7 +122,7 @@ class Client:
 
         try:
             resp = await self.request.get("/auth/user", headers={"Authorization": "Basic "+b64})
-            self.me = CurrentUser(self, resp["data"], self.loop)
+            self.me = CurrentUser(self, resp["data"])
         except ClientErrors.MfaRequired:
             if mfa is None:
                 raise ClientErrors.MfaRequired("Account login requires mfa")
