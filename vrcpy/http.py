@@ -3,6 +3,8 @@ import logging
 import json
 from . import __version__
 
+from .errors import ClientErrors, RequestErrors
+
 class Request:
     request_retries = 1
 
