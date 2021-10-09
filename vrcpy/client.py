@@ -1,8 +1,11 @@
 ﻿from .errors import ClientErrors
 from .http import Request
 
+from .util.threadwrap import ThreadWrap
 from .currentuser import CurrentUser
+from .limiteduser import LimitedUser
 from .config import Config
+from .user import User
 
 import vrcpy.currentuser
 
@@ -10,6 +13,9 @@ import logging
 import asyncio
 import base64
 import time
+import json
+
+from typing import Union, List, Callable
 
 def auth_required(method):
     async def _method(self, *args, **kwargs):
@@ -29,14 +35,46 @@ class Client:
         self.me = None
         self.config = None
         self.request = Request(self)
+        self.ws = None
 
         self._logged_in = False
+        self._logout_intent = False
+        self._event_listeners = []
+
+        ## Cache
+        self.users = []
+
+    # Cache grabbers
+
+    def get_user(self, id: str) -> Union[User, LimitedUser, None]:
+        for user in self.users:
+            if user.id == id:
+                return user
+
+        return None
+
+    def get_friends(self) -> List[Union[User, LimitedUser]]:
+        return [user for user in self.users if user.is_friend]
+
+    def get_active_friends(self) -> List[Union[User, LimitedUser]]:
+        return [
+            user for user in self.get_friends() if user.status == "active"]
+
+    def get_online_friends(self) -> List[Union[User, LimitedUser]]:
+        return [
+            user for user in self.get_friends() if user.status == "online"]
+
+    def get_offline_friends(self) -> List[Union[User, LimitedUser]]:
+        return [
+            user for user in self.get_friends() if user.status == "offline"]
+
+    # Fetches
 
     @auth_required
-    async def fetch_me(self):
+    async def fetch_me(self) -> CurrentUser:
         """Fetches new CurrentUser object. This also updates `Client.me`"""
 
-        logging.debug("Fetching me")
+        logging.debug("Fetching CurrentUser")
 
         me = await self.request.get("/auth/user")
         me = CurrentUser(
@@ -50,6 +88,10 @@ class Client:
 
     ## System
     async def fetch_config(self) -> Config:
+        """Fetches API Configuration"""
+
+        logging.debug("Fetching API config")
+
         async with self.request.session.get(
             self.request.base + "/config") as resp:
 
@@ -85,7 +127,7 @@ class Client:
         Keyword Arguments
         ------------------
         mfa: :class:`str`
-            One Time Password (OTP, recovery code) or Temporary One Time Password (TOTP, MFA code) to verify auth cookie
+            One Time Password (OTP, recovery code) or Timed One Time Password (TOTP, MFA code) to verify auth cookie
         """
 
         b64 = base64.b64encode((username+":"+password).encode()).decode()
@@ -152,3 +194,92 @@ class Client:
 
         if not resp["data"]["verified"]:
             raise ClientErrors.MfaInvalid(f"{mfa} is not a valid MFA code")
+
+    @auth_required
+    async def logout(self, unauth=True):
+        """
+        Closes client session and logs out of VRChat
+        Keyword Arguments
+        ------------------
+        unauth: :class:`bool`
+            If the auth cookie should be un-authenticated/destroyed.
+            Defaults to ``True``
+        """
+
+        logging.debug("Doing logout (%sdeauthing authtoken)" % (
+            "" if unauth else "not "))
+
+        self.me = None
+
+        if unauth:
+            # Sending json with this makes it not 401 for some reason
+            # Hey, works for me
+            await self.request.put("/logout", json={})
+
+        if self.ws is not None:
+            await self.ws.close()
+
+        await self.request.close_session()
+        await asyncio.sleep(0)
+
+    # Event stuff
+
+    async def _ws_loop(self):
+        while not self._logout_intent:
+            auth = await self.fetch_auth_cookie()
+            auth = auth["token"]
+
+            self.ws = await self.request.session.ws_connect(
+                "wss://pipeline.vrchat.cloud/?authToken="+auth)
+
+            self.loop.create_task(self.on_connect())
+
+            async for message in self.ws:
+                message = self.loop.run_in_executor(None, message.json)
+                content = self.loop.run_in_executor(None, lambda: json.loads(message["content"]))
+
+                logging.debug("Got ws message (%s)" % message["type"])
+                for event in self._event_listeners:
+                    if asyncio.iscoroutine(event):
+                        self.loop.create_task(event(message, content))
+                    else:
+                        ThreadWrap(event, message, content)
+
+
+            self.loop.create_task(self.on_disconnect())
+
+    def event(self, func):
+        """
+        Decorator that overwrites class ws event hooks.
+        Example::
+            @client.event
+            def on_connect():
+                print("Connected to wss pipeline.")
+        """
+
+        if func.__name__.startswith("on_") and hasattr(self, func.__name__):
+            if not asyncio.iscoroutine(func):
+                raise ClientErrors.InvalidEventFunction(
+                    "'{}' event must be a coroutine!".format(func.__name__))
+
+            logging.debug("Replacing %s via decorator" % func.__name__)
+            setattr(self, func.__name__, func)
+            return func
+
+        raise ClientErrors.InvalidEventFunction(
+            "{} is not a valid event".format(func.__name__))
+
+    def add_listener(self, func: Callable):
+        self._event_listeners.append(func)
+
+    def remove_listener(self, func: Callable):
+        self._event_listeners.remove(func)
+
+
+    async def on_connect(self):
+        """Called at the start of ws event loop"""
+        pass
+
+    async def on_disconnect(self):
+        """Called at the end of ws event loop"""
+        pass
