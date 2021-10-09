@@ -6,11 +6,11 @@ from . import __version__
 class Request:
     request_retries = 1
 
-    def __init__(self, loop, client, user_agent=None, verify=True):
+    def __init__(self, client, user_agent=None, verify=True):
         self.verify = verify
-        self.loop = loop
+        self.loop = client.loop
         self.client = client
-        self.user_agent = user_agent or "AIOHTTP/%s (VRCPy/%s)" % aiohttp.__version__, __version__
+        self.user_agent = user_agent or "AIOHTTP/%s (VRCPy/%s)" % (aiohttp.__version__, __version__)
 
         self.session = None
         self.base = "https://api.vrchat.cloud/api/1"
