@@ -22,6 +22,31 @@ import json
 from typing import Union, List, Dict, Callable
 
 class Client:
+    """
+    VRChat Client object used to interact with the VRChat API
+
+    Keyword Arguments
+    ------------------
+    loop: :class:`asyncio.AbstractEventLoop`
+        Event loop client will create new asyncio tasks in.
+        Defaults to ``None``
+
+    Attributes
+    -----------
+    config: :class:`vrcpy.config.Config`
+        Last fetched API Configuration
+    loop: :class:`vrcpy.AbstractEventLoop`
+        Event loop client will create new asyncio tasks in.
+    me: :class:`vrcpy.currentuser.CurrentUser`
+        Last fetched user profile object
+    request: :class:`vrcpy.http.Request`
+        Internal AIOHTTP Wrapper instance
+    users: :class:`list`
+        User cache
+    ws: :class:`aiohttp.WebSocketResponse`
+        Websocket connection to VRChat
+    """
+
     def __init__(self, loop=None):
         self.loop = asyncio.get_event_loop() if loop is None else loop
         self.me = None
@@ -37,11 +62,39 @@ class Client:
         self.users = []
 
     async def _pre_loop(self):
-        pass
+        # Fetch all friends
+        # I want this to be able to be run no matter cache state,
+        # and be successful
+
+        count = 0
+        for offset in range(0, len(self.me.friends), 100):
+            friends = await self.me.fetch_friends(offset, 100, False)
+            self.users += friends
+
+            my_count = len(friends)
+            count += my_count
+
+            if my_count > 100:
+                break
+
+        for offset in range(0, len(self.me.friends) - count, 100):
+            friends = await self.me.fetch_friends(offset, 100, True)
+            self.users += friends
+
+        self.loop.create_task(self.on_ready())
 
     # Cache grabbers
 
     def get_user(self, id: str) -> Union[User, LimitedUser, None]:
+        """
+        Get a user from cache
+        Returns None if user not in cache
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to get
+        """
         for user in self.users:
             if user.id == id:
                 return user
@@ -49,17 +102,21 @@ class Client:
         return None
 
     def get_friends(self) -> List[Union[User, LimitedUser]]:
+        """Gets all cached friends"""
         return [user for user in self.users if user.is_friend]
 
     def get_active_friends(self) -> List[Union[User, LimitedUser]]:
+        """Gets all cached friends that are active"""
         return [
             user for user in self.get_friends() if user.status == "active"]
 
     def get_online_friends(self) -> List[Union[User, LimitedUser]]:
+        """Gets all cached friends that are online"""
         return [
             user for user in self.get_friends() if user.status == "online"]
 
     def get_offline_friends(self) -> List[Union[User, LimitedUser]]:
+        """Gets all cached friends that are offline"""
         return [
             user for user in self.get_friends() if user.status == "offline"]
 
@@ -67,7 +124,10 @@ class Client:
 
     @auth_required
     async def fetch_me(self) -> CurrentUser:
-        """Fetches new CurrentUser object. This also updates `Client.me`"""
+        """
+        Fetches new CurrentUser object.
+        This also updates `Client.me`
+        """
 
         logging.debug("Fetching CurrentUser")
 
@@ -81,14 +141,35 @@ class Client:
     async def search_users(
         self, search: str, developer_type: DeveloperType = None, n: int = 60,
         offset: int = 0) -> List[User]:
+        """
+        Searches VRChat for users
 
+        Arguments
+        ----------
+        search: :class:`str`
+            User display name to search for
+
+        Keyword Arguments
+        ------------------
+        developer_type: :class:`vrcpy.types.enum.DeveloperType`
+            Only return users that have this developer type
+            Defaults to ``vrcpy.types.enum.DeveloperType.NONE``
+        n: :class:`int`
+            Number of objects to return
+            Min 1 | Max 100
+            Defaults to ``60``
+        offset: :class:`int`
+            Zero-based offset from start of object return
+            Used for pagination
+            Defaults to ``0``
+        """
         logging.debug(
             "Searching users (search={} devType={} n={} offset={})".format(
                 search, developer_type, n, offset))
 
         names = {
             "search": search,
-            "developerType": developer_type,
+            "developerType": None if developer_type is None else developer_type.value,
             "n": n,
             "offset": offset
         }
@@ -104,6 +185,14 @@ class Client:
 
     @auth_required
     async def fetch_user(self, id: str) -> User:
+        """
+        Fetches a user using their id
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to fetch
+        """
         logging.debug("Fetching user %s" % id)
 
         resp = await self.request.get("/users/"+id)
@@ -111,6 +200,14 @@ class Client:
 
     @auth_required
     async def fetch_user_via_username(self, username: str) -> User:
+        """
+        Fetches a user using their username
+
+        Arguments
+        ----------
+        username: :class:`str`
+            Username of the user to fetch
+        """
         logging.debug("Fetching user via username %s" % id)
 
         resp = await self.request.get("/users/%s/name" % username)
@@ -282,6 +379,7 @@ class Client:
 
     @auth_required
     async def verify_auth(self) -> Dict[str, Union[bool, str]]:
+        """Fetches auth verification status"""
         logging.debug("Verifying auth token")
 
         resp = await self.request.get("/auth")
@@ -291,6 +389,24 @@ class Client:
     async def user_exists(
         self, email: str = None, display_name: str = None, id: str = None,
         exclude_id: str = None) -> bool:
+        """
+        At least one of the kwargs excluding `exclude_id` must be passed
+        Checks if a user exists based off their:
+            - email
+            - display name
+            - id
+
+        Keyword Arguments
+        ------------------
+        email: :class:`str`
+            Email to check
+        display_name: :class:`str`
+            Display name to check
+        id: :class:`str`
+            User ID to check
+        exclude_id: :class:`str`
+            User ID to exclude from results
+        """
 
         names = {
             "email": email,
@@ -357,7 +473,7 @@ class Client:
 
             self.loop.create_task(self.on_disconnect())
 
-    def event(self, func):
+    def event(self, func: Callable):
         """
         Decorator that overwrites class ws event hooks.
         Example::
@@ -379,18 +495,47 @@ class Client:
             "{} is not a valid event".format(func.__name__))
 
     def add_listener(self, func: Callable):
+        """
+        Adds a listener that gets called whenever receiving a websocket event
+        Listeners added through this get called before any in-built event
+
+        Arguments
+        ----------
+        func: `Method`
+            Async or Sync method to call when received an event
+        """
         self._event_listeners.append(func)
 
     def remove_listener(self, func: Callable):
+        """
+        Removes a listener previously added with :method:`vrcpy.client.Client.add_listener`
+
+        Arguments
+        ----------
+        func: `Method`
+            Previously added method
+        """
         self._event_listeners.remove(func)
 
 
     async def on_connect(self):
-        """Called at the start of ws event loop"""
+        """
+        Called when connected to event websocket
+        This can be called multiple times due to vrchat disconnects
+        """
         pass
 
     async def on_disconnect(self):
-        """Called at the end of ws event loop"""
+        """
+        Called when disconnected to event websocket
+        This can be called multiple times due to vrchat disconnects
+        """
+        pass
+
+    async def on_ready(self):
+        """
+        Called when cache has been filled
+        """
         pass
 
     async def _on_friend_online(self, obj):
@@ -410,7 +555,9 @@ class Client:
         Arguments
         ----------
         before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            Friend object before they came online
         after: :class:`vrcpy.user.User`
+            Friend object after they came online
         """
         pass
 
@@ -431,7 +578,9 @@ class Client:
         Arguments
         ----------
         before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            Friend object before they went active
         after: :class:`vrcpy.user.User`
+            Friend object after they went active
         """
         pass
 
@@ -452,7 +601,9 @@ class Client:
         Arguments
         ----------
         before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            Friend object before they went offline
         after: :class:`vrcpy.user.User`
+            Friend object after they went offline
         """
         pass
 
@@ -463,6 +614,13 @@ class Client:
         await self.on_friend_add(user)
 
     async def on_friend_add(self, friend: User):
+        """
+        Called when a user is added as a friend
+
+        Arguments
+        ----------
+        friend: :class:`vrcpy.user.User`
+        """
         pass
 
     async def _on_friend_delete(self, obj):
@@ -471,8 +629,15 @@ class Client:
 
         await self.on_friend_delete(user)
 
-    async def on_friend_delete(self, friend: User):
-        pass
+    async def on_friend_unfriend(self, friend: User):
+        """
+        Called when a user is added as a friend
+
+        Arguments
+        ----------
+        friend: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            Friend object before they were unfriended
+        """
 
     async def _on_friend_update(self, obj):
         old_user = self.get_user(obj["userId"])
@@ -484,6 +649,16 @@ class Client:
         await self.on_friend_update(old_user, user)
 
     async def on_friend_update(self, before: User, after: User):
+        """
+        Called when a friend updates their profile
+        
+        Arguments
+        ----------
+        before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            Friend object before they updated
+        after: :class:`vrcpy.user.User`
+            Friend object after they updated
+        """
         pass
 
     async def _on_friend_location(self, obj):
@@ -497,6 +672,18 @@ class Client:
 
     async def on_friend_location(
         self, friend: User, world: World, location: str):
+        """
+        Called when a friend changes location
+
+        Arugments
+        ----------
+        friend: :class:`vrcpy.user.User`
+            Friend that changed location
+        world: :class:`vrcpy.world.World`
+            World the friend changed to
+        location: :class:`str`
+            Location ID of the instance friend is in
+        """
         pass
 
     async def _on_notification_received(self, obj):
@@ -504,6 +691,14 @@ class Client:
             Notification(self, obj))
 
     async def on_notification_received(self, notification: Notification):
+        """
+        Called when you receive a notification
+
+        Arguments
+        ----------
+        notification: :class:`vrcpy.notification.Notification`
+            Notification you received
+        """
         pass
 
     async def _on_notification_seen(self, obj):
@@ -511,6 +706,14 @@ class Client:
         await self.on_notification_seen(notif)
 
     async def on_notification_seen(self, notification: Notification):
+        """
+        Called when you mark a notification as seen
+
+        Arguments
+        ----------
+        notification: :class:`vrcpy.notification.Notification`
+            Notification you marked as seen
+        """
         pass
 
     async def _on_notification_response(self, obj):
@@ -527,4 +730,16 @@ class Client:
     async def on_notification_response(
         self, notification: Notification,
         response: Notification, sender: Union[LimitedUser, User]):
+        """
+        Called when you get a response to a notification you sent
+
+        Arguments
+        ----------
+        notification: :class:`vrcpy.notification.Notification`
+            The original notification you sent
+        response: :class:`vrcpy.notification.Notification`
+            The response notification
+        sender: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+            The user that sent the response
+        """
         pass
