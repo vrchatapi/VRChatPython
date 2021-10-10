@@ -13,9 +13,10 @@ class TypeCasts:
 
     @staticmethod
     def struct_time(self, attr: str) -> time.struct_time:
-        if attr == "created":
+        try:
             return time.strptime(attr, "%Y-%m-%dT%H:%M:%S.%fZ")
-        return time.strptime(attr, "%Y-%m-%dT%H:%M:%S%z")
+        except:
+            return time.strptime(attr, "%Y-%m-%dT%H:%M:%S%z")
 
 class Model:
     __slots__ = ("client", "loop")
