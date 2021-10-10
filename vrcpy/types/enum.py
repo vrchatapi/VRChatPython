@@ -22,3 +22,8 @@ class NotificationType(Enum):
     REQUEST_INVITE = "requestInvite"
     REQUEST_INVITE_RESPONSE = "requestInviteResponse"
     VOTE_TO_KICK = "votetokick"
+
+class SearchGenericType(Enum):
+    ALL = "all"
+    PUBLIC = "public"
+    PRIVATE = "private"

@@ -1,9 +1,11 @@
-﻿from .decorators import auth_required
+﻿from .notification import Notification
+from .decorators import auth_required
 from .limiteduser import LimitedUser
 from .moderation import Moderation
 from .user import User
 
 from .types.enum import UserStatus, PlayerModerationType
+from .types.enum import NotificationType, SearchGenericType
 
 import logging
 
@@ -46,6 +48,40 @@ class CurrentUser(User):
         logging.debug("Clearing all moderations")
 
         await self.client.request.delete("/auth/user/playmoderations")
+
+    @auth_required
+    async def fetch_notifications(
+        self, typeof: Union[
+            NotificationType, SearchGenericType] = SearchGenericType.ALL,
+        hidden: bool = False, after: str = None,
+        n: int = 60, offset: int = 0) -> List[Notification]:
+
+        if hidden and typeof != NotificationType.FRIEND_REQUEST:
+            raise TypeError("Hidden can be True only when typeof kwarg is set to NotificationType.FRIEND_REQUEST")
+
+        typeof = typeof.value
+        params = {}
+        names = {
+            "type": typeof,
+            "hidden": hidden,
+            "after": after,
+            "n": n,
+            "offset": offset
+        }
+        
+        for param in names:
+            if names[param] is not None:
+                params[param] = names[param]
+
+        resp = await self.client.request.get("/auth/user/notifications",
+                                             params=params)
+        return [Notification(self.client, notif) for notif in resp["data"]]
+
+    @auth_required
+    async def clear_notifications(self):
+        logging.debug("Clearing all notifications")
+
+        await self.client.request.put("/auth/user/notifications/clear")
 
     @auth_required
     async def update(
