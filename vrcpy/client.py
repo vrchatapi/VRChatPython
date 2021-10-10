@@ -17,7 +17,7 @@ import base64
 import time
 import json
 
-from typing import Union, List, Callable
+from typing import Union, List, Dict, Callable
 
 class Client:
     def __init__(self, loop=None):
@@ -270,6 +270,40 @@ class Client:
 
         await self.request.close_session()
         await asyncio.sleep(0)
+
+    @auth_required
+    async def verify_auth(self) -> Dict[str, Union[bool, str]]:
+        logging.debug("Verifying auth token")
+
+        resp = await self.request.get("/auth")
+        return resp["data"]
+
+    @auth_required
+    async def user_exists(
+        self, email: str = None, display_name: str = None, id: str = None,
+        exclude_id: str = None) -> bool:
+
+        names = {
+            "email": email,
+            "displayName": display_name,
+            "userId": id,
+            "excludeUserId": exclude_id
+        }
+
+        req = {}
+
+        all_none = True
+        for param in names:
+            if names[param] is not None:
+                if param in ["email", "displayName", "userId"]:
+                    all_none = False
+                req[param] = names[param]
+
+        if all_none:
+            raise TypeError("You must pass at least one kwarg! (email, display_name, id)")
+
+        resp = await self.request.get("/auth/exists", params=req)
+        return resp["data"]["userExists"]
 
     # Event stuff
 

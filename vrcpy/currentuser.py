@@ -75,3 +75,12 @@ class CurrentUser(User):
 
         resp = self.client.request.put("/users/%s" % self.id, json=req)
         return CurrentUser(self.client, resp["data"])
+
+    @auth_required
+    async def delete_account(self) -> CurrentUser:
+        logging.debug("Deleting user %s" % self.id)
+
+        resp = await self.client.request.put("/user/%s/delete" % self.id)
+        self.client.me = CurrentUser(self.client, resp["data"])
+
+        return self.client.me
