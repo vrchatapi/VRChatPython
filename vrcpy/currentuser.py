@@ -28,12 +28,25 @@ class CurrentUser(User):
 
     @auth_required
     async def fetch_player_moderations(
-        self, id: str, typeof: PlayerModerationType) -> List[Moderation]:
+        self, id: str = None,
+        typeof: PlayerModerationType = None) -> List[Moderation]:
+
         logging.debug("Fetching player moderations")
+
+        params = {}
+
+        if id is not None:
+            params["targetUserId"] = id
+        if typeof is not None:
+            if typeof == PlayerModerationType.UNBLOCK:
+                raise TypeError("PlayerModerationType.UNBLOCK is not allowed in this method")
+
+            params["type"] = typeof.value
 
         resp = self.client.request.get(
             "/auth/user/playermoderations",
-            params={"targetUserId": id, "type": typeof.value})
+            params=params)
+        return [Moderation(self.client, mod) for mod in resp["data"]]
 
     @auth_required
     async def fetch_moderation(
