@@ -5,6 +5,9 @@
 
             self.callee = callee
 
+    class MfaRequired(Exception):
+        pass
+
     class MfaInvalid(Exception):
         pass
 

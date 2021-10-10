@@ -1,4 +1,5 @@
-﻿import time
+﻿import logging
+import time
 
 from .types.enum import PlayerModerationType, NotificationType
 
@@ -7,12 +8,15 @@ __basetypes__ = (
 )
 
 class TypeCasts:
-    __casts__ = {
-        time.struct_time: TypeCasts.struct_time
-    }
+    @classmethod
+    @property
+    def __casts__(cls):
+        return {
+            time.struct_time: cls.struct_time
+        }
 
     @staticmethod
-    def struct_time(self, attr: str) -> time.struct_time:
+    def struct_time(attr: str) -> time.struct_time:
         try:
             return time.strptime(attr, "%Y-%m-%dT%H:%M:%S.%fZ")
         except:
@@ -25,6 +29,8 @@ class Model:
         self.client = client
         self.loop = self.client.loop
 
+        logging.debug("Instantiating %s object" % self.__class__.__name__)
+
         for attr in data:
             fixed_attr = self._fix_attr_name(attr)
             setattr(self, fixed_attr, data[attr])
@@ -33,7 +39,7 @@ class Model:
     def _fix_attr_name(self, name):
         name_fin = ""
         for char in name:
-            if char == char.upper():
+            if char == char.upper() and char not in "_-":
                 if char == name[0]:
                     name_fin += char.lower()
                 else:

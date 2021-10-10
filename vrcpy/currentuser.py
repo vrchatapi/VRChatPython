@@ -1,4 +1,6 @@
-﻿from .notification import Notification
+﻿from __future__ import annotations
+
+from .notification import Notification
 from .decorators import auth_required
 from .limiteduser import LimitedUser
 from .moderation import Moderation
@@ -9,7 +11,7 @@ from .types.enum import NotificationType, SearchGenericType
 
 import logging
 
-from typing import List
+from typing import List, Union
 
 class CurrentUser(User):
     @auth_required
@@ -43,7 +45,7 @@ class CurrentUser(User):
 
             params["type"] = typeof.value
 
-        resp = self.client.request.get(
+        resp = await self.client.request.get(
             "/auth/user/playermoderations",
             params=params)
         return [Moderation(self.client, mod) for mod in resp["data"]]
@@ -53,7 +55,7 @@ class CurrentUser(User):
         self, id: str) -> Moderation:
         logging.debug("Fetching moderation %s" % id)
 
-        resp = self.client.request.get("/auth/user/playermoderations/"+id)
+        resp = await self.client.request.get("/auth/user/playermoderations/"+id)
         return Moderation(self.client, resp["data"])
 
     @auth_required
@@ -117,7 +119,7 @@ class CurrentUser(User):
             "birthday": birthday,
             "acceptedTOSVersion": accepted_tos_version,
             "tags": tags,
-            "status": status.value,
+            "status": None if status is None else status.value,
             "statusDescription": status_description,
             "bio": bio,
             "bioLinks": bio_links,
@@ -130,7 +132,7 @@ class CurrentUser(User):
             if names[attr] is not None:
                 req[attr] = names[attr]
 
-        resp = self.client.request.put("/users/%s" % self.id, json=req)
+        resp = await self.client.request.put("/users/%s" % self.id, json=req)
         return CurrentUser(self.client, resp["data"])
 
     @auth_required

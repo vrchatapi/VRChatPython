@@ -102,17 +102,17 @@ class Client:
         return [User(self, user) for user in users["data"]]
 
     @auth_required
-    async def fetch_user(id: str) -> User:
+    async def fetch_user(self, id: str) -> User:
         logging.debug("Fetching user %s" % id)
 
-        resp = await self.client.request.get("/users/"+id)
+        resp = await self.request.get("/users/"+id)
         return User(self, resp["data"])
 
     @auth_required
     async def fetch_user_via_username(self, username: str) -> User:
         logging.debug("Fetching user via username %s" % id)
 
-        resp = await self.client.request.get("/users/%s/name" % username)
+        resp = await self.request.get("/users/%s/name" % username)
         return User(self, resp["data"])
 
     ## System
@@ -187,6 +187,7 @@ class Client:
             resp = await self.request.get("/auth/user", headers={
                 "Authorization": "Basic "+b64})
             self.me = CurrentUser(self, resp["data"])
+            self._logged_in = True
         except ClientErrors.MfaRequired:
             if mfa is None:
                 raise ClientErrors.MfaRequired("Account login requires mfa")
@@ -222,6 +223,7 @@ class Client:
             raise ClientErrors.InvalidAuthToken(
                 "Passed auth token is not valid")
 
+        self._logged_in = True
         await self.fetch_me()
         await self._pre_loop()
 
@@ -247,6 +249,8 @@ class Client:
 
         if not resp["data"]["verified"]:
             raise ClientErrors.MfaInvalid(f"{mfa} is not a valid MFA code")
+
+        self._logged_in = True
 
     @auth_required
     async def logout(self, unauth=True):

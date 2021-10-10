@@ -1,4 +1,6 @@
-﻿from .types.enum import NotificationType
+﻿from __future__ import annotations
+
+from .types.enum import NotificationType
 from .decorators import auth_required
 from .model import Model
 

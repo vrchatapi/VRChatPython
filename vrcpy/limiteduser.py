@@ -5,6 +5,7 @@ from .moderation import Moderation
 from .model import Model
 
 from typing import Dict
+import logging
 
 class LimitedUser(Model):
     __slots__ = (
@@ -61,7 +62,7 @@ class LimitedUser(Model):
         await self.client.request.delete(
             "/user/%s/friendRequest" % self.id)
 
-    @auth_request
+    @auth_required
     async def fetch_friend_status(self) -> Dict[str, bool]:
         logging.debug("Fetching friend status for %s" % self.id)
 
