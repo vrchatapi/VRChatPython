@@ -76,10 +76,41 @@ class Client:
         return me
 
     @auth_required
+    async def search_users(
+        self, search: str = None, developer_type: str = None, n: int = 60,
+        offset: int = 0) -> List[User]:
+
+        logging.debug("Searching users (search={} devType={} n={} offset={})".format(
+            search, developer_type, n, offset))
+
+        names = {
+            "search": search,
+            "developerType": developer_type,
+            "n": n,
+            "offset": offset
+        }
+
+        req = {}
+
+        for param in names:
+            if names[param] is not None:
+                req[param] = names[param]
+
+        users = await self.request.get("/users", params=req)
+        return [User(self, user) for user in users["data"]]
+
+    @auth_required
     async def fetch_user(id: str) -> User:
         logging.debug("Fetching user %s" % id)
 
         resp = await self.client.request.get("/users/"+id)
+        return User(self, resp["data"])
+
+    @auth_required
+    async def fetch_user_via_username(self, username: str) -> User:
+        logging.debug("Fetching user via username %s" % id)
+
+        resp = await self.client.request.get("/users/%s/name" % username)
         return User(self, resp["data"])
 
     ## System
