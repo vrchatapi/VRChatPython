@@ -1,9 +1,9 @@
 ﻿import time
 
-from .types.enum import PlayerModerationType
+from .types.enum import PlayerModerationType, NotificationType
 
 __basetypes__ = (
-    str, int, list, dict, PlayerModerationType
+    str, int, list, dict, PlayerModerationType, NotificationType
 )
 
 class TypeCasts:
