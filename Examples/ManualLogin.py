@@ -16,7 +16,7 @@ async def main():
 
     try:
         # Start the ws event loop
-        await client.start()
+        await client.start_ws_loop()
     except KeyboardInterrupt:
         await client.logout()
 
