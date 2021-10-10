@@ -2,6 +2,7 @@
 from .http import Request
 
 from .util.threadwrap import ThreadWrap
+from .notification import Notification
 from .decorators import auth_required
 from .currentuser import CurrentUser
 from .limiteduser import LimitedUser
@@ -80,8 +81,9 @@ class Client:
         self, search: str = None, developer_type: str = None, n: int = 60,
         offset: int = 0) -> List[User]:
 
-        logging.debug("Searching users (search={} devType={} n={} offset={})".format(
-            search, developer_type, n, offset))
+        logging.debug(
+            "Searching users (search={} devType={} n={} offset={})".format(
+                search, developer_type, n, offset))
 
         names = {
             "search": search,
@@ -182,7 +184,8 @@ class Client:
         b64 = base64.b64encode((username+":"+password).encode()).decode()
 
         try:
-            resp = await self.request.get("/auth/user", headers={"Authorization": "Basic "+b64})
+            resp = await self.request.get("/auth/user", headers={
+                "Authorization": "Basic "+b64})
             self.me = CurrentUser(self, resp["data"])
         except ClientErrors.MfaRequired:
             if mfa is None:
@@ -235,7 +238,8 @@ class Client:
         logging.debug("Verifying MFA authtoken")
 
         if type(mfa) is not str or not (len(mfa) == 6 or len(mfa) == 8):
-            raise ClientErrors.MfaInvalid("{} is not a valid MFA code".format(mfa))
+            raise ClientErrors.MfaInvalid(
+                "{} is not a valid MFA code".format(mfa))
 
         resp = await self.request.post("/auth/twofactorauth/{}/verify".format(
             "totp" if len(mfa) == 6 else "otp"
@@ -300,7 +304,8 @@ class Client:
                 req[param] = names[param]
 
         if all_none:
-            raise TypeError("You must pass at least one kwarg! (email, display_name, id)")
+            raise TypeError(
+                "You must pass at least one kwarg! (email, display_name, id)")
 
         resp = await self.request.get("/auth/exists", params=req)
         return resp["data"]["userExists"]
@@ -319,7 +324,8 @@ class Client:
 
             async for message in self.ws:
                 message = self.loop.run_in_executor(None, message.json)
-                content = self.loop.run_in_executor(None, lambda: json.loads(message["content"]))
+                content = self.loop.run_in_executor(
+                    None, lambda: json.loads(message["content"]))
 
                 logging.debug("Got ws message (%s)" % message["type"])
                 for event in self._event_listeners:
@@ -331,7 +337,13 @@ class Client:
                 switch = {
                     "friend-online": self._on_friend_online,
                     "friend-offline": self._on_friend_offline,
-                    "friend-active": self._on_friend_active
+                    "friend-active": self._on_friend_active,
+                    "friend-add": self._on_friend_add,
+                    "friend-update": self._on_friend_update,
+                    "friend-location": self._on_friend_location,
+                    "notification": self._on_notification_received,
+                    "see-notification": self._on_notification_seen,
+                    "response-notification": self._on_notification_response
                 }
 
                 if message["type"] in switch:
@@ -480,4 +492,34 @@ class Client:
 
     async def on_friend_location(
         self, friend: User, world: World, location: str):
+        pass
+
+    async def _on_notification_received(self, obj):
+        await self.on_notification_received(
+            Notification(self, obj))
+
+    async def on_notification_received(self, notification: Notification):
+        pass
+
+    async def _on_notification_seen(self, obj):
+        notif = await self.me.fetch_notification(obj)
+        await self.on_notification_seen(notif)
+
+    async def on_notification_seen(self, notification: Notification):
+        pass
+
+    async def _on_notification_response(self, obj):
+        notif = await self.me.fetch_notification(obj["notificationId"])
+        sender = self.get_user(obj["receiverId"])
+        response = await self.me.fetch_notification(obj["responseId"])
+
+        if sender is None:
+            sender = await self.fetch_user(obj["receiverId"])
+
+        await self.on_notification_response(
+            notif, response, sender)
+
+    async def on_notification_response(
+        self, notification: Notification,
+        response: Notification, sender: Union[LimitedUser, User]):
         pass

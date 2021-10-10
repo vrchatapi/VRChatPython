@@ -91,6 +91,14 @@ class CurrentUser(User):
         return [Notification(self.client, notif) for notif in resp["data"]]
 
     @auth_required
+    async def fetch_notification(self, id: str) -> Notification:
+        logging.debug("Fetching notification %s" % id)
+
+        resp = await self.client.request.get(
+            "/auth/user/notifications/%s" % id)
+        return Notification(self.client, resp["data"])
+
+    @auth_required
     async def clear_notifications(self):
         logging.debug("Clearing all notifications")
 
