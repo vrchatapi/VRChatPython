@@ -10,6 +10,7 @@ from .config import Config
 from .world import World
 from .user import User
 
+from .types.enum import DeveloperType
 import vrcpy.currentuser
 
 import logging
@@ -78,7 +79,7 @@ class Client:
 
     @auth_required
     async def search_users(
-        self, search: str = None, developer_type: str = None, n: int = 60,
+        self, search: str, developer_type: DeveloperType = None, n: int = 60,
         offset: int = 0) -> List[User]:
 
         logging.debug(

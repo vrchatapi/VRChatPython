@@ -15,6 +15,10 @@ class PlayerModerationType(Enum):
     HIDEAVATAR = "hideAvatar"
     SHOWAVATAR = "showAvatar"
 
+class DeveloperType(Enum):
+    NONE = "none"
+    MODERATOR = "internal"
+
 class NotificationType(Enum):
     FRIEND_REQUEST = "friendRequest"
     INVITE = "invite"
