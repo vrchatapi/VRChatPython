@@ -114,6 +114,7 @@ class Client:
         return User(self, resp["data"])
 
     ## System
+
     async def fetch_config(self) -> Config:
         """Fetches API Configuration"""
 
@@ -125,7 +126,6 @@ class Client:
             assert resp.status == 200
             json = await resp.json()
             self.config = Config(self, json)
-
         return self.config
 
     async def fetch_system_time(self) -> time.struct_time:
@@ -141,6 +141,28 @@ class Client:
 
         data = await self.request.get("/visits")
         return data["data"]
+
+    async def fetch_frontend_css(self) -> str:
+        logging.debug("Fetching frontend CSS")
+
+        async with self.request.session.get(
+            self.request.base + "/css/app.js") as resp:
+            
+            assert resp.status == 200
+            js = await resp.read()
+        return js
+
+    async def fetch_frontend_js(self) -> str:
+        logging.debug("Fetching frontend JS")
+
+        async with self.request.session.get(
+            self.request.base + "/js/app.js") as resp:
+            
+            assert resp.status == 200
+            js = await resp.read()
+        return js
+
+    ## Authentication
 
     async def login(self, username, password, mfa=None):
         """
