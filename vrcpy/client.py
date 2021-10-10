@@ -6,6 +6,7 @@ from .decorators import auth_required
 from .currentuser import CurrentUser
 from .limiteduser import LimitedUser
 from .config import Config
+from .world import World
 from .user import User
 
 import vrcpy.currentuser
@@ -73,6 +74,13 @@ class Client:
 
         self.me = me
         return me
+
+    @auth_required
+    async def fetch_user(id: str) -> User:
+        logging.debug("Fetching user %s" % id)
+
+        resp = await self.client.request.get("/users/"+id)
+        return User(self, resp["data"])
 
     ## System
     async def fetch_config(self) -> Config:
@@ -233,6 +241,15 @@ class Client:
                     else:
                         ThreadWrap(event, message, content)
 
+                switch = {
+                    "friend-online": self._on_friend_online,
+                    "friend-offline": self._on_friend_offline,
+                    "friend-active": self._on_friend_active
+                }
+
+                if message["type"] in switch:
+                    self.loop.create_task(switch[message["type"]](content))
+
 
             self.loop.create_task(self.on_disconnect())
 
@@ -270,4 +287,110 @@ class Client:
 
     async def on_disconnect(self):
         """Called at the end of ws event loop"""
+        pass
+
+    async def _on_friend_online(self, obj):
+        user = User(self, obj["user"])
+        old_user = self.get_user(user.id)
+
+        self.users.remove(old_user)
+        self.users.append(user)
+
+        await self.on_friend_online(old_user, user)
+
+    async def on_friend_online(
+        self, before: Union[LimitedUser, User], after: User):
+        """
+        Called when a friend comes online
+        
+        Arguments
+        ----------
+        before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+        after: :class:`vrcpy.user.User`
+        """
+        pass
+
+    async def _on_friend_active(self, obj):
+        user = User(self, obj["user"])
+        old_user = self.get_user(user.id)
+
+        self.users.remove(old_user)
+        self.users.append(user)
+
+        await self.on_friend_active(old_user, user)
+
+    async def on_friend_active(
+        self, before: Union[LimitedUser, User], after: User):
+        """
+        Called when a friend becomes active
+        
+        Arguments
+        ----------
+        before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+        after: :class:`vrcpy.user.User`
+        """
+        pass
+
+    async def _on_friend_offline(self, obj):
+        user = await self.fetch_user(obj["userId"])
+        old_user = self.get_user(user.id)
+
+        self.users.remove(old_user)
+        self.users.append(user)
+
+        await self.on_friend_offline(old_user, user)
+
+    async def on_friend_offline(
+        self, before: Union[LimitedUser, User], after: User):
+        """
+        Called when a friend goes offline
+        
+        Arguments
+        ----------
+        before: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
+        after: :class:`vrcpy.user.User`
+        """
+        pass
+
+    async def _on_friend_add(self, obj):
+        user = User(self, obj["user"])
+        self.users.append(user)
+
+        await self.on_friend_add(user)
+
+    async def on_friend_add(self, friend: User):
+        pass
+
+    async def _on_friend_delete(self, obj):
+        user = self.get_user(obj["userId"])
+        self.users.remove(user)
+
+        await self.on_friend_delete(user)
+
+    async def on_friend_delete(self, friend: User):
+        pass
+
+    async def _on_friend_update(self, obj):
+        old_user = self.get_user(obj["userId"])
+        user = User(self, obj["user"])
+
+        self.users.remove(old_user)
+        self.users.append(user)
+
+        await self.on_friend_update(old_user, user)
+
+    async def on_friend_update(self, before: User, after: User):
+        pass
+
+    async def _on_friend_location(self, obj):
+        user = User(self, obj["user"])
+        world = World(self, obj["world"])
+        
+        self.users.remove(self.get_user(obj["userId"]))
+        self.users.append(user)
+
+        await self.on_friend_location(user, world, obj["location"])
+
+    async def on_friend_location(
+        self, friend: User, world: World, location: str):
         pass
