@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
+sys.path.append(os.path.abspath("./_ext")) # Custom extensions
 
 
 # -- Project information -----------------------------------------------------
@@ -33,8 +34,14 @@ release = 'v0.8.4'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'm2r2'
+    'sphinx.ext.intersphinx',
+    'autodoc_enum'
 ]
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'aiohttp': ('https://docs.aiohttp.org/en/stable/', None)
+}
 
 autodoc_member_order = 'bysource'
 source_suffix = ['.rst', '.md']
