@@ -10,7 +10,7 @@ from typing import Any, Optional
 from docutils.statemachine import StringList
 
 from sphinx.application import Sphinx
-from sphinx.ext.autodoc import ClassDocumenter, bool_option
+from sphinx.ext.autodoc import ClassDocumenter
 
 def setup(app: Sphinx) -> None:
     app.setup_extension("sphinx.ext.autodoc")

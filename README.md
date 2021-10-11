@@ -5,7 +5,7 @@
 Install using `pip install -U vrcpy`
 
 API wrapper for the [VRChat API](https://vrchatapi.github.io)  
-For docs, please see out [Read The Docs](https://vrcpy.readthedocs.io/en/latest/?)!
+For docs, please see our [Read The Docs](https://vrcpy.readthedocs.io/en/latest/?)!
 
 Please note this wrapper does NOT follow the [guidelines set by the vrchat team,](https://vrchatapi.github.io/#/?id=disclaimer)  
 Specifically, this wrapper makes queries more than once per minute.  

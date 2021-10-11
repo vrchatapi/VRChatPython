@@ -35,7 +35,9 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
-    'autodoc_enum'
+    'autodoc_enum',
+    'autodoc_auth',
+    'm2r2'
 ]
 
 intersphinx_mapping = {
