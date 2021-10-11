@@ -1,10 +1,11 @@
 ﻿from .types.enum import PlayerModerationType
+from .favoritegroup import FavoriteGroup
 from .notification import Notification
 from .decorators import auth_required
 from .moderation import Moderation
 from .model import Model
 
-from typing import Dict
+from typing import Dict, List
 import logging
 
 class LimitedUser(Model):
@@ -95,3 +96,32 @@ class LimitedUser(Model):
         }
 
         return resp
+
+    @auth_required
+    async def fetch_favorite_groups(
+        self, n: int = 60, offset: int = 0) -> List[FavoriteGroup]:
+        """
+        Fetches a list of favorite groups owned by a user
+
+        Keyword Arguments
+        ------------------
+        n: :class:`int`
+            Number of :class:`vrcpy.favoritegroup.FavoriteGroup` to return
+        offset: :class:`int`
+            Zero-based offset from start of object return\n
+            Used for pagination
+        """
+        req = {}
+        names = {
+            "n": n,
+            "offset": offset,
+            "ownerId": self.id
+        }
+
+        for attr in names:
+            if names[attr] is not None:
+                req[attr] = names[attr]
+
+        logging.debug("Listing favorite groups %s" % req)
+        resp = await self.client.request.get("/favorite/groups", params=req)
+        return [FavoriteGroup.favorite_group(self.client, group) for group in resp["data"]]

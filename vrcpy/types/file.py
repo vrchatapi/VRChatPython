@@ -1,6 +1,7 @@
-﻿import time
+﻿from ..model import Model
+import time
 
-class FileAsset:
+class FileAsset(Model):
     __slots__ = (
         "file_name", "url", "md5", "size_in_bytes",
         "status", "category", "upload_id"
@@ -14,7 +15,7 @@ class FileAsset:
         "status": str,
     }
 
-class FileVersion:
+class FileVersion(Model):
     __slots__ = (
         "version", "status", "created_at", "file", "delta", "signature"
     )
@@ -28,7 +29,7 @@ class FileVersion:
         "signature": FileAsset
     }
 
-class FileStatus:
+class FileStatus(Model):
     __slots__ = (
         "upload_id", "file_name", "next_part_number",
         "max_parts", "parts", "etags"

@@ -1,16 +1,21 @@
 ﻿from .errors import ClientErrors
 from .http import Request
 
+from .favoritegroup import FavoriteGroup
 from .util.threadwrap import ThreadWrap
 from .notification import Notification
 from .decorators import auth_required
-from .currentuser import CurrentUser
 from .limiteduser import LimitedUser
+from .permission import Permission
+from .avatar import Avatar
 from .config import Config
 from .world import World
 from .user import User
 
-from .types.enum import DeveloperType
+from .types.enum import DeveloperType, Sort, UserFilter
+from .types.enum import SortOrder, ReleaseStatus, FavoriteType
+from .types.favorite import Favorite
+
 import vrcpy.currentuser
 
 import logging
@@ -154,7 +159,7 @@ class Client:
     # Fetches
 
     @auth_required
-    async def fetch_me(self) -> CurrentUser:
+    async def fetch_me(self) -> vrcpy.currentuser.CurrentUser:
         """
         Fetches new CurrentUser object.
         This also updates `Client.me`
@@ -163,7 +168,7 @@ class Client:
         logging.debug("Fetching CurrentUser")
 
         me = await self.request.get("/auth/user")
-        me = CurrentUser(self, me["data"])
+        me = vrcpy.currentuser.CurrentUser(self, me["data"])
 
         self.me = me
         return me
@@ -244,6 +249,246 @@ class Client:
         resp = await self.request.get("/users/%s/name" % username)
         return User(self, resp["data"])
 
+    @auth_required
+    async def fetch_avatar(self, id: str) -> Avatar:
+        """
+        Fetches an avatar object
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of avatar to fetch
+        """
+        logging.debug("Fetching avatar %s" % id)
+
+        resp = await self.request.get("/avatar/%s" % id)
+        return Avatar(self, resp["data"])
+
+    @auth_required
+    async def search_avatars(
+        self, sort: Sort = Sort.POPULARITY, user: UserFilter = UserFilter.NONE,
+        user_id: str = None, n: int = 60, featured: bool = True,
+        order: SortOrder = SortOrder.DESCENDING, offset: int = 0,
+        tag: List[str] = None, notag: List[str] = None,
+        release_status: ReleaseStatus = ReleaseStatus.PUBLIC,
+        max_unity_version: str = None, min_unity_version: str = None,
+        platform: str = None) -> List[Avatar]:
+        """
+        Search for avatars with filters
+        You can only search your own or featured avatars
+
+        Keyword Arguments
+        ------------------
+        sort: :class:`vrcpy.types.enum.Sort`
+            What to sort result by\n
+            Defaults to ``vrcpy.types.enum.Sort.POPULARITY``
+        user: :class:`vrcpy.types.enum.UserFilter`
+            User to filter avatars by\n
+            Defaults to ``vrcpy.types.enum.UserFilter.NONE``
+        user_id: :class:`str`
+            ID of user to filter avatars by\n
+            Defaults to ``None``
+        n: :class:`int`
+            Number of objects to return\n
+            Min 1 | Max 100\n
+            Defaults to ``60``
+        featured: :class:`bool`
+            Filters to only featured results\n
+            Defaults to ``True``
+        order: :class:`vrcpy.types.enum.SortOrder`
+            Order to list sorted items in\n
+            Defaults to ``vrcpy.types.enum.SortOrder.DESCENDING``
+        offset: :class:`int`
+            Zero-based offset from start of object return\n
+            Used for pagination\n
+            Defaults to ``0``
+        tag: :class:`list`[:class:`str`]
+            Tags to include\n
+            Defaults to ``None``
+        notag: :class:`list`[:class:`str`]
+            Tags to exclude\n
+            Defaults to ``None``
+        release_status: :class:`vrcpy.types.enum.ReleaseStatus`
+            Filter by release status\n
+            Defaults to ``vrcpy.types.enum.ReleaseStatus.PUBLIC``
+        max_unity_version: :class:`str`
+            Maximum unity version supported by the .vrca asset\n
+            Defaults to ``None``
+        min_unity_version: :class:`str`
+            Minimum unity version supported by the .vrca asset\n
+            Defaults to ``None``
+        platform: :class:`str`
+            Platform the .vrca asset supports\n
+            Defaults to ``None``
+        """
+
+        names = {
+            "sort": None if sort is None else sort.value,
+            "user": None if user is None else user.value,
+            "userId": user_id,
+            "n": n,
+            "order": None if order is None else order.value,
+            "offset": offset,
+            "tag": tag,
+            "notag": notag,
+            "releaseStatus": None if release_status is None else release_status.value,
+            "maxUnityVersion": max_unity_version,
+            "minUnityVersion": min_unity_version,
+            "platform": platform
+        }
+
+        req = {}
+        for attr in names:
+            if attr is not None:
+                req[attr] = names[attr]
+
+        logging.debug("Searching avatar %s" % req)
+
+        resp = await self.request.get("/avatars", json=req)
+        return [Avatar(self, avatar) for avatar in resp["data"]]
+
+    @auth_required
+    async def fetch_permission(self, id: str) -> Permission:
+        """
+        Fetches a permission
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of permission to fetch
+        """
+        logging.debug("Fetching permission %s" % id)
+
+        resp = await self.request.get("/permissions/%s" % id)
+        return Permission(self, resp["data"])
+
+    @auth_required
+    async def fetch_favorite_group(
+        self, favorite_group_type: FavoriteType, 
+        name: str, user_id: str) -> FavoriteGroup:
+        """
+        Fetches a favorite group
+
+        Arguments
+        ----------
+        favorite_group_type: :class:`vrcpy.types.enum.FavoriteType`
+            Type of group to fetch
+        name: :class:`str`
+            Name of group to fetch
+        user_id: :class:`str`
+            User who owns the :class:`vrcpy.favoritegroup.FavoriteGroup`
+        """
+        logging.debug(
+            "Fetching FavoriteGroup \{{}: {}, {}: {}, {}: {}\}".format(
+                "favorite_group_type", favorite_group_type,
+                "name", name, "user_id", user_id))
+        
+        resp = await self.request.get("/favorite/group/%s/%s/%s" % (
+            favorite_group_type.value, name, user_id))
+        return FavoriteGroup.favorite_group(self, resp["data"])
+
+    @auth_required
+    async def fetch_favorite(self, id: str) -> Favorite:
+        """
+        Fetches a favorite
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the favorite object
+        """
+        logging.debug("Fetching favorite %s" % id)
+
+        resp = await self.request.get("/favorites/%s" % id)
+        return Favorite(self, resp["data"])
+
+    @auth_required
+    async def fetch_world(self, id: str) -> World:
+        """
+        Fetches a world
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the world object
+        """
+        logging.debug("Fetching world %s" % id)
+
+        resp = await self.request.get("/worlds/%s" % id)
+        return World(self, resp["data"])
+
+    @auth_required
+    async def search_worlds(
+        self, search: str = None, sort: Sort = Sort.POPULARITY,
+        user: UserFilter = UserFilter.NONE, user_id: str = None, n: int = 60,
+        featured: bool = True, order: SortOrder = SortOrder.DESCENDING,
+        offset: int = 0, tag: List[str] = None, notag: List[str] = None,
+        release_status: ReleaseStatus = ReleaseStatus.PUBLIC,
+        max_unity_version: str = None, min_unity_version: str = None,
+        platform: str = None) -> List[World]:
+        """
+        Search for worlds with filters
+
+        Keyword Arguments
+        ------------------
+        search: :class:`str`
+            Search for worlds by name
+        sort: :class:`vrcpy.types.enum.Sort`
+            What to sort result by
+        user: :class:`vrcpy.types.enum.UserFilter`
+            User to filter worlds by
+        user_id: :class:`str`
+            ID of user to filter worlds by
+        n: :class:`int`
+            Number of objects to return\n
+            Min 1 | Max 100
+        featured: :class:`bool`
+            Filters to only featured results
+        order: :class:`vrcpy.types.enum.SortOrder`
+            Order to list sorted items in
+        offset: :class:`int`
+            Zero-based offset from start of object return\n
+            Used for pagination
+        tag: :class:`list`[:class:`str`]
+            Tags to include
+        notag: :class:`list`[:class:`str`]
+            Tags to exclude
+        release_status: :class:`vrcpy.types.enum.ReleaseStatus`
+            Filter by release status
+        max_unity_version: :class:`str`
+            Maximum unity version supported by the .vrcw asset
+        min_unity_version: :class:`str`
+            Minimum unity version supported by the .vrcw asset
+        platform: :class:`str`
+            Platform the .vrcw asset supports
+        """
+
+        req = {}
+        names = {
+            "search": search,
+            "sort": None if sort is None else sort.value,
+            "user": None if user is None else user.value,
+            "userId": user_id,
+            "n": n,
+            "order": None if order is None else order.value,
+            "offset": offset,
+            "tag": tag,
+            "notag": notag,
+            "releaseStatus": None if release_status is None else release_status.value,
+            "maxUnityVersion": max_unity_version,
+            "minUnityVersion": min_unity_version,
+            "platform": platform
+        }
+
+        for attr in names:
+            if attr is not None:
+                req[attr] = names[attr]
+
+        logging.debug("Searching world %s" % req)
+
+        resp = await self.request.get("/worldss", json=req)
+        return [World(self, world) for world in resp["data"]]
+
     ## System
 
     async def fetch_config(self) -> Config:
@@ -315,7 +560,7 @@ class Client:
         try:
             resp = await self.request.get("/auth/user", headers={
                 "Authorization": "Basic "+b64})
-            self.me = CurrentUser(self, resp["data"])
+            self.me = vrcpy.currentuser.CurrentUser(self, resp["data"])
             self._logged_in = True
         except ClientErrors.MfaRequired:
             if mfa is None:
@@ -545,7 +790,7 @@ class Client:
 
     def remove_listener(self, func: Callable):
         """
-        Removes a listener previously added with `vrcpy.client.Client.add_listener`
+        Removes a listener previously added with :func:`Client.add_listener`
 
         Arguments
         ----------

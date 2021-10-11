@@ -4,14 +4,17 @@ from .notification import Notification
 from .decorators import auth_required
 from .limiteduser import LimitedUser
 from .moderation import Moderation
+from .permission import Permission
 from .user import User
 
-from .types.enum import UserStatus, PlayerModerationType
-from .types.enum import NotificationType, SearchGenericType
+from .types.enum import UserStatus, PlayerModerationType, ReleaseStatus
+from .types.enum import NotificationType, SearchGenericType, FavoriteType
+from .types.favorite import Favorite
 
 import logging
-
 from typing import List, Union
+
+import vrcpy.avatar
 
 class CurrentUser(User):
     @auth_required
@@ -43,6 +46,67 @@ class CurrentUser(User):
             self.client, user) for user in friends[data]]
 
         return friends
+
+    @auth_required
+    async def create_avatar(
+        self, name: str, image_url: str, asset_url: str = None, id: str = None,
+        description: str = None, tags: List[str] = None,
+        release_status: ReleaseStatus = None, version: int = None,
+        unity_package_url: str = None) -> vrcpy.avatar.Avatar:
+        """
+        Creates an avatar
+
+        Arguments
+        ----------
+        name: :class:`str`
+            Name to give the avatar
+        image_url: :class:`str`
+            URL to preview image of avatar
+
+        Keyword Arguments
+        ------------------
+        asset_url: :class:`str`
+            URL to avatar asset (.vrca)\n
+            Defaults to ``None``
+        id: :class:`str`
+            Custom ID to give avatar\n
+            Defaults to ``None``
+        description: :class:`str`
+            Description of avatar\n
+            Defaults to ``None``
+        tags: :class:`list`[:class:`str`]
+            Avatar tags\n
+            Defaults to ``None``
+        release_status: :class:`vrcpy.types.enum.ReleaseStatus`
+            Release status of avatar\n
+            Defaults to ``vrcpy.types.enum.ReleaseStatus.PUBLIC``
+        version: :class:`int`
+            Current release version of avatar\n
+            Defaults to ``1``
+        unity_package_url: :class:`str`
+            URL to unity package for avatar\n
+            Defaults to ``None``
+        """
+        
+        names = {
+            "assetUrl": asset_url,
+            "id": id,
+            "name": name,
+            "description": description,
+            "tags": tags,
+            "imageUrl": image_url,
+            "releaseStatus": None if release_status is None else release_status.value,
+            "version": version,
+            "unityPackageUrl": unity_package_url
+        }
+
+        req = {}
+        for item in names:
+            if names[item] is not None:
+                req[item] = names[item]
+
+        resp = await self.client.request.post("/avatars", json=req)
+        return vrcpy.avatar.Avatar(self.client, resp["data"])
 
     @auth_required
     async def fetch_player_moderations(
@@ -173,6 +237,44 @@ class CurrentUser(User):
         logging.debug("Clearing all notifications")
 
         await self.client.request.put("/auth/user/notifications/clear")
+
+    @auth_required
+    async def fetch_permissions(self) -> List[Permission]:
+        """Fetches all permissions"""
+        logging.debug("Fetching permissions")
+
+        resp = await self.client.request.get("/auth/permissions")
+        return [Permission(self.client, perm) for perm in resp["data"]]
+
+    @auth_required
+    async def fetch_favorites(
+        self, n: int = 60, offset: int = 0,
+        typeof: FavoriteType = None, tag: List[str] = None) -> List[Favorite]:
+        """
+        Fetches user favorites
+
+        Keyword Arguments
+        ------------------
+        n: :class:`int`
+            Number of :class:`vrcpy.types.favorite.Favorite` objects to return
+        offset: :class:`int`
+            Zero-based offset from start of object return\n
+            Used for pagination
+        type: :class:`vrcpy.types.enum.FavoriteType`
+            Type of favorites to return
+        tags: :class:`list`[:class:`str`]
+            Tags to filter by
+        """
+        req = {}
+        names = {"n": n, "offset": offset, "tags": tags}
+
+        for attr in names:
+            if names[attr] is not None:
+                req[attr] = names[attr]
+        logging.debug("Listing favorites %s" % req)
+
+        resp = await self.client.request.get("/favorites", params=req)
+        return [Favorite(self.client, fav) for fav in resp["data"]]
 
     @auth_required
     async def update(

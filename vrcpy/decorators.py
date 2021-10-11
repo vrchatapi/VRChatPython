@@ -1,4 +1,5 @@
 ﻿from .errors import ClientErrors
+from copy import deepcopy
 
 def auth_required(method):
     async def _method(self, *args, **kwargs):
@@ -13,6 +14,9 @@ def auth_required(method):
         resp = await method(self, *args, **kwargs)
         return resp
 
+    ## Stuff for sphinx and autodocs
     _method.__doc__ = method.__doc__
+    _method.__nested_annotations__ = method.__annotations__
+    _method.__nested_module__ = method.__module__
 
     return _method
