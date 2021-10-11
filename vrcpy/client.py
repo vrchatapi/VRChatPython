@@ -35,7 +35,7 @@ class Client:
     -----------
     config: :class:`vrcpy.config.Config`
         Last fetched API Configuration
-    loop: :class:`vrcpy.AbstractEventLoop`
+    loop: :class:`asyncio.AbstractEventLoop`
         Event loop client will create new asyncio tasks in.
     me: :class:`vrcpy.currentuser.CurrentUser`
         Last fetched user profile object
@@ -43,7 +43,7 @@ class Client:
         Internal AIOHTTP Wrapper instance
     users: :class:`list`
         User cache
-    ws: :class:`aiohttp.WebSocketResponse`
+    ws: :class:`aiohttp.ClientWebSocketResponse`
         Websocket connection to VRChat
     """
 
@@ -82,6 +82,37 @@ class Client:
             self.users += friends
 
         self.loop.create_task(self.on_ready())
+
+    def run(self, username: str, password: str, mfa: str = None):
+        """
+        Automates :func:`Client.login` + :func:`Client.start_ws_loop`
+        This function is blocking
+
+        Arguments
+        ----------
+        username: :class:`str`
+            Username/email of VRChat account
+        password: :class:`str`
+            Password of VRChat account
+
+
+        Keyword Arguments
+        ------------------
+        mfa: :class:`str`
+            One Time Password (OTP, recovery code) or Timed One Time Password (TOTP, MFA code) to verify auth cookie
+        """
+
+        async def run():
+            await self.login(username, password, mfa)
+            await self.start_ws_loop()
+
+        try:
+            self.loop.run_until_complete(run())
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.logout())
+        except Exception as e:
+            self.loop.run_until_complete(self.logout())
+            raise e.__class__(str(e))
 
     # Cache grabbers
 
@@ -328,7 +359,7 @@ class Client:
     async def verify_mfa(self, mfa: str):
         """
         Used to verify auth token on 2fa enabled accounts
-        This is called automatically by `Client.login` when mfa kwarg is passed
+        This is called automatically by :func:`Client.login` when mfa kwarg is passed
         Arguments
         ----------
         mfa: :class:`str`
@@ -365,6 +396,7 @@ class Client:
             "" if unauth else "not "))
 
         self.me = None
+        self._logout_intent = True
 
         if unauth:
             # Sending json with this makes it not 401 for some reason
@@ -433,7 +465,7 @@ class Client:
 
     # Event stuff
 
-    async def _ws_loop(self):
+    async def start_ws_loop(self):
         while not self._logout_intent:
             auth = await self.fetch_auth_cookie()
             auth = auth["token"]
@@ -480,6 +512,11 @@ class Client:
             @client.event
             def on_connect():
                 print("Connected to wss pipeline.")
+
+        Arguments
+        ----------
+        func: `method`
+            Event function to register as event hook
         """
 
         if func.__name__.startswith("on_") and hasattr(self, func.__name__):
@@ -508,7 +545,7 @@ class Client:
 
     def remove_listener(self, func: Callable):
         """
-        Removes a listener previously added with :method:`vrcpy.client.Client.add_listener`
+        Removes a listener previously added with `vrcpy.client.Client.add_listener`
 
         Arguments
         ----------
@@ -629,15 +666,15 @@ class Client:
 
         await self.on_friend_delete(user)
 
-    async def on_friend_unfriend(self, friend: User):
+    async def on_friend_delete(self, friend: User):
         """
-        Called when a user is added as a friend
+        Called when a user is unfriended
 
         Arguments
         ----------
-        friend: :class:`vrcpy.user.User` OR :class:`vrcpy.limiteduser.LimitedUser`
-            Friend object before they were unfriended
+        friend: :class:`vrcpy.user.User`
         """
+        pass
 
     async def _on_friend_update(self, obj):
         old_user = self.get_user(obj["userId"])
@@ -675,7 +712,7 @@ class Client:
         """
         Called when a friend changes location
 
-        Arugments
+        Arguments
         ----------
         friend: :class:`vrcpy.user.User`
             Friend that changed location

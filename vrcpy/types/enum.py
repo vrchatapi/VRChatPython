@@ -1,6 +1,8 @@
 ﻿from enum import Enum
 
 class UserStatus(Enum):
+    """Status' users can set"""
+
     ACTIVE = "active"
     JOIN_ME = "join me"
     ASK_ME = "ask me"
@@ -8,6 +10,8 @@ class UserStatus(Enum):
     OFFLINE = "offline"
 
 class PlayerModerationType(Enum):
+    """Moderation types"""
+
     MUTE = "mute"
     UNMUTE = "unmute"
     BLOCK = "block"
@@ -16,10 +20,14 @@ class PlayerModerationType(Enum):
     SHOWAVATAR = "showAvatar"
 
 class DeveloperType(Enum):
+    """User developer types"""
+
     NONE = "none"
     MODERATOR = "internal"
 
 class NotificationType(Enum):
+    """Types of notifications"""
+
     FRIEND_REQUEST = "friendRequest"
     INVITE = "invite"
     INVITE_RESPONSE = "inviteResponse"
@@ -28,6 +36,8 @@ class NotificationType(Enum):
     VOTE_TO_KICK = "votetokick"
 
 class SearchGenericType(Enum):
+    """Generic search types"""
+
     ALL = "all"
     PUBLIC = "public"
     PRIVATE = "private"

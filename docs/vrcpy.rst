@@ -8,9 +8,16 @@ Client
 
 .. autoclass:: vrcpy.Client
     :members:
-    :exclude-members: on_connect, on_ready, on_disconnect, on_friend_online, on_friend_offline, on_friend_active, on_friend_add, on_friend_delete, on_friend_update, on_friend_location, on_notification, event
+    :exclude-members: on_connect, on_ready, on_disconnect, on_friend_online, on_friend_offline, on_friend_active, on_friend_add, on_friend_delete, on_friend_update, on_friend_location, on_notification_received, on_notification_seen, on_notification_response, event, fetch_me, search_users, fetch_user, fetch_user_via_username, logout, verify_auth, user_exists
 
-.. autodecorator:: vrcpy.Client.event
+    .. automethod:: vrcpy.Client.fetch_me()
+    .. automethod:: vrcpy.Client.search_users(search: str, developer_type: vrcpy.types.enum.DeveloperType = None, n: int = 60, offset: int = 0) -> list[vrcpy.user.User]
+    .. automethod:: vrcpy.Client.fetch_user(id: str) -> vrcpy.user.User
+    .. automethod:: vrcpy.Client.fetch_user_via_username(username: str) -> vrcpy.user.User
+    .. automethod:: vrcpy.Client.logout(unauth: bool = True)
+    .. automethod:: vrcpy.Client.verify_auth() -> dict[str, Union[bool, str]]
+    .. automethod:: vrcpy.Client.user_exists(email: str = None, display_name: str = None, id: str = None, exclude_id: str = None) -> bool
+    .. autodecorator:: vrcpy.Client.event
 
 Events
 ~~~~~~~
@@ -25,149 +32,132 @@ Events
 .. automethod:: vrcpy.Client.on_friend_delete
 .. automethod:: vrcpy.Client.on_friend_update
 .. automethod:: vrcpy.Client.on_friend_location
-.. automethod:: vrcpy.Client.on_notification
+.. automethod:: vrcpy.Client.on_notification_received
+.. automethod:: vrcpy.Client.on_notification_seen
+.. automethod:: vrcpy.Client.on_notification_response
 
 
 User
 ~~~~~
 
-.. _vrcpy.FriendStatus:
-.. autoclass:: vrcpy.FriendStatus
-    :members:
+.. _vrcpy.limiteduser.LimitedUser:
+.. autoclass:: vrcpy.limiteduser.LimitedUser
+    :no-members:
 
-.. _vrcpy.LimitedUser:
-.. autoclass:: vrcpy.LimitedUser
-    :members:
+    .. automethod:: vrcpy.limiteduser.LimitedUser.moderate(typeof: vrcpy.types.enum.PlayerModerationType) -> vrcpy.moderation.Moderation
+    .. automethod:: vrcpy.limiteduser.LimitedUser.unmoderate(typeof: vrcpy.types.enum.PlayerModerationType)
+    .. automethod:: vrcpy.limiteduser.LimitedUser.unfriend()
+    .. automethod:: vrcpy.limiteduser.LimitedUser.friend() -> vrcpy.notification.Notification
+    .. automethod:: vrcpy.limiteduser.LimitedUser.cancel_friend()
+    .. automethod:: vrcpy.limiteduser.LimitedUser.fetch_friend_status() -> dict[str, bool]
 
-.. _vrcpy.User:
-.. autoclass:: vrcpy.User
+.. _vrcpy.user.User:
+.. autoclass:: vrcpy.user.User
+    :show-inheritance:
+    :no-members:
     :inherited-members:
-    :members:
 
-.. _vrcpy.CurrentUser:
-.. autoclass:: vrcpy.CurrentUser
-    :inherited-members:
-    :members:
+.. _vrcpy.currentuser.CurrentUser:
+.. autoclass:: vrcpy.currentuser.CurrentUser
+    :show-inheritance:
+    :no-members:
+
+    .. automethod:: vrcpy.currentuser.CurrentUser.fetch_friends(offset: int = 0, n: int = 60, offline: bool = False) -> list[vrcpy.limiteduser.LimitedUser]
+    .. automethod:: vrcpy.currentuser.CurrentUser.fetch_player_moderations(id: str = None, typeof: vrcpy.types.enum.PlayerModerationType = None) -> list[vrcpy.moderation.Moderation]
+    .. automethod:: vrcpy.currentuser.CurrentUser.fetch_moderation(id: str) -> vrcpy.moderation.Moderation
+    .. automethod:: vrcpy.currentuser.CurrentUser.clear_player_moderations()
+    .. automethod:: vrcpy.currentuser.CurrentUser.fetch_notifications(typeof: Union[vrcpy.types.enum.NotificationType, vrcpy.types.enum.SearchGenericType] = vrcpy.types.enum.SearchGenericType.ALL, hidden: bool = False, after: str = None, n: int = 60, offset: int = 0) -> list[vrcpy.notification.Notification]
+    .. automethod:: vrcpy.currentuser.CurrentUser.fetch_notification(id: str) -> vrcpy.notification.Notification
+    .. automethod:: vrcpy.currentuser.CurrentUser.clear_notifications()
+    .. automethod:: vrcpy.currentuser.CurrentUser.update(email: str = None, birthday: str = None, accepted_tos_version: int = None, tags: list[str] = None, status: vrcpy.types.enum.UserStatus = None, status_description: str = None, bio: str = None, bio_links: list[str] = None, user_icon: str = None) -> vrcpy.currentuser.CurrentUser
+    .. automethod:: vrcpy.currentuser.CurrentUser.delete_account() -> vrcpy.currentuser.CurrentUser
 
 World
 ~~~~~~
 
-.. _vrcpy.LimitedWorld:
-.. autoclass:: vrcpy.LimitedWorld
+.. _vrcpy.limitedworld.LimitedWorld:
+.. autoclass:: vrcpy.limitedworld.LimitedWorld
     :members:
 
-.. _vrcpy.World:
-.. autoclass:: vrcpy.World
+.. _vrcpy.world.World:
+.. autoclass:: vrcpy.world.World
     :inherited-members:
-    :members:
-
-.. _vrcpy.Instance:
-.. autoclass:: vrcpy.Instance
     :members:
 
 Avatar
 ~~~~~~~
 
-.. _vrcpy.Avatar:
-.. autoclass:: vrcpy.Avatar
+.. _vrcpy.avatar.Avatar:
+.. autoclass:: vrcpy.avatar.Avatar
     :members:
 
 Favorite
 ~~~~~~~~~
 
-.. _vrcpy.WorldFavorite:
-.. autoclass:: vrcpy.WorldFavorite
+.. _vrcpy.favoritegroup.FavoriteGroup:
+.. autoclass:: vrcpy.favoritegroup.FavoriteGroup
     
-.. _vrcpy.AvatarFavorite:
-.. autoclass:: vrcpy.AvatarFavorite
+.. _vrcpy.favoritegroup.FavoriteWorldGroup:
+.. autoclass:: vrcpy.favoritegroup.FavoriteWorldGroup
 
-.. _vrcpy.FriendFavorite:
-.. autoclass:: vrcpy.FriendFavorite
+.. _vrcpy.favoritegroup.FavoriteFriendGroup:
+.. autoclass:: vrcpy.favoritegroup.FavoriteFriendGroup
 
-.. _vrcpy.WorldFavoriteGroup:
-.. autoclass:: vrcpy.WorldFavoriteGroup
-
-.. _vrcpy.AvatarFavoriteGroup:
-.. autoclass:: vrcpy.AvatarFavoriteGroup
-
-.. _vrcpy.FriendFavoriteGroup:
-.. autoclass:: vrcpy.FriendFavoriteGroup
+.. _vrcpy.favoritegroup.FavoriteAvatarGroup:
+.. autoclass:: vrcpy.favoritegroup.FavoriteAvatarGroup
 
 File
 ~~~~~
 
-.. _vrcpy.File:
-.. autoclass:: vrcpy.File
+.. _vrcpy.file.File:
+.. autoclass:: vrcpy.file.File
     :members:
 
-.. _vrcpy.FileVersion:
-.. autoclass:: vrcpy.FileVersion
+.. _vrcpy.types.file.FileAsset:
+.. autoclass:: vrcpy.types.file.FileAsset
+
+.. _vrcpy.types.file.FileVersion:
+.. autoclass:: vrcpy.types.file.FileVersion
     :members:
 
-.. _vrcpy.IconFile:
-.. autoclass:: vrcpy.IconFile
+.. _vrcpy.types.file.FileStatus:
+.. autoclass:: vrcpy.types.file.FileStatus
     :members:
 
 Moderation
 ~~~~~~~~~~~
 
-.. _vrcpy.PlayerModeration:
-.. autoclass:: vrcpy.PlayerModeration
+.. _vrcpy.moderation.Moderation:
+.. autoclass:: vrcpy.moderation.Moderation
     :members:
-    :exclude-members: build_moderation
-
-.. _vrcpy.BlockPlayerModeration:
-.. autoclass:: vrcpy.BlockPlayerModeration
-    :inherited-members:
-    :members:
-    :exclude-members: build_moderation, create_moderation
-
-.. _vrcpy.ShowAvatarModeration:
-.. autoclass:: vrcpy.ShowAvatarModeration
-    :inherited-members:
-    :members:
-    :exclude-members: build_moderation, create_moderation
-
-.. _vrcpy.HideAvatarModeration:
-.. autoclass:: vrcpy.HideAvatarModeration
-    :inherited-members:
-    :members:
-    :exclude-members: build_moderation, create_moderation
-
-.. _vrcpy.MutePlayerModeration:
-.. autoclass:: vrcpy.MutePlayerModeration
-    :inherited-members:
-    :members:
-    :exclude-members: build_moderation, create_moderation
-
-.. _vrcpy.UnmutePlayerModeration:
-.. autoclass:: vrcpy.UnmutePlayerModeration
-    :inherited-members:
-    :members:
-    :exclude-members: build_moderation, create_moderation
 
 Notification
 ~~~~~~~~~~~~~
 
-.. _vrcpy.InviteNotification:
-.. autoclass:: vrcpy.InviteNotification
-    :inherited-members:
+.. _vrcpy.notification.Notification
+.. autoclass:: vrcpy.notification.Notification
     :members:
 
-.. _vrcpy.RequestInviteNotification:
-.. autoclass:: vrcpy.RequestInviteNotification
-    :inherited-members:
-    :members:
+Types
+~~~~~~
 
-.. _vrcpy.RequestInviteResponseNotification:
-.. autoclass:: vrcpy.RequestInviteResponseNotification
-    :inherited-members:
-    :members:
+types.enum
+------------
 
-.. _vrcpy.FriendRequestNotification:
-.. autoclass:: vrcpy.FriendRequestNotification
-    :inherited-members:
-    :members:
+.. _vrcpy.types.enum.UserStatus
+.. autoenum:: vrcpy.types.enum.UserStatus
+
+.. _vrcpy.types.enum.PlayerModerationType
+.. autoenum:: vrcpy.types.enum.PlayerModerationType
+
+.. _vrcpy.types.enum.DeveloperType
+.. autoenum:: vrcpy.types.enum.DeveloperType
+
+.. _vrcpy.types.enum.NotificationType
+.. autoenum:: vrcpy.types.enum.NotificationType
+
+.. _vrcpy.types.enum.SearchGenericType
+.. autoenum:: vrcpy.types.enum.SearchGenericType
 
 Exceptions
 ~~~~~~~~~~~
@@ -175,35 +165,11 @@ Exceptions
 errors.RequestErrors
 ---------------------
 
-.. _vrcpy.errors.RequestErrors.NoSession:
-.. autoexception:: vrcpy.errors.RequestErrors.NoSession
-
-.. _vrcpy.errors.RequestErrors.SessionExists:
-.. autoexception:: vrcpy.errors.RequestErrors.SessionExists
-
-.. _vrcpy.errors.RequestErrors.RequestError:
-.. autoexception:: vrcpy.errors.RequestErrors.RequestError
-
 .. _vrcpy.errors.RequestErrors.RateLimit:
 .. autoexception:: vrcpy.errors.RequestErrors.RateLimit
 
-.. _vrcpy.errors.RequestErrors.Unauthorized:
-.. autoexception:: vrcpy.errors.RequestErrors.Unauthorized
-
-errors.VRChatErrors
---------------------
-
-.. _vrcpy.errors.VRChatErrors.ServiceUnavailable:
-.. autoexception:: vrcpy.errors.VRChatErrors.ServiceUnavailable
-
 errors.ClientErrors
 --------------------
-
-.. _vrcpy.errors.ClientErrors.OutOfDate:
-.. autoexception:: vrcpy.errors.ClientErrors.OutOfDate
-
-.. _vrcpy.errors.ClientErrors.MissingCredentials:
-.. autoexception:: vrcpy.errors.ClientErrors.MissingCredentials
 
 .. _vrcpy.errors.ClientErrors.MfaRequired:
 .. autoexception:: vrcpy.errors.ClientErrors.MfaRequired
@@ -217,35 +183,11 @@ errors.ClientErrors
 .. _vrcpy.errors.ClientErrors.InvalidAuthToken:
 .. autoexception:: vrcpy.errors.ClientErrors.InvalidAuthToken
 
-errors.ObjectErrors
---------------------
-
-.. _vrcpy.errors.ObjectErrors.IntegretyError:
-.. autoexception:: vrcpy.errors.ObjectErrors.IntegretyError
-
-.. _vrcpy.errors.ObjectErrors.NotFriends:
-.. autoexception:: vrcpy.errors.ObjectErrors.NotFriends
-
-.. _vrcpy.errors.ObjectErrors.AlreadyFriends:
-.. autoexception:: vrcpy.errors.ObjectErrors.AlreadyFriends
-
-.. _vrcpy.errors.ObjectErrors.InvalidGroupName:
-.. autoexception:: vrcpy.errors.ObjectErrors.InvalidGroupName
-
-.. _vrcpy.errors.ObjectErrors.NotOwned:
-.. autoexception:: vrcpy.errors.ObjectErrors.NotOwned
-
 Utility Helpers
 ~~~~~~~~~~~~~~~~
 
-.. _vrcpy.util.full_paginate:
-.. automethod:: vrcpy.util.full_paginate
-
-.. _vrcpy.util.TaskWrapReturn:
-.. autoclass:: vrcpy.util.TaskWrapReturn
-
-.. _vrcpy.util.find_in_list_via_attribute:
-.. automethod:: vrcpy.util.find_in_list_via_attribute
+.. _vrcpy.util.threadwrap.ThreadWrap:
+.. autoclass:: vrcpy.util.threadwrap.ThreadWrap
 
 .. toctree::
    :maxdepth: 2

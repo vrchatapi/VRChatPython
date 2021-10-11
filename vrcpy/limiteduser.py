@@ -18,6 +18,15 @@ class LimitedUser(Model):
 
     @auth_required
     async def moderate(self, typeof: PlayerModerationType) -> Moderation:
+        """
+        Adds a :class:`PlayerModeration` moderation to this user
+
+        Arguments
+        ----------
+        typeof: :class:`PlayerModerationType`
+            Type of moderation to add
+        """
+
         logging.debug("Creating %s moderation on %s" % (
             typeof.value, self.id))
 
@@ -28,6 +37,14 @@ class LimitedUser(Model):
 
     @auth_required
     async def unmoderate(self, typeof: PlayerModerationType):
+        """
+        Removes a :class:`PlayerModerationType` moderation from this user
+
+        Arguments
+        ----------
+        typeof: :class:`PlayerModerationType`
+            Type of moderation to remove
+        """
         logging.debug("Removing %s moderation on %s" % (
             typeof.value, self.id))
 
@@ -37,6 +54,7 @@ class LimitedUser(Model):
 
     @auth_required
     async def unfriend(self):
+        """Unfriends this user"""
         logging.debug("Unfriending %s" % self.id)
 
         if not self.is_friend:
@@ -46,6 +64,7 @@ class LimitedUser(Model):
 
     @auth_required
     async def friend(self) -> Notification:
+        """Sends a :class:`PlayerModerationType.FRIEND_REQUEST` notification to this user"""
         logging.debug("Friending %s" % self.id)
 
         if self.is_friend:
@@ -57,6 +76,7 @@ class LimitedUser(Model):
 
     @auth_required
     async def cancel_friend(self):
+        """Cancels a :class:`PlayerModerationType.FRIEND_REQUEST` notification that was sent to this user"""
         logging.debug("Cancelling friend request to %s" % self.id)
 
         await self.client.request.delete(
@@ -64,6 +84,7 @@ class LimitedUser(Model):
 
     @auth_required
     async def fetch_friend_status(self) -> Dict[str, bool]:
+        """Gets the friend status of this user"""
         logging.debug("Fetching friend status for %s" % self.id)
 
         resp = await self.client.request.get("/user/%s/friendStatus" % self.id)

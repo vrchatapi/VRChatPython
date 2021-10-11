@@ -12,4 +12,7 @@ def auth_required(method):
 
         resp = await method(self, *args, **kwargs)
         return resp
+
+    _method.__doc__ = method.__doc__
+
     return _method
