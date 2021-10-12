@@ -15,14 +15,10 @@ class Avatar(Model):
         "unity_packages", "updated_at", "version"
     )
 
-    @auth_required
     async def select(self) -> vrcpy.currentuser.CurrentUser:
         """Selects this avatar"""
-        logging.debug("Selecting avatar %s" % self.id)
-
-        resp = await self.client.request.put("/avatars/%s/select" % self.id)
-        self.client.me = vrcpy.currentuser.CurrentUser(self.client, resp["data"])
-        return self.client.me
+        resp = await self.client.select_avatar(self.id)
+        return resp
 
     @auth_required
     async def update(
@@ -80,10 +76,7 @@ class Avatar(Model):
         resp = await self.client.request.put("/avatars", json=req)
         return Avatar(self.client, resp["data"])
 
-    @auth_required
     async def delete(self) -> Avatar:
         """Deletes this avatar"""
-        logging.debug("Deleting avatar %s" % self.id)
-
-        resp = await self.client.request.delete("/avatars/%s" % self.id)
-        return Avatar(self.client, resp["data"])
+        resp = await self.client.delete_avatar(self.id)
+        return resp

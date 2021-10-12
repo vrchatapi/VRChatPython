@@ -2,6 +2,7 @@
 import time
 
 from .types.enum import PlayerModerationType, NotificationType
+from typing import Any, Dict
 
 __basetypes__ = (
     str, int, list, dict, PlayerModerationType, NotificationType
@@ -23,6 +24,25 @@ class TypeCasts:
             return time.strptime(attr, "%Y-%m-%dT%H:%M:%S%z")
 
 class Model:
+    """
+    Underlying class for all VRChat objects
+
+    Attributes
+    -----------
+    client: :class:`vrcpy.Client`
+        Client this object was created by
+    loop: :class:`asyncio.AbstractEventLoop`
+        Event loop, I honestly forgot why I put this here\n
+        I don't think any objects use it?
+
+    Arguments
+    ----------
+    client: :class:`vrcpy.Client`
+        Client this object was created by
+    data: :class:`dict`[:class:`str`, :class:`Any`]
+        Data used to create the object
+    """
+
     __slots__ = ("client", "loop")
 
     def __init__(self, client, data):

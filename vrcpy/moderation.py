@@ -1,6 +1,7 @@
 ﻿from .types.enum import PlayerModerationType
 from .decorators import auth_required
 from .model import Model
+from .types.rdict import RDict
 
 import logging
 import time
@@ -11,7 +12,7 @@ class Moderation(Model):
         "target_display_name", "target_user_id", "type"
     )
 
-    __types__ = {
+    __types__ = RDict({
         "created": time.struct_time,
         "id": str,
         "source_display_name": str,
@@ -19,10 +20,8 @@ class Moderation(Model):
         "target_display_name": str,
         "target_user_id": str,
         "type": PlayerModerationType
-    }
+    })
 
-    @auth_required
-    async def delete_moderation(self):
-        logging.debug("Deleting moderation %s" % self.id)
-
-        await self.client.request.delete("/auth/user/playermoderations/%s" % self.id)
+    async def delete(self):
+        """Deletes this moderation"""
+        await self.client.delete_moderation(self.id)

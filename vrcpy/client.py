@@ -5,6 +5,7 @@ from .favoritegroup import FavoriteGroup
 from .util.threadwrap import ThreadWrap
 from .notification import Notification
 from .decorators import auth_required
+from .currentuser import CurrentUser
 from .limiteduser import LimitedUser
 from .permission import Permission
 from .avatar import Avatar
@@ -14,6 +15,7 @@ from .user import User
 
 from .types.enum import DeveloperType, Sort, UserFilter
 from .types.enum import SortOrder, ReleaseStatus, FavoriteType
+from .types.instance import Instance
 from .types.favorite import Favorite
 
 import vrcpy.currentuser
@@ -249,6 +251,68 @@ class Client:
         resp = await self.request.get("/users/%s/name" % username)
         return User(self, resp["data"])
 
+     @auth_required
+    async def friend_user(self, id: str) -> Notification:
+        """
+        Sends a :class:`PlayerModerationType.FRIEND_REQUEST` notification to a user
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to friend
+        """
+        logging.debug("Friending %s" % id)
+
+        resp = await self.request.post("/auth/%s/friendRequest" % id)
+        return Notification(self, resp["data"])
+
+    @auth_required
+    async def cancel_friend(self, id: str):
+        """
+        Cancels a :class:`PlayerModerationType.FRIEND_REQUEST` notification that was sent to a user
+        
+         Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to cancel friend request to
+        """
+        logging.debug("Cancelling friend request to %s" % id)
+        await self.request.delete("/user/%s/friendRequest" % id)
+
+    @auth_required
+    async def fetch_friend_status(self) -> Dict[str, bool]:
+        """
+        Gets the friend status of this user
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to fetch friend status with
+        """
+        logging.debug("Fetching friend status for %s" % id)
+
+        resp = await self.request.get("/user/%s/friendStatus" % id)
+        resp = {
+            "incoming_request": resp["data"]["incomingRequest"],
+            "is_friend": resp["data"]["isFriend"],
+            "outgoing_request": resp["data"]["outgoingRequest"]
+        }
+
+        return resp
+
+    @auth_required
+    async def unfriend_user(self, id: str):
+        """
+        Unfriends a user
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the user to unfriend
+        """
+        logging.debug("Unfriending %s" % id)
+        await self.request.delete("/auth/user/friends/%s" % id)
+
     @auth_required
     async def fetch_avatar(self, id: str) -> Avatar:
         """
@@ -348,6 +412,37 @@ class Client:
         return [Avatar(self, avatar) for avatar in resp["data"]]
 
     @auth_required
+    async def select_avatar(self, id: str) -> CurrentUser:
+        """
+        Selects avatar
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of avatar to select
+        """
+        logging.debug("Selecting avatar %s" % id)
+
+        resp = await self.request.put("/avatars/%s/select" % id)
+        self.me = CurrentUser(self, resp["data"])
+        return self.me
+
+    @auth_required
+    async def delete_avatar(self, id: str) -> Avatar:
+        """
+        Deletes avatar
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of avatar to delete
+        """
+        logging.debug("Deleting avatar %s" % id)
+
+        resp = await self.request.delete("/avatars/%s" % id)
+        return Avatar(self, resp["data"])
+
+    @auth_required
     async def fetch_permission(self, id: str) -> Permission:
         """
         Fetches a permission
@@ -403,6 +498,41 @@ class Client:
         return Favorite(self, resp["data"])
 
     @auth_required
+    async def add_favorite(
+        self, typeof: FavoriteType, id: str, group_name: str) -> Favorite:
+        """
+        Favorites an object
+
+        Arguments
+        ----------
+        typeof: :class:`vrcpy.types.enum.FavoriteType`
+            Type of object to favorite
+        id: :class:`str`
+            ID of friend, avatar or world to favorite
+        group_name: :class:`str`
+            Name of group to add favorite to
+        """
+        logging.debug("Adding %s object (%s) to %s favorite group" % (
+            typeof, id, group_name))
+
+        resp = await self.request.post("/favorites", json={
+            "type": typeof.value, "favoriteId": id, "tags": [group_name]})
+        return Favorite(self, resp["data"])
+
+    @auth_required
+    async def delete_favorite(self, id: str):
+        """
+        Deletes a favorite
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the favorite object
+        """
+        logging.debug("Unfavoriting %s" % id)
+        await self.client.request.delete("/favorites/%s" % id)
+
+    @auth_required
     async def fetch_world(self, id: str) -> World:
         """
         Fetches a world
@@ -419,10 +549,11 @@ class Client:
 
     @auth_required
     async def search_worlds(
-        self, search: str = None, sort: Sort = Sort.POPULARITY,
-        user: UserFilter = UserFilter.NONE, user_id: str = None, n: int = 60,
-        featured: bool = True, order: SortOrder = SortOrder.DESCENDING,
-        offset: int = 0, tag: List[str] = None, notag: List[str] = None,
+        self, search: str = None, active: bool = False, recent: bool = False,
+        sort: Sort = Sort.POPULARITY, user: UserFilter = UserFilter.NONE,
+        user_id: str = None, n: int = 60, featured: bool = True,
+        order: SortOrder = SortOrder.DESCENDING, offset: int = 0,
+        tag: List[str] = None, notag: List[str] = None,
         release_status: ReleaseStatus = ReleaseStatus.PUBLIC,
         max_unity_version: str = None, min_unity_version: str = None,
         platform: str = None) -> List[World]:
@@ -433,6 +564,12 @@ class Client:
         ------------------
         search: :class:`str`
             Search for worlds by name
+        active: :class:`bool`
+            Search for only active worlds\n
+            If True `recent` kwarg must be False
+        recent: :class:`bool`
+            Search for only recent worlds\n
+            If True `active` kwarg must be False
         sort: :class:`vrcpy.types.enum.Sort`
             What to sort result by
         user: :class:`vrcpy.types.enum.UserFilter`
@@ -463,6 +600,15 @@ class Client:
             Platform the .vrcw asset supports
         """
 
+        end = ""
+        if active and recent:
+            raise TypeError(
+                "Both active and recent kwargs can not be set to true")
+        elif active:
+            end = "/active"
+        elif recent:
+            end = "/recent"
+
         req = {}
         names = {
             "search": search,
@@ -486,8 +632,197 @@ class Client:
 
         logging.debug("Searching world %s" % req)
 
-        resp = await self.request.get("/worldss", json=req)
+        resp = await self.request.get("/worlds%s" % end, json=req)
         return [World(self, world) for world in resp["data"]]
+
+    @auth_required
+    async def create_world(
+        self, asset_url: str, image_url: str, name: str,
+        author_id: str = None, author_name: str = None, capacity: int = None,
+        id: str = None, description: str = None, tags: List[str] = None,
+        platform: str = None, release_status: ReleaseStatus = None,
+        version: int = None, unity_package_url: str = None,
+        unity_version: str = None) -> Avatar:
+        """
+        Creates a world
+
+        Arguments
+        ----------
+        asset_url: :class:`str`
+            URL to world asset (.vrcw)
+        image_url: :class:`str`
+            URL to preview image of world
+        name: :class:`str`
+            Name of the world
+
+        Keyword Arguments
+        ------------------
+        author_id: :class:`str`
+            ID of the user who owns the world
+        author_name: :class:`str`
+            Name of the user who owns the world
+        capacity: :class:`str`
+            Instance capacity of this world
+        id: :class:`str`
+            Custom ID to give world
+        description: :class:`str`
+            Description of world
+        tags: :class:`list`[:class:`str`]
+            World tags
+        platform: :class:`str`
+            Platform the world supports
+        release_status: :class:`vrcpy.types.enum.ReleaseStatus`
+            Release status of world
+        version: :class:`int`
+            Current release version of world
+        unity_package_url: :class:`str`
+            URL to unity package for world
+        unity_version: :class:`str`
+            Version of unity this world was uploaded from
+        """
+        req = {}
+        names = {
+            "assetUrl": asset_url,
+            "authorId": author_id,
+            "authorName": author_name,
+            "capacity": capacity,
+            "id": id,
+            "description": description,
+            "tags": tags,
+            "imageUrl": image_url,
+            "name": name,
+            "platform": platform,
+            "releaseStatus": None if release_status is None else release_status.value,
+            "assetVersion": version,
+            "unityPackageUrl": unity_package_url,
+            "unityVersion": unity_version
+        }
+        
+        for item in names:
+            if names[item] is not None:
+                req[item] = names[item]
+
+        logging.debug("Creating world %s" % req)
+
+        resp = await self.request.post("/worlds", json=req)
+        return World(self, resp["data"])
+
+    @auth_required
+    async def fetch_world_instance(
+        self, world_id: str, instance_id: str) -> Instance:
+        """
+        Fetches an instance of a world
+
+        Arguments
+        ----------
+        world_id: :class:`str`
+            ID of the world the instance belongs to
+        instance_id: :class:`str`
+            ID of the instance to fetch, including nonce and region if applicable
+        """
+        logging.debug("Fetching instance %s/%s" % (world_id, instance_id))
+
+        resp = await self.request.get("/worlds/%s/%s" % (
+            world_id, instance_id))
+        return Instance(self, resp["data"])
+
+    @auth_required
+    async def can_publish_world(self, id: str) -> bool:
+        """
+        Returns whether a world can be published or not
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of world to check
+        """
+        logging.debug("Fetching world publish status %s" % id)
+
+        resp = await self.request.get("/worlds/%s/publish" % id)
+        return resp["data"]["canPublish"]
+
+    @auth_required
+    async def publish_world(self, id: str):
+        """
+        Publishes a world
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the world to publish
+        """
+        logging.debug("Publishing world %s" % id)
+        await self.request.put("/worlds/%s/publish" % id)
+
+    @auth_required
+    async def unpublish_world(self, id: str):
+        """
+        Unpublishes a world
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the world to unpublish
+        """
+        logging.debug("Unpublishing world %s" % id)
+        await self.request.delete("/worlds/%s/publish" % id)
+
+    @auth_required
+    async def delete_world(self, id: str):
+        """
+        Deletes a world
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the world to delete
+        """
+        logging.debug("Deleting world %s" % id)
+        await self.request.delete("/worlds/%s" % id)
+
+    @auth_required
+    async def delete_moderation(self, id: str):
+        """
+        Deletes a moderation
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the moderation to delete
+        """
+        logging.debug("Deleting moderation %s" % id)
+        await self.request.delete("/auth/user/playermoderations/%s" % id)
+
+    @auth_required
+    async def mark_notification_as_read(self, id: str) -> Notification:
+        """
+        Marks a notification as read
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the notification to mark seen
+        """
+        logging.debug("Marking notification as read %s" % id)
+
+        resp = await self.request.put(
+            "/auth/user/notifications/%s/see" % id)
+        return Notification(self, resp["data"])
+
+    @auth_required
+    async def delete_notification(self, id: str) -> Notification:
+        """
+        Deletes a notification
+        
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the notification to delete
+        """
+        logging.debug("Deleting notification %s" % id)
+
+        resp = await self.request.put("/auth/user/notifications/%s/hide" % id)
+        return Notification(self.client, resp["data"])
 
     ## System
 

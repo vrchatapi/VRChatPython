@@ -125,6 +125,12 @@ Notification
 .. autoclass:: vrcpy.notification.Notification
     :members:
 
+Base Object
+~~~~~~~~~~~~
+
+.. _vrcpy.model.Model:
+.. autoclass:: vrcpy.model.Model
+
 Types
 ~~~~~~
 

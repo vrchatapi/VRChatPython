@@ -53,48 +53,28 @@ class LimitedUser(Model):
             "/auth/user/unplayermoderate",
             params={"moderated": self.id, "type": typeof})
 
-    @auth_required
     async def unfriend(self):
         """Unfriends this user"""
-        logging.debug("Unfriending %s" % self.id)
-
         if not self.is_friend:
             raise TypeError("Can't unfriend a user that isn't a friend")
 
-        await self.client.request.delete("/auth/user/friends/%s" % self.id)
+        await self.client.unfriend_user(self.id)
 
-    @auth_required
     async def friend(self) -> Notification:
         """Sends a :class:`PlayerModerationType.FRIEND_REQUEST` notification to this user"""
-        logging.debug("Friending %s" % self.id)
-
         if self.is_friend:
             raise TypeError("Can't friend user that is already a friend")
 
-        resp = await self.client.request.post(
-            "/auth/%s/friendRequest" % self.id)
-        return Notification(self.client, resp["data"])
+        resp = await self.client.friend_user(self.id)
+        return resp
 
-    @auth_required
     async def cancel_friend(self):
         """Cancels a :class:`PlayerModerationType.FRIEND_REQUEST` notification that was sent to this user"""
-        logging.debug("Cancelling friend request to %s" % self.id)
+        await self.client.cancel_friend(self.id)
 
-        await self.client.request.delete(
-            "/user/%s/friendRequest" % self.id)
-
-    @auth_required
     async def fetch_friend_status(self) -> Dict[str, bool]:
         """Gets the friend status of this user"""
-        logging.debug("Fetching friend status for %s" % self.id)
-
-        resp = await self.client.request.get("/user/%s/friendStatus" % self.id)
-        resp = {
-            "incoming_request": resp["data"]["incomingRequest"],
-            "is_friend": resp["data"]["isFriend"],
-            "outgoing_request": resp["data"]["outgoingRequest"]
-        }
-
+        resp = await self.client.fetch_friend_status(self.id)
         return resp
 
     @auth_required

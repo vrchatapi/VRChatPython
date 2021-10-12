@@ -1,4 +1,5 @@
 ﻿from ..model import Model
+from .rdict import RDict
 import time
 
 class FileAsset(Model):
@@ -7,27 +8,27 @@ class FileAsset(Model):
         "status", "category", "upload_id"
     )
 
-    __types__ = {
+    __types__ = RDict({
         "file_name": str,
         "url": str,
         "md5": str,
         "size_in_bytes": int,
         "status": str,
-    }
+    })
 
 class FileVersion(Model):
     __slots__ = (
         "version", "status", "created_at", "file", "delta", "signature"
     )
 
-    __types__ = {
+    __types__ = RDict({
         "version": int,
         "status": str,
         "created_at": time.struct_time,
         "file": FileAsset,
         "delta": FileAsset,
         "signature": FileAsset
-    }
+    })
 
 class FileStatus(Model):
     __slots__ = (
@@ -35,11 +36,11 @@ class FileStatus(Model):
         "max_parts", "parts", "etags"
     )
 
-    __types__ = {
+    __types__ = RDict({
         "upload_id": str,
         "file_name": str,
         "next_part_number": int,
         "max_parts": int,
         "parts": list,
         "etags": list
-    }
+    })

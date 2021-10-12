@@ -3,15 +3,16 @@
 from .types.enum import FavoriteType, Visibility
 from .decorators import auth_required
 from .model import Model
+from .types.rdict import RDict
 
 from typing import List
 import logging
 
 class FavoriteGroup(Model):
-    __types__ = {
+    __types__ = RDict({
         "type": FavoriteType,
         "visibility": Visibility
-    }
+    })
 
     @staticmethod
     def favorite_group(client, data):

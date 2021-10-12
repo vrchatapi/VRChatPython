@@ -2,6 +2,7 @@
 
 from .limitedworld import LimitedWorld
 from .decorators import auth_required
+from .types.instance import Instance
 
 import logging
 
@@ -14,6 +15,31 @@ class World(LimitedWorld):
         "version", "visits"
     )
 
+    async def fetch_instance(self, id: str) -> Instance:
+        """
+        Fetches an instance of this world
+
+        Arguments
+        ----------
+        id: :class:`str`
+            ID of the instance to fetch, including nonce and region if applicable
+        """
+        resp = await self.client.fetch_world_instance(self.id, id)
+        return resp
+
+    async def can_publish(self) -> bool:
+        """Returns whether the world can be published or not"""
+        resp = await self.client.can_publish_world(self.id)
+        return resp
+
+    async def publish(self):
+        """Publishes this world"""
+        await self.client.publish_world(self.id)
+
+    async def unpublish(self):
+        """Unpublishes this world"""
+        await self.client.unpublish_world(self.id)
+
     @auth_required
     async def update(
         self, asset_url: str = None, author_id: str = None,
@@ -23,7 +49,7 @@ class World(LimitedWorld):
         release_status: ReleaseStatus = None, version: int = None,
         unity_package_url: str = None, unity_version: str = None) -> Avatar:
         """
-        Updates this avatar
+        Updates this world
 
         Keyword Arguments
         ------------------
@@ -80,12 +106,9 @@ class World(LimitedWorld):
 
         logging.debug("Updating world %s" % req)
 
-        resp = await self.client.request.put("/worlds", json=req)
+        resp = await self.client.request.put("/worlds/%s" % self.id, json=req)
         return World(self.client, resp["data"])
 
-    @auth_required
     async def delete(self):
         """Deletes this world"""
-        logging.debug("Deleting world %s" % self.id)
-
-        await self.client.request.delete("/worlds/%s" % self.id)
+        await self.client.delete_world(self.id)
