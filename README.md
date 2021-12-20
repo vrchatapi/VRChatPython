@@ -1,5 +1,9 @@
 [![Documentation Status](https://readthedocs.org/projects/vrcpy/badge/?version=latest)](https://vrcpy.readthedocs.io/en/latest/?badge=latest) 
 
+# This wrapper is deprecated!
+
+Please use [this wrapper](https://github.com/vrchatapi/vrchatapi-python) made from our specification! Thanks!
+
 ## VRCpy
 
 Install using `pip install -U vrcpy`
